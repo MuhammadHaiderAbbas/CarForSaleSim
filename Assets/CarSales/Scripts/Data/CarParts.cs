@@ -85,7 +85,7 @@ namespace CarSales
             if (c.components == null) c.components = new List<ComponentState>();
             var pt = PowertrainOf(c);
             bool partsOk = c.parts != null && c.parts.Length == All.Length;
-            if (partsOk && c.components.Count == ExpectedComponents(pt)) return;
+            if (partsOk && c.components.Count == ExpectedComponents(pt)) { CarRecords.Ensure(c); return; }
             if (!partsOk)
             {
                 c.parts = new float[All.Length];
@@ -95,6 +95,7 @@ namespace CarSales
             ComponentSet.Ensure(c.components, pt, c.parts, () => Random.Range(-1f, 1f), c.condition);
             if (fresh) AvoidDeadOnArrival(c);
             Recalculate(c);
+            CarRecords.Ensure(c);
         }
 
         /// <summary>Newly generated or converted cars always start; dead batteries come from wear and crashes later.</summary>
@@ -110,6 +111,8 @@ namespace CarSales
         {
             EnsureParts(c);
             ComponentSet.SetGroup(c.components, (ComponentGroup)p, PowertrainOf(c), Mathf.Clamp(value, 0f, 100f));
+            if (value >= 99f) CarRecords.ClearFaultsInGroup(c, (ComponentGroup)p);   // a full repair fixes the faults too
+            else FaultModel.ApplyHealthCaps(c.components, c.faults);
             Recalculate(c);
         }
 
@@ -153,6 +156,7 @@ namespace CarSales
             ComponentSet.Ensure(c.components, PowertrainOf(c), c.parts, () => Random.Range(-1f, 1f), overall);
             AvoidDeadOnArrival(c);
             Recalculate(c);
+            CarRecords.Ensure(c);
         }
 
         /// <summary>Crash damage without a known direction (treated as a front impact).</summary>
@@ -179,6 +183,7 @@ namespace CarSales
         {
             EnsureParts(c);
             foreach (var s in c.components) s.health = 100f;
+            if (c.faults != null) c.faults.Clear();
             Recalculate(c);
         }
 

@@ -36,7 +36,7 @@ namespace CarSales.Sim
     {
         static float Clamp(float v) => v < 0f ? 0f : v > 100f ? 100f : v;
 
-        static ComponentState Find(List<ComponentState> list, ComponentId id)
+        public static ComponentState Find(List<ComponentState> list, ComponentId id)
         {
             if (list == null) return null;
             int key = (int)id;

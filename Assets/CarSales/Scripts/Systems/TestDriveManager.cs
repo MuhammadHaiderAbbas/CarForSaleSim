@@ -116,6 +116,8 @@ namespace CarSales
             if (target.IsForSaleListing) { reason = "Buy the car first."; return false; }
             if (!Camera.main) { reason = "No main camera found."; return false; }
             if (target.Data.fuel <= 0.5f) { reason = "The tank is empty! Tow it to a fuel station (phone, P)."; return false; }
+            if (target.Data.documents != null && target.Data.documents.generated && target.Data.documents.keys <= 0)
+            { reason = "There's no key for this car. Get one cut by the locksmith (computer: Workshop > Paperwork)."; return false; }
             if (!CarParts.Effects(target.Data).CanStart)
             { reason = "It won't start - the 12V battery or starter motor is dead. Repair the electronics (tow it to the workshop)."; return false; }
             return true;

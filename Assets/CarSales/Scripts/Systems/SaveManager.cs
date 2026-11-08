@@ -16,8 +16,8 @@ namespace CarSales
     public class SaveManager : MonoBehaviour
     {
         public const string LegacyFileName = "carsales_save.json";
-        public const string GameModule = "game", LedgerModule = "ledger";
-        public const int GameModuleVersion = 6, LedgerModuleVersion = 1;   // game v6: per-car components
+        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop";
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-dev";
 
         [SerializeField] bool loadOnStart = true;
@@ -76,6 +76,7 @@ namespace CarSales
             if (CarSalesServices.Upgrades) CarSalesServices.Upgrades.SetLevels(null);
             if (CarSalesServices.Bank) CarSalesServices.Bank.SetLoan(0);
             if (CarSalesServices.Progress) CarSalesServices.Progress.ResetProgress();
+            if (CarSalesServices.Workshop) CarSalesServices.Workshop.ResetState();
             CarSalesServices.DayCycle.StartDay(1, 100f);
 
             var cars = new List<CarInstance>();
@@ -178,6 +179,7 @@ namespace CarSales
             };
             env.Set(GameModule, GameModuleVersion, JsonUtility.ToJson(data, true));
             env.Set(LedgerModule, LedgerModuleVersion, JsonUtility.ToJson(eco.Ledger.State));
+            if (CarSalesServices.Workshop) env.Set(WorkshopModule, WorkshopModuleVersion, JsonUtility.ToJson(CarSalesServices.Workshop.GetState()));
             try
             {
                 Store.Write(ActiveSlot, env);
@@ -203,6 +205,7 @@ namespace CarSales
 
             SaveData data;
             LedgerState ledger = null;
+            WorkshopState workshop = null;
             try
             {
                 var game = result.Envelope.Get(GameModule);
@@ -214,6 +217,12 @@ namespace CarSales
                 {
                     Migrations.Migrate(led, LedgerModuleVersion);
                     ledger = JsonUtility.FromJson<LedgerState>(led.Data);
+                }
+                var ws = result.Envelope.Get(WorkshopModule);
+                if (ws != null)
+                {
+                    Migrations.Migrate(ws, WorkshopModuleVersion);
+                    workshop = JsonUtility.FromJson<WorkshopState>(ws.Data);
                 }
             }
             catch (Exception e)
@@ -235,6 +244,7 @@ namespace CarSales
             if (CarSalesServices.Progress) CarSalesServices.Progress.SetState(data.stats, data.objectiveIndex, data.daysInDebt, data.hasWon);
             foreach (var c in data.ownedCars) c.inspected = true;
             CarSalesServices.Inventory.SetCars(data.ownedCars);
+            if (CarSalesServices.Workshop) CarSalesServices.Workshop.SetState(workshop);
             if (CarSalesServices.Messages) CarSalesServices.Messages.SetMessages(data.messages);
             CarSalesServices.Vehicles.RebuildAll();
             CarSalesServices.Marketplace.SetListings(data.marketListings, data.lotListings);

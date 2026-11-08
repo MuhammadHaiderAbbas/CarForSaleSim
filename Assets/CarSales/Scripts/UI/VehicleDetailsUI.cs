@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using CarSales.Foundation;
+using CarSales.Sim;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -146,8 +148,8 @@ namespace CarSales
             }
             SetChip(conditionChip, conditionChipText, known ? $"Verified {cond:0}%" : $"Claimed {cond:0}% - not inspected", known ? UIFactory.Good : UIFactory.Warn);
 
-            int fee = CarValueCalculator.InspectionCost();
-            inspectLabel.text = car.inspected || mode == Mode.Owned ? "Inspection report" : fee > 0 ? $"Inspect ({UIFactory.Money(fee)})" : "Inspect (free)";
+            int found = InspectionEngine.KnownCount(car.faults);
+            inspectLabel.text = found > 0 ? $"Inspection ({found} found)" : "Inspect";
             int delivery = CarSalesServices.Marketplace.DeliveryFee;
             buyLabel.text = mode == Mode.Physical ? "Buy - drive it away" : mode == Mode.Listing ? $"Buy now\n<size=75%>+{UIFactory.Money(delivery)} delivery</size>" : car.state == CarState.Listed ? "Change price" : "Set price";
             UIFactory.SetButtonColor(buyButton, mode == Mode.Owned ? UIFactory.Accent : UIFactory.Good);
@@ -245,6 +247,14 @@ namespace CarSales
                 var t = UIFactory.Text(row, $"{v:0}%  {CarParts.Label(v)}", 16, CarParts.LabelColor(v), TextAlignmentOptions.Right, true);
                 UIFactory.LE(t, w: 150, flexW: 0);
             }
+            var known = CarRecords.KnownFaults(car).ToList();
+            UIFactory.SectionTitle(tabArea, known.Count == 0 ? "No faults found yet" : $"Faults found ({known.Count})");
+            foreach (var f in known)
+            {
+                var def = f.Def;
+                string mot = def.FailsMot(f.severity) ? "  MOT FAIL" : def.AdvisesMot(f.severity) ? "  MOT advisory" : "";
+                Spec(def.Name, $"<color={UIFactory.Hex(f.severity >= 0.6f ? UIFactory.Bad : UIFactory.Warn)}>~{UIFactory.Money(CarRecords.RepairEstimate(car, f))}{mot}</color>");
+            }
             int repair = CarValueCalculator.RepairCost(car);
             UIFactory.Divider(tabArea);
             Spec("Estimated repair cost (all)", repair > 0 ? UIFactory.Money(repair) : "Nothing to repair");
@@ -253,31 +263,74 @@ namespace CarSales
 
         void Documents()
         {
+            CarParts.EnsureParts(car);
+            var d = car.documents;
+            var id = car.identity;
+            UIFactory.SectionTitle(tabArea, "Identity");
+            Spec("Registration", string.IsNullOrEmpty(id.plate) ? "-" : id.plate);
+            Spec("VIN", string.IsNullOrEmpty(id.vin) ? "-" : id.vin);
+            Spec("First registered", id.firstRegYear > 0 ? id.firstRegYear.ToString() : "-");
             UIFactory.SectionTitle(tabArea, "Paperwork");
-            UIFactory.EmptyState(tabArea, "Documents arrive with the paperwork update",
-                "Logbook (V5C), MOT certificate, service book, keys and history checks are part of V5 phase 5.");
+            Spec("Logbook (V5C)", d.v5cPresent ? $"Present  -  {d.keepers} previous keeper{(d.keepers == 1 ? "" : "s")}" :
+                                  d.v5cArrivesDay > 0 ? $"<color={UIFactory.Hex(UIFactory.Warn)}>Replacement arrives day {d.v5cArrivesDay}</color>" :
+                                  $"<color={UIFactory.Hex(UIFactory.Bad)}>MISSING (-25% value)</color>");
+            bool motOk = CarRecords.MotValid(car);
+            Spec("MOT", $"<color={UIFactory.Hex(motOk ? UIFactory.Good : UIFactory.Bad)}>{CarRecords.MotText(car)}</color>");
+            Spec("Service history", CarRecords.ServiceText(d) + (d.lastServiceKm > 0 ? $"  -  last at {d.lastServiceKm:N0} km" : ""));
+            Spec("Keys", d.keys >= 2 ? "2 keys" : d.keys == 1 ? $"<color={UIFactory.Hex(UIFactory.Warn)}>1 key</color>" : $"<color={UIFactory.Hex(UIFactory.Bad)}>No key - can't be driven</color>");
+
+            UIFactory.SectionTitle(tabArea, "MOT history");
+            if (d.motHistory.Count == 0) { Paragraph("No MOT tests yet.", 30f); return; }
+            foreach (var m in Enumerable.Reverse(d.motHistory).Take(8))
+            {
+                string extra = (m.fails.Count > 0 ? $"  <color={UIFactory.Hex(UIFactory.Bad)}>{string.Join(", ", m.fails)}</color>" : "") +
+                               (m.advisories.Count > 0 ? $"  <color={UIFactory.Hex(UIFactory.Warn)}>Advisory: {string.Join(", ", m.advisories)}</color>" : "");
+                var t = UIFactory.Text(tabArea, $"<b>{m.year}</b>   {(m.passed ? "PASS" : "FAIL")}   {m.mileage:N0} km{extra}", 15, UIFactory.TextMain, TextAlignmentOptions.TopLeft);
+                t.textWrappingMode = TextWrappingModes.Normal;
+                t.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
         }
 
         void History()
         {
-            UIFactory.SectionTitle(tabArea, "Your history with this car");
+            CarParts.EnsureParts(car);
+            var h = car.history;
+            UIFactory.SectionTitle(tabArea, "History check");
+            if (!h.checkedHistory)
+            {
+                Paragraph($"Write-offs, outstanding finance and mileage records are only known after a history check ({UIFactory.Money(InspectionEngine.HistoryCheckCost)})." +
+                          (h.clockingSuspected ? $"\n<color={UIFactory.Hex(UIFactory.Warn)}>You suspect the mileage is wrong.</color>" : ""), 60f);
+                var b = UIFactory.Btn(tabArea, $"Run a history check ({UIFactory.Money(InspectionEngine.HistoryCheckCost)})", UIFactory.Accent, () =>
+                {
+                    if (CarSalesServices.Workshop && CarSalesServices.Workshop.RunHistoryCheck(car) != null) ShowInternal(car);
+                }, 44f, 16f);
+                UIFactory.LE(b, h: 44, w: 360, flexW: 0);
+            }
+            else
+            {
+                foreach (var line in InspectionEngine.HistoryCheck(car.documents, h, car.mileage, h.checkedDay, null))
+                {
+                    bool bad = line.StartsWith("WRITE-OFF") || line.StartsWith("OUTSTANDING") || line.StartsWith("MILEAGE");
+                    var t = UIFactory.Text(tabArea, (bad ? "!  " : "-  ") + line, 16, bad ? UIFactory.Bad : UIFactory.TextMain, TextAlignmentOptions.Left, bad);
+                    t.textWrappingMode = TextWrappingModes.Normal;
+                    t.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                }
+                Paragraph($"Checked on day {h.checkedDay}.", 24f);
+            }
+
+            UIFactory.SectionTitle(tabArea, "Your records for this car");
             var ledger = CarSalesServices.Economy ? CarSalesServices.Economy.Ledger : null;
             var entries = ledger != null ? ledger.ForRef(car.instanceId) : new List<Transaction>();
-            if (entries.Count == 0)
-            {
-                UIFactory.EmptyState(tabArea, mode == Mode.Owned ? "No records kept for this car" : "No history yet",
-                    mode == Mode.Owned ? "Records older than the ledger's history are summarised in Accounts." : "Buy the car to start its file. Previous owners and history checks come in phase 5.");
-                return;
-            }
+            if (entries.Count == 0) { Paragraph(mode == Mode.Owned ? "No records kept (older ones are summarised in Accounts)." : "Nothing yet - buy the car to start its file.", 30f); return; }
             foreach (var e in entries)
             {
-                var row = UIFactory.HRow(tabArea, 34, 12, "Entry", false);
-                var when = UIFactory.Text(row, $"Day {e.day}  {Mathf.FloorToInt(e.hour):00}:{Mathf.FloorToInt((e.hour % 1f) * 60f):00}", 16, UIFactory.TextDim, TextAlignmentOptions.Left);
-                UIFactory.LE(when, w: 140, flexW: 0);
-                var what = UIFactory.Text(row, string.IsNullOrEmpty(e.memo) ? TxCategories.DisplayName(e.category) : e.memo, 16, UIFactory.TextMain, TextAlignmentOptions.Left);
+                var row = UIFactory.HRow(tabArea, 30, 12, "Entry", false);
+                var when = UIFactory.Text(row, $"Day {e.day}  {Mathf.FloorToInt(e.hour):00}:{Mathf.FloorToInt((e.hour % 1f) * 60f):00}", 15, UIFactory.TextDim, TextAlignmentOptions.Left);
+                UIFactory.LE(when, w: 130, flexW: 0);
+                var what = UIFactory.Text(row, string.IsNullOrEmpty(e.memo) ? TxCategories.DisplayName(e.category) : e.memo, 15, UIFactory.TextMain, TextAlignmentOptions.Left);
                 UIFactory.LE(what, flexW: 1);
-                var amt = UIFactory.Text(row, (e.amount > 0 ? "+" : "") + UIFactory.Money(e.amount), 16, e.amount >= 0 ? UIFactory.Good : UIFactory.Bad, TextAlignmentOptions.Right, true);
-                UIFactory.LE(amt, w: 140, flexW: 0);
+                var amt = UIFactory.Text(row, (e.amount > 0 ? "+" : "") + UIFactory.Money(e.amount), 15, e.amount >= 0 ? UIFactory.Good : UIFactory.Bad, TextAlignmentOptions.Right, true);
+                UIFactory.LE(amt, w: 130, flexW: 0);
             }
         }
 
@@ -353,16 +406,6 @@ namespace CarSales
                             : "Sellers may exaggerate. Inspect before you buy, or upgrade to a mechanic for true condition.", 60f);
         }
 
-        void Inspect()
-        {
-            if (!car.inspected && mode != Mode.Owned)
-            {
-                int fee = CarValueCalculator.InspectionCost();
-                if (fee > 0 && !CarSalesServices.Economy.TrySpend(fee, TxCategory.Inspection, $"Inspection - {car.Name}", car.instanceId)) { CarSalesServices.UI.Error("Not enough money for an inspection."); return; }
-                if (fee > 0) CarSalesServices.DayCycle.RegisterExpense(fee);
-                car.inspected = true;
-            }
-            CarSalesServices.UI.inspection.Show(car, mode == Mode.Owned ? physical : null);
-        }
+        void Inspect() => CarSalesServices.UI.inspection.Show(car, physical);
     }
 }

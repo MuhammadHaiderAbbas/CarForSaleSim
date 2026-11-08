@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-3 are merged; Phase 4 (4a + 4b) code is written (see [Phase 4 status](#phase-4-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-4 are merged; Phase 5a code is written (see [Phase 5 status](#phase-5-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -967,6 +967,31 @@ shapes, but the first real download is the test. Report any "Unexpected answer" 
 5. Vehicle file tabs: Condition, Documents, History, Costs.
 **Done when:** a car bought "blind" can be inspected step by step, revealing faults per method; repairs consume
 parts + time + money and change value; an MOT can pass/fail with advisories; a history check can expose a Cat N.
+
+#### Phase 5 status
+**Phase 5a: code complete** (214 EditMode tests, compile-checked; not run in Unity). All four "done when" points are covered:
+
+| Item | Built |
+|---|---|
+| Faults | `Sim/Faults/FaultCatalog.cs`: 40 faults on real components, each with symptom, OBD code, which methods find it, MOT effect, value impact and daily progression. Generated from component wear (worn parts get far more faults); a fault caps its component's health; faults get worse every night (known ones warn you when they turn severe). |
+| Knowledge & inspection | `Sim/Inspection/Inspection.cs`: walk-around, interior, under the bonnet, OBD scanner (buy one, $300), road test (drive 1 km; mild faults rarely noticed), lift ($40, your cars), history check ($15), full garage inspection ($120, also for online listings). Skill (grows with practice) raises the chance to notice. Only found faults are shown or priced by a buyer who hasn't checked. Interior check can spot clocking. |
+| Documents & history | `Sim/Documents/VehicleRecords.cs`: VIN with check digit, UK plate with age identifier, logbook (missing 8%: -25%), keepers, keys (0 keys: can't drive), MOT expiry + history, service history (+6% full, -5% none), write-offs Cat N (-20%) / Cat S (-35%), outstanding finance (the lender may repossess the car: 4%/day until settled), clocked mileage (MOT records show it). |
+| MOT | `MotTest`: tyre tread (1.6 mm), pads, discs, lights, shocks, bushes, steering, emissions, glass and MOT-relevant faults → pass/fail + advisories; revealed faults become known; a pass gives 365 days. |
+| Workshop | `Sim/Workshop/Workshop.cs`: 35 parts in Used / Aftermarket / OEM (used 50-80% health, aftermarket ~88%, OEM 100%), 3 suppliers (motor factor today, online -15% next morning, breaker's yard used parts with daily stock), 35 repair jobs covering every component, price scaled by car class. `WorkshopManager`: storage, orders, garage jobs ($65/h, progress with the clock), do-it-yourself (time passes, small botch risk), MOT, logbook ($25, 5 days), locksmith ($150), finance settlement. Saved as module `workshop` v1. |
+| Value | `CarValueCalculator.MarketValue` × faults × paperwork × history (`CarRecords.ValueMultiplier`); marketplace prices use only what the seller shows, so hidden problems are your loss. |
+| UI | Inspection checklist + findings (symptom, code, MOT, repair estimate); Workshop app on the desktop (Repairs, Parts, Jobs, MOT & paperwork); vehicle file **Documents** (plate, VIN, logbook, MOT, service, keys, MOT history) and **History** (history check, your records) tabs, faults in **Condition**; marketplace badges *No logbook* / *MOT expired*; road-test findings as toasts. |
+
+**Phase 5b (next):** workstations in your own dealership (mechanical bay with lift, tyre machine, MOT bay) as world sites,
+the Workshop Board (kanban), first-person Inspection Mode with sockets (bonnet, doors, wheels) and the hold-to-unbolt
+DIY interaction, staff doing the work, parts shop counter in the town.
+
+**Phase 5a play-test checklist:**
+1. New game (or load: older cars get records the first time they're seen).
+2. Used Car Market: open a car → Inspect: walk-around, interior, under the bonnet; see findings appear. History check: look for Cat N.
+3. Online listing: only the history check and full inspection are possible.
+4. Buy a car, drive it 1 km: a road-test toast. Computer → Workshop: buy the scanner, order parts, garage vs. do it yourself; wait for the job.
+5. Workshop → MOT & paperwork: run an MOT on an old car (fail with tyres/pads?), fix, re-test.
+6. Vehicle file → Documents / History / Costs: the repair costs add up, the value changes.
 
 ### Phase 6 — Auction ecosystem (L)
 1. AuctionEngine (venues, events, lots, reports, buyer accounts, invoices, fees, storage, collection).

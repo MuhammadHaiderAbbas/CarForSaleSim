@@ -30,6 +30,10 @@ namespace CarSales.Foundation
         Rewards = 18,
         Debug = 19,
         Adjustment = 20,
+        Parts = 21,          // spare parts (workshop)
+        Labour = 22,         // garage labour
+        Paperwork = 23,      // MOT, logbook, history checks, keys
+        FinanceSettlement = 24,
     }
 
     public static class TxCategories
@@ -60,6 +64,10 @@ namespace CarSales.Foundation
                 case TxCategory.Rewards: return "Goal rewards";
                 case TxCategory.Debug: return "Debug";
                 case TxCategory.Adjustment: return "Adjustments";
+                case TxCategory.Parts: return "Spare parts";
+                case TxCategory.Labour: return "Garage labour";
+                case TxCategory.Paperwork: return "MOT & paperwork";
+                case TxCategory.FinanceSettlement: return "Finance settlements";
                 default: return "Other";
             }
         }

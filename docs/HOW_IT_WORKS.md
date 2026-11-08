@@ -397,3 +397,14 @@ Won cars appear in the auction car park — drive or tow them home.
   `CarSalesWorldBuilder.cs`); `Editor/CarSalesPlaceholders.cs` fits the chosen prefabs (`Data/PlaceholderReplacements.asset`).
 - **Save thumbnails:** `SaveThumbnail.Capture(Camera.main, store.ThumbnailFile(slot))` after each save.
 
+## 16. Inspection, faults, documents, workshop (Phase 5)
+- **Data per car** (`CarInstance`): `identity`, `documents`, `history`, `faults`, `knowledge`. `CarRecords.Ensure` fills
+  them once (seeded from the car's id) and is called from `CarParts.EnsureParts`/`Randomize`, so old saves upgrade themselves.
+- **Rules** live in `Sim/` (engine-free, tested): `FaultCatalog`/`FaultModel`, `InspectionEngine`, `MotTest`,
+  `VehicleRecords` (VIN, plate, generation, value multiplier), `WorkshopCatalog` (parts, jobs, prices, results).
+- **Knowledge, not truth:** a fault's `known` flag; `history.checkedHistory`. `MarketValue(car, useReported: true)`
+  only counts known problems. The UI lists only known faults.
+- **WorkshopManager** (added by `CarSalesBootstrap` if missing): inspections, orders, garage jobs (advance with
+  `DayCycle.OnTimeChanged`), DIY, MOT, paperwork, nightly fault progression, deliveries, repossession. Saved as module `workshop`.
+- **Money:** new ledger categories Parts, Labour, Paperwork, Finance settlements.
+

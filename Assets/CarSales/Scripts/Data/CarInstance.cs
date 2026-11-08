@@ -35,6 +35,13 @@ namespace CarSales
         // v5: every individual component (engine internals, pads, each tyre, each panel...). See CarSales.Sim.ComponentCatalog.
         public List<ComponentState> components = new List<ComponentState>();
 
+        // v5 phase 5: identity, paperwork, past, faults and what the player knows (see CarRecords).
+        public VehicleIdentity identity = new VehicleIdentity();
+        public DocumentSet documents = new DocumentSet();
+        public HistoryRecord history = new HistoryRecord();
+        public List<FaultInstance> faults = new List<FaultInstance>();
+        public VehicleKnowledge knowledge = new VehicleKnowledge();
+
         /// <summary>Display name of the car model (not saved).</summary>
         public string Name => CarSalesServices.Database && CarSalesServices.Database.Get(carId) ? CarSalesServices.Database.Get(carId).displayName : carId;
     }

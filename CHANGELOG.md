@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.0-dev — Phase 5a "Inspection, workshop, documents"
+- **Hidden faults**: 40 kinds (misfires, head gaskets, slipping clutches, worn pads, rust, smoker's cars...). Worn cars
+  have more; they get worse every day and lower the value.
+- **Inspect step by step**: walk-around, interior, under the bonnet, OBD scanner, road test (drive 1 km), lift,
+  history check, or pay for a full inspection. Each finds different faults; you get better with practice.
+- **Paperwork & history**: plate and VIN, logbook, keys, MOT, service history; history check for write-offs (Cat N/S),
+  outstanding finance (the lender can take the car!) and clocked mileage.
+- **MOT tests** with fails and advisories.
+- **Workshop app**: parts in three qualities from three suppliers, repair jobs at the garage or do it yourself,
+  jobs in progress, MOT and paperwork (replacement logbook, locksmith, settle finance).
+- Vehicle file **Documents** and **History** tabs are live; marketplace cards show *No logbook* / *MOT expired*.
+- 21 new tests (214 total).
+
 ## v5.0-dev — Phase 4b "Screens"
 - **HUD** is minimal: clock and shop status, cash (with +/- pops), slim GPS, smaller minimap; speed/gear/fuel only
   while driving; prompts show their key; **H** shows the controls. The HUD hides while menus are open.

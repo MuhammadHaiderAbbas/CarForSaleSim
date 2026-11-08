@@ -23,6 +23,8 @@ namespace CarSales
             UIFactory.Place(badges, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(8f, -8f), new Vector2(240f, 24f));
             if (rating != DealRating.Fair && rating != DealRating.Unknown) UIFactory.Badge(badges, PriceRating.Label(rating), MarketplaceUI.DealColor(rating));
             if (verified) UIFactory.Badge(badges, "Verified", UIFactory.Good);
+            if (car.documents != null && car.documents.generated && !car.documents.v5cPresent) UIFactory.Badge(badges, "No logbook", UIFactory.Bad);
+            else if (!CarRecords.MotValid(car)) UIFactory.Badge(badges, "MOT expired", UIFactory.Warn);
             UIFactory.Spacer(badges, 0f, 1f);
 
             var name = UIFactory.Text(card.transform, $"{def.brand} {def.displayName}", 20, UIFactory.TextMain, TextAlignmentOptions.Left, true);

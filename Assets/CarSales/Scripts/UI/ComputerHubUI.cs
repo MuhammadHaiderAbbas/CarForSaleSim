@@ -23,6 +23,7 @@ namespace CarSales
         public StatsUI Stats { get; private set; }
         public RealEstateUI RealEstate { get; private set; }
         public AccountsPageUI Accounts { get; private set; }
+        public WorkshopPageUI Workshop { get; private set; }
 
         TextMeshProUGUI moneyText, titleText, clockText, taskClock, taskApp, todayText, goalText, mailText, unreadBadge;
         RectTransform content, appWindow, desktop;
@@ -57,6 +58,7 @@ namespace CarSales
             RealEstate = AddPage<RealEstateUI>("Real Estate");
             Stats = AddPage<StatsUI>("Statistics");
             Accounts = AddPage<AccountsPageUI>("Accounts");
+            Workshop = AddPage<WorkshopPageUI>("Workshop");
 
             BuildIcons();
         }
@@ -126,10 +128,10 @@ namespace CarSales
             Tile("Bank", "B", UIFactory.Personal, () => ShowPage(Bank), Bank);
             Tile("Accounts", "%", UIFactory.Home, () => ShowPage(Accounts), Accounts);
             Tile("Real Estate", "R", UIFactory.Special, () => ShowPage(RealEstate), RealEstate);
-            Tile("Upgrades", "+", UIFactory.Warn, () => ShowPage(Upgrades), Upgrades);
+            Tile("Upgrades", "+", UIFactory.Gold, () => ShowPage(Upgrades), Upgrades);
             Tile("Statistics", "#", UIFactory.AccentDark, () => ShowPage(Stats), Stats);
             Tile("Settings", "*", UIFactory.Neutral, () => CarSalesServices.UI.settings.Show());
-            Soon("Workshop", "W", 5);
+            Tile("Workshop", "W", UIFactory.Warn, () => ShowPage(Workshop));
             Soon("Customers", "C", 7);
             Soon("Staff", "T", 7);
             Soon("Marketing", "K", 7);
