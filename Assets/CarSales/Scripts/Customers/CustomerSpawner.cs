@@ -88,6 +88,8 @@ namespace CarSales
                 return;
             }
             var customer = Instantiate(customerPrefab, hit.position, point.rotation);
+            var look = AssetRegistry.RandomCustomerModel();
+            if (look) customer.UseAppearance(look);
             customer.Init(GenerateProfile(), this);
             active.Add(customer);
             CarSalesServices.PlaySfx(Sfx.DoorChime, 0.5f);

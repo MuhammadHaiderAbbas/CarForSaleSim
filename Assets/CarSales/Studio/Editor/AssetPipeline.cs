@@ -24,6 +24,7 @@ namespace CarSales.Studio.EditorTools
         public static void Ensure(string path)
         {
             if (AssetDatabase.IsValidFolder(path)) return;
+            if (Directory.Exists(path)) { AssetDatabase.ImportAsset(path); return; }   // made on disk (download): just import it
             string parent = Path.GetDirectoryName(path)?.Replace('\\', '/');
             if (!string.IsNullOrEmpty(parent)) Ensure(parent);
             AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
@@ -65,6 +66,13 @@ namespace CarSales.Studio.EditorTools
         public string fuelType = "Petrol";
         public string transmission = "Automatic";
 
+        // Character
+        public string idleClipPath = "", idleClipName = "", walkClipPath = "", walkClipName = "";
+        public bool useAsCustomer = true;
+
+        // Building
+        public BuildingFunction buildingFunction = BuildingFunction.Decorative;
+
         // Results of the last analysis (not edited by the user)
         [NonSerialized] public ModelStats stats;
         [NonSerialized] public Vector3 finalSize;
@@ -83,7 +91,7 @@ namespace CarSales.Studio.EditorTools
     }
 
     /// <summary>The import steps (spec §7.1): ingest, configure, analyse, normalise, materials, components, prefab, registry.</summary>
-    public static class AssetPipeline
+    public static partial class AssetPipeline
     {
         static readonly Regex PaintName = new Regex("(paint|body|carpaint|car_paint|exterior|shell|chassis)", RegexOptions.IgnoreCase);
         static readonly string[] TextureExtensions = { ".png", ".jpg", ".jpeg", ".tga", ".tif", ".tiff", ".psd", ".exr", ".bmp" };
@@ -134,6 +142,7 @@ namespace CarSales.Studio.EditorTools
             SetIf(mi.importAnimation, category == AssetCategory.Character, v => mi.importAnimation = v);
             SetIf(mi.importCameras, false, v => mi.importCameras = v);
             SetIf(mi.importLights, false, v => mi.importLights = v);
+            changed |= EnableMeshLods(mi, category);
             if (changed) mi.SaveAndReimport();
         }
 
@@ -407,11 +416,12 @@ namespace CarSales.Studio.EditorTools
                 switch (job.category)
                 {
                     case AssetCategory.Vehicle: SetUpVehicle(job, root, inst); break;
-                    case AssetCategory.Building:
+                    case AssetCategory.Building: SetUpStatic(root); SetUpBuilding(job, root); break;
                     case AssetCategory.Environment: SetUpStatic(root); break;
-                    case AssetCategory.Character: SetUpCharacter(root); break;
+                    case AssetCategory.Character: SetUpCharacter(root); SetUpAnimation(job, root); break;
                     default: SetUpProp(root); break;
                 }
+                ApplyLodGroup(root);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
                 if (record == null)
@@ -428,6 +438,7 @@ namespace CarSales.Studio.EditorTools
                 record.importedAtUtc = DateTime.UtcNow.ToString("o");
                 record.jobJson = JsonUtility.ToJson(job);   // to reopen the job later
                 if (job.category == AssetCategory.Vehicle) record.carDefinition = CreateCarDefinition(job, prefab);
+                record.useInGame = job.category != AssetCategory.Character || job.useAsCustomer;
                 EditorUtility.SetDirty(registry);
                 AssetDatabase.SaveAssets();
                 return record;

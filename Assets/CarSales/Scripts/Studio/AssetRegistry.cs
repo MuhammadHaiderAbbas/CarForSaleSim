@@ -16,6 +16,8 @@ namespace CarSales
         public string sourcePath = "";         // model file inside Assets/CarSales/Art/.../Source
         public GameObject prefab;              // the game-ready prefab
         public CarDefinition carDefinition;    // vehicles only
+        public UnityEngine.Object mainAsset;   // materials and skies (no prefab)
+        public bool useInGame = true;          // characters: appear as customers
         public LicenceInfo licence = new LicenceInfo();
         public string importedAtUtc = "";
         public int version = 1;
@@ -37,6 +39,24 @@ namespace CarSales
         public static AssetRegistry Load() => Resources.Load<AssetRegistry>(ResourceName);
 
         public AssetRecord Find(string id) => records.Find(r => r != null && r.id == id);
+
+        static List<GameObject> customerModels;
+
+        /// <summary>A random imported character to use as a customer, or null (keeps the built-in capsule look).</summary>
+        public static GameObject RandomCustomerModel()
+        {
+            if (customerModels == null)
+            {
+                var reg = Load();
+                customerModels = reg ? reg.records.Where(r => r != null && r.category == AssetCategory.Character && r.useInGame && r.prefab)
+                                                  .Select(r => r.prefab).ToList()
+                                     : new List<GameObject>();
+            }
+            return customerModels.Count == 0 ? null : customerModels[UnityEngine.Random.Range(0, customerModels.Count)];
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetCache() => customerModels = null;
 
         /// <summary>The credits text for all imported assets.</summary>
         public string CreditsText(string gameName = "Car For Sale Simulator") =>

@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-2 are merged; Phase 3a code is written (see [Phase 3 status](#phase-3-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-3a are merged; Phase 3b code is written (see [Phase 3 status](#phase-3-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -877,11 +877,22 @@ sources; the vehicle drives, the building works as a site, the character walks a
 | 4 | Basic templates: Building/Environment (mesh colliders, static), Prop/Interior (box collider), Character (capsule + Animator). |
 | 6 | Validation checklist (budgets from §11, size range, wheels, paint, licence) blocks Approve on errors; interactive previews of the source and the result; versioned prefabs with **Roll back** (same GUID, so references survive) and **Remove**. |
 
-**Phase 3b (next):** Sketchfab connector (search + download with your API token) and Poly Haven (HDRIs/textures);
-building → working Site (entrances, NavMesh, dealership/workshop function, with World Builder in Phase 8);
-characters as customers (humanoid avatar check, animator controller, NavMeshAgent); LOD generation; a preview
-scene with a scale reference. Real models only come from you - the audit's acceptance needs 1 car, 1 building,
-1 character and 1 prop.
+**Phase 3b: code complete** (187 EditMode tests passing, compile-checked; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Sketchfab | Asset Studio → **Online** tab: search (downloadable models, optional "cars & vehicles" category) with thumbnails, author and licence verdict; *Download & set up* with your API token (stored in EditorPrefs on your computer, never in the project). GLB preferred, glTF zip as fallback; the licence record is filled in from Sketchfab. GLB/glTF needs the glTFast package (button in the Import tab). |
+| Poly Haven | Online tab: CC0 skies (HDRI → Skybox/Panoramic material, *Use as sky* in the Library) and materials (maps → URP Lit, roughness packed into metallic-smoothness, normal maps flagged). "Powered by Poly Haven" credit and an app User-Agent, as their API terms ask. |
+| Characters | Humanoid check and *Make humanoid*; idle/walk clips found by name in the model and next to it (Mixamo), looped, Animator Controller with a `Speed` parameter. *Use as a customer*: customers spawn with a random imported character instead of the capsule (`AssetRegistry.RandomCustomerModel`, `CustomerAI.UseAppearance`). |
+| Buildings | `BuildingInfo` (function: dealership, workshop, car wash, ... and an Entrance marker). They become working sites with the World Builder (Phase 8). |
+| LODs | Models that ship with `_LOD0/_LOD1...` meshes get a LODGroup; on Unity versions with import-time mesh LOD generation it is switched on for props, buildings and environment (by reflection, ignored where it doesn't exist). |
+| Preview scene | *Preview in scene*: a new unsaved scene with the asset, a ground grid and a 1.80 m person for scale. |
+
+**Not verified here:** this environment can't reach sketchfab.com or api.polyhaven.com. Poly Haven's formats were
+checked against its published API spec; Sketchfab's licence and download formats are handled in both documented
+shapes, but the first real download is the test. Report any "Unexpected answer" message.
+
+**Still open for the Phase 3 acceptance:** importing your real 1 car, 1 building, 1 character and 1 prop.
 
 **Phase 3 play-test checklist:**
 1. Download a free CC0 or CC BY car (e.g. from Sketchfab as FBX or GLB) and note the author/licence.
@@ -891,6 +902,10 @@ scene with a scale reference. Real models only come from you - the audit's accep
 5. *Fix materials for URP* if it looks pink; *Approve*; *Drive on test track*.
 6. Back in the town, the car appears for sale (marketplace / used lot) and can be painted, bought, driven and dented.
 7. *Licences* tab → *Write CREDITS.txt*.
+8. Online tab: paste your Sketchfab API token, search "car", *Download & set up* a CC BY model.
+9. Online → Poly Haven: download a sky and *Use as sky* (Library tab); download an asphalt material.
+10. Import a character (e.g. from Mixamo with idle + walk), *Make humanoid*, *Find idle/walk*, Approve with
+    *Use as a customer*; in the town, customers now look like it and walk.
 ### Phase 4 — UI design system & visual pass (L)
 1. `UITheme` + component library; screen stack, transitions, focus navigation, UI scale.
 2. Redesign HUD, main menu (save slots), dealer computer desktop, vehicle file, marketplace, map.

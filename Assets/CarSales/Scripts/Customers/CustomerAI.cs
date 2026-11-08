@@ -28,6 +28,25 @@ namespace CarSales
 
         void Awake() => agent = GetComponent<NavMeshAgent>();
 
+        /// <summary>
+        /// Replaces the built-in capsule look with an imported character (Asset Studio). The capsule's collider stays
+        /// for interaction; the character's Animator gets the "Speed" parameter.
+        /// </summary>
+        public void UseAppearance(GameObject characterPrefab)
+        {
+            if (!characterPrefab) return;
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+                if (!bubble || !r.transform.IsChildOf(bubble.transform)) r.enabled = false;
+            var look = Instantiate(characterPrefab, transform);
+            look.transform.localPosition = Vector3.zero;
+            look.transform.localRotation = Quaternion.identity;
+            foreach (var c in look.GetComponentsInChildren<Collider>(true)) Destroy(c);
+            UIFactory.SetLayer(look, gameObject.layer);
+            animator = look.GetComponentInChildren<Animator>();
+            if (animator) animator.applyRootMotion = false;
+            bodyRenderer = null;   // keep the character's own clothes
+        }
+
         public void Init(CustomerProfile profile, CustomerSpawner owner)
         {
             Profile = profile;

@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.0-dev — Phase 3b "Online sources & characters"
+- Asset Studio **Online** tab:
+  - **Sketchfab**: search downloadable models (thumbnails, author, licence and whether it can ship), then
+    *Download & set up* with your own API token. The licence record is filled in automatically.
+  - **Poly Haven** (CC0): skies (HDRI → sky material, *Use as sky*) and materials (URP Lit with normal,
+    AO and metallic-smoothness maps).
+- **Characters as customers**: humanoid setup, idle/walk animations found automatically (e.g. Mixamo),
+  an animator is generated; customers spawn looking like your imported characters.
+- **Buildings** get a function and an Entrance marker (working sites come with the World Builder).
+- **LODs** from `_LOD0/_LOD1` meshes; import-time mesh LODs where Unity supports them.
+- **Preview in scene** with a 1.80 m person for scale.
+- 30 new tests (187 total).
+
 ## v5.0-dev — Phase 3a "Asset Studio"
 - **Asset Studio** (*Tools → Car Sales → Asset Studio*): bring external models into the game.
   - Import from a file, drag & drop, the Drop folder (`Assets/CarSales/Art/_Drop`) or any model in the project.

@@ -1,7 +1,7 @@
 {
     "name": "CarSales.Studio.Core",
     "rootNamespace": "CarSales.Studio",
-    "references": [],
+    "references": [ "CarSales.Foundation" ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
