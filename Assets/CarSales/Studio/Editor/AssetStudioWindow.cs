@@ -16,8 +16,8 @@ namespace CarSales.Studio.EditorTools
     /// </summary>
     public class AssetStudioWindow : EditorWindow
     {
-        enum Tab { Import, Library, Licences }
-        static readonly string[] TabNames = { "Import", "Library", "Licences" };
+        enum Tab { Import, Online, Library, Licences }
+        static readonly string[] TabNames = { "Import", "Online", "Library", "Licences" };
         static readonly int[] Yaws = { 0, 90, 180, 270 };
         static readonly string[] YawNames = { "0°", "90°", "180°", "270°" };
         static readonly string[] Corners = { "Front left", "Front right", "Rear left", "Rear right" };
@@ -30,6 +30,7 @@ namespace CarSales.Studio.EditorTools
         Editor preview;
         Object previewTarget;
         string status = "";
+        [SerializeField] OnlinePanel online = new OnlinePanel();
 
         [MenuItem("Tools/Car Sales/Asset Studio", priority = 29)]
         public static void Open() => GetWindow<AssetStudioWindow>("Asset Studio").minSize = new Vector2(760f, 560f);
@@ -42,6 +43,21 @@ namespace CarSales.Studio.EditorTools
             w.StartJob(modelPath, AssetCategory.Vehicle);
         }
 
+        void OnEnable()
+        {
+            if (online == null) online = new OnlinePanel();
+            online.SetStatus = s => { status = s; Repaint(); };
+            online.Repaint = Repaint;
+            online.OnModelDownloaded = (path, category, licence) =>
+            {
+                tab = Tab.Import;
+                StartJob(path, category);
+                if (job != null) { job.licence = licence; AssetPipeline.Analyse(job, false); }
+                status = "Downloaded from Sketchfab. Check the steps below, then Approve.";
+                Repaint();
+            };
+        }
+
         void OnDisable() { if (preview) DestroyImmediate(preview); }
 
         void OnGUI()
@@ -52,6 +68,7 @@ namespace CarSales.Studio.EditorTools
             switch (tab)
             {
                 case Tab.Import: DrawImport(); break;
+                case Tab.Online: online.Draw(); break;
                 case Tab.Library: DrawLibrary(); break;
                 default: DrawLicences(); break;
             }
@@ -117,6 +134,14 @@ namespace CarSales.Studio.EditorTools
             EditorGUILayout.LabelField("Final size", $"width {job.finalSize.x:0.00} m  ×  height {job.finalSize.y:0.00} m  ×  length {job.finalSize.z:0.00} m");
 
             if (job.category == AssetCategory.Vehicle) DrawVehicle();
+            if (job.category == AssetCategory.Character) DrawCharacter();
+            if (job.category == AssetCategory.Building)
+            {
+                Section("5. Building");
+                job.buildingFunction = (BuildingFunction)EditorGUILayout.EnumPopup("Used as", job.buildingFunction);
+                EditorGUILayout.HelpBox("Approve adds an Entrance marker in front of the building (move it to the door). The World Builder " +
+                                        "(Phase 8) turns buildings into working dealerships, workshops and so on.", UnityEditor.MessageType.None);
+            }
 
             Section("Preview (source model)");
             DrawPreview(job.Model, 260f);
@@ -143,6 +168,7 @@ namespace CarSales.Studio.EditorTools
                 {
                     if (GUILayout.Button("Show prefab")) EditorGUIUtility.PingObject(lastApproved.prefab);
                     if (lastApproved.carDefinition && GUILayout.Button("Drive on test track")) VehicleStudioWindow.DriveOnTestTrack(lastApproved.carDefinition);
+                    if (GUILayout.Button("Preview in scene (scale reference)")) AssetPipeline.OpenPreviewScene(lastApproved.prefab);
                 }
                 Section("Result");
                 DrawPreview(lastApproved.prefab, 220f);
@@ -185,6 +211,38 @@ namespace CarSales.Studio.EditorTools
             job.transmission = EditorGUILayout.TextField("Transmission", job.transmission);
             EditorGUILayout.HelpBox("Real brand names and logos are trademarks: use a fictional brand and remove badges from the model.", UnityEditor.MessageType.None);
             if (EditorGUI.EndChangeCheck()) AssetPipeline.Analyse(job, false);
+        }
+
+        void DrawCharacter()
+        {
+            Section("5. Character");
+            bool human = AssetPipeline.IsHumanoid(job.modelPath);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Rig", human ? "Humanoid" : "Not humanoid");
+                if (!human && GUILayout.Button("Make humanoid", GUILayout.Width(120))) { AssetPipeline.MakeHumanoid(job.modelPath); AssetPipeline.Analyse(job, false); }
+            }
+            if (!human) EditorGUILayout.HelpBox("Humanoid rigs can share animations (e.g. Mixamo idle/walk). Without it, use clips made for this exact model.", UnityEditor.MessageType.None);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Animations", EditorStyles.boldLabel);
+                if (GUILayout.Button("Find idle/walk", GUILayout.Width(110))) { job.idleClipName = job.walkClipName = ""; AssetPipeline.FindClips(job); }
+            }
+            ClipField("Idle", ref job.idleClipPath, ref job.idleClipName);
+            ClipField("Walk", ref job.walkClipPath, ref job.walkClipName);
+            if (string.IsNullOrEmpty(job.walkClipName))
+                EditorGUILayout.HelpBox("No walk animation: customers would slide. Free humanoid animations: mixamo.com (download 'FBX for Unity', " +
+                                        "put the files next to the model, then 'Find idle/walk').", UnityEditor.MessageType.Warning);
+            job.useAsCustomer = EditorGUILayout.Toggle("Use as a customer", job.useAsCustomer);
+        }
+
+        void ClipField(string label, ref string path, ref string name)
+        {
+            var clip = AssetPipeline.LoadClip(path, name);
+            var picked = (AnimationClip)EditorGUILayout.ObjectField(label, clip, typeof(AnimationClip), false);
+            if (picked == clip) return;
+            path = picked ? AssetDatabase.GetAssetPath(picked) : "";
+            name = picked ? picked.name : "";
         }
 
         System.Collections.Generic.IEnumerable<string> ParentPaths() =>
@@ -265,6 +323,7 @@ namespace CarSales.Studio.EditorTools
                 return;
             }
             job = new ImportJob { modelPath = assetPath, category = category, displayName = Path.GetFileNameWithoutExtension(assetPath) };
+            if (category == AssetCategory.Character) AssetPipeline.FindClips(job);
             var existing = StudioPaths.Registry().records.FirstOrDefault(r => r.sourcePath == assetPath && !string.IsNullOrEmpty(r.jobJson));
             if (existing != null)
             {
@@ -321,8 +380,20 @@ namespace CarSales.Studio.EditorTools
                 {
                     EditorGUILayout.LabelField($"{r.displayName}  ({r.category}, v{r.version})", EditorStyles.boldLabel, GUILayout.Width(280));
                     EditorGUILayout.LabelField(LicencePolicy.DisplayName(r.licence.licence) + (v.BlocksRelease ? "  ⚠" : ""), GUILayout.Width(190));
-                    if (GUILayout.Button("Show", GUILayout.Width(50)) && r.prefab) EditorGUIUtility.PingObject(r.prefab);
-                    if (GUILayout.Button("Edit", GUILayout.Width(50))) { tab = Tab.Import; StartJob(r.sourcePath, r.category); }
+                    if (GUILayout.Button("Show", GUILayout.Width(50))) EditorGUIUtility.PingObject(r.prefab ? (Object)r.prefab : r.mainAsset);
+                    if (r.category == AssetCategory.Sky)
+                    {
+                        if (GUILayout.Button("Use as sky", GUILayout.Width(80)) && r.mainAsset is Material sky)
+                        {
+                            AssetPipeline.UseAsSky(sky);
+                            status = $"'{r.displayName}' is the sky of the open scene (save the scene to keep it; Build Everything regenerates scenes).";
+                        }
+                    }
+                    else if (r.prefab)
+                    {
+                        if (GUILayout.Button("Edit", GUILayout.Width(50))) { tab = Tab.Import; StartJob(r.sourcePath, r.category); }
+                        if (GUILayout.Button("Preview", GUILayout.Width(60))) AssetPipeline.OpenPreviewScene(r.prefab);
+                    }
                     using (new EditorGUI.DisabledScope(AssetPipeline.LatestHistory(r) == null))
                         if (GUILayout.Button("Roll back", GUILayout.Width(70)) && AssetPipeline.Rollback(r)) status = $"{r.displayName} is back to version {r.version}.";
                     if (GUILayout.Button("Remove", GUILayout.Width(65)) &&

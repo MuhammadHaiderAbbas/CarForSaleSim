@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 namespace CarSales.Studio
 {
     /// <summary>What an imported asset is used for. Saved as numbers: only add new values at the end.</summary>
-    public enum AssetCategory { Vehicle = 0, Building = 1, Prop = 2, Character = 3, Interior = 4, Environment = 5 }
+    public enum AssetCategory { Vehicle = 0, Building = 1, Prop = 2, Character = 3, Interior = 4, Environment = 5, Material = 6, Sky = 7 }
 
     public enum Axis { X, Y, Z }
 

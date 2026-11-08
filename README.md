@@ -22,6 +22,8 @@ Phase 3 adds the **Asset Studio** (*Tools → Car Sales → Asset Studio*): impo
 characters (FBX, OBJ, GLB/glTF...), fix their scale and materials, set up wheels and paint, record their licence, and
 approve them into the game. Imported cars go on sale and can be driven. Release builds refuse assets whose licence
 doesn't allow a commercial game. **If this repository is public, don't commit paid assets.**
+Its **Online** tab searches and downloads Sketchfab models (with your own API token) and Poly Haven skies and
+materials; imported characters can walk around as customers.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
