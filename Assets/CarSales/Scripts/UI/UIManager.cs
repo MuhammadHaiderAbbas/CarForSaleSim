@@ -31,6 +31,7 @@ namespace CarSales
         public AuctionUI auction;
         public VehicleDetailsUI vehicleDetails;
         public InspectionUI inspection;
+        public PartsUI parts;
         public PurchaseConfirmUI purchaseConfirm;
         public CarMenuUI carMenu;
         public GarageUI garage;
@@ -70,6 +71,7 @@ namespace CarSales
             realEstate = computerHub.RealEstate;
             vehicleDetails = Create<VehicleDetailsUI>("VehicleDetails");
             inspection = Create<InspectionUI>("Inspection");
+            parts = Create<PartsUI>("Parts");
             purchaseConfirm = Create<PurchaseConfirmUI>("PurchaseConfirm");
             carMenu = Create<CarMenuUI>("CarMenu");
             garage = Create<GarageUI>("Garage");

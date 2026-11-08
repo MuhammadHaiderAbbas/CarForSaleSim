@@ -8,12 +8,12 @@ namespace CarSales
     public class SettingsUI : UIPanel
     {
         Slider sensitivity, volume;
-        TextMeshProUGUI sensitivityLabel, volumeLabel, drivingLabel, absLabel, tcsLabel, escLabel;
+        TextMeshProUGUI sensitivityLabel, volumeLabel, drivingLabel, gearboxLabel, absLabel, tcsLabel, escLabel;
         public GameObject showOnBackInMenu;
 
         public override void Build()
         {
-            var body = UIFactory.Window(Root, "Settings", new Vector2(720f, 640f), Back);
+            var body = UIFactory.Window(Root, "Settings", new Vector2(720f, 710f), Back);
             UIFactory.Vertical(body, 0, 12f);
             sensitivityLabel = UIFactory.Text(body, "", 21, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             sensitivity = UIFactory.MakeSlider(body, UIFactory.Accent, 32f);
@@ -32,6 +32,8 @@ namespace CarSales
                 GameSettings.Driving = GameSettings.Driving == DrivingModel.Realistic ? DrivingModel.Arcade : DrivingModel.Realistic;
                 UpdateLabels();
             }, out drivingLabel, 52f, 19f);
+            UIFactory.Btn(body, "", UIFactory.AccentDark, () => { GameSettings.ManualGearbox = !GameSettings.ManualGearbox; UpdateLabels(); },
+                          out gearboxLabel, 52f, 19f);
             var assists = UIFactory.HRow(body, 52f, 10f);
             UIFactory.Btn(assists, "", UIFactory.Neutral, () => { GameSettings.Abs = !GameSettings.Abs; UpdateLabels(); }, out absLabel, 52f, 18f);
             UIFactory.Btn(assists, "", UIFactory.Neutral, () => { GameSettings.TractionControl = !GameSettings.TractionControl; UpdateLabels(); }, out tcsLabel, 52f, 18f);
@@ -69,6 +71,7 @@ namespace CarSales
             volumeLabel.text = $"Volume: {GameSettings.Volume * 100f:0}%";
             if (!drivingLabel) return;
             drivingLabel.text = GameSettings.Driving == DrivingModel.Realistic ? "Physics: REALISTIC (wheels, gearbox, weight)" : "Physics: ARCADE (simple)";
+            gearboxLabel.text = GameSettings.ManualGearbox ? "Gearbox: MANUAL (Left Shift up, Left Ctrl down)" : "Gearbox: AUTOMATIC";
             absLabel.text = "ABS: " + (GameSettings.Abs ? "ON" : "OFF");
             tcsLabel.text = "Traction control: " + (GameSettings.TractionControl ? "ON" : "OFF");
             escLabel.text = "Stability: " + (GameSettings.StabilityControl ? "ON" : "OFF");

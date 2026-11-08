@@ -33,6 +33,8 @@ namespace CarSales
 
         public InputAction MoveAction { get; set; }
         public InputAction BrakeAction { get; set; }
+        public InputAction GearUpAction { get; set; }
+        public InputAction GearDownAction { get; set; }
         public bool OutOfFuel { get; set; }
         public event Action<VehicleImpact> OnImpact;
 
@@ -74,7 +76,7 @@ namespace CarSales
             var c = root.AddComponent<WheelVehicleController>();
             c.Profile = profile;
             c.Effects = effects;
-            c.Powertrain = new Powertrain(profile) { PowerFactor = effects.Power };
+            c.Powertrain = new Powertrain(profile) { PowerFactor = effects.Power, Manual = GameSettings.ManualGearbox };
             c.Build(model);
             return c;
         }
@@ -288,7 +290,8 @@ namespace CarSales
 
             Vector2 input = MoveAction != null ? MoveAction.ReadValue<Vector2>() : Vector2.zero;
             Handbrake = BrakeAction != null && BrakeAction.IsPressed();
-            var cmd = DriveInput.Map(input.y, Speed, Powertrain.Gear < 0);
+            var cmd = Powertrain.Manual ? DriveInput.MapManual(input.y, Powertrain.Gear < 0)
+                                        : DriveInput.Map(input.y, Speed, Powertrain.Gear < 0);
             Limited = ch.topSpeedLimitKmh > 0f && Mathf.Abs(Speed) * 3.6f >= ch.topSpeedLimitKmh;
             ThrottleInput = Limited ? 0f : cmd.Throttle;
             BrakeInput = cmd.Brake;
@@ -371,6 +374,11 @@ namespace CarSales
 
         void Update()
         {
+            if (Powertrain != null && Powertrain.Manual)
+            {
+                if (GearUpAction != null && GearUpAction.WasPressedThisFrame()) Powertrain.ShiftUp(Speed);
+                if (GearDownAction != null && GearDownAction.WasPressedThisFrame()) Powertrain.ShiftDown(Speed);
+            }
             foreach (var w in wheels)
             {
                 if (!w.pivot) continue;

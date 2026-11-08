@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.0-dev — Phase 2b "Test Track"
+- **Test track** scene (built by Build Everything; *Tools → Car Sales → 5. Open Test Track*): long straight with
+  distance boards, braking zone, slalom, bumps, skid pad, ramp and knock-over cones. Measures 0-100 km/h, braking
+  distance, top speed and cornering g, next to the simulated figures. Switch car (N/B), condition (1-4),
+  physics (G), gearbox (M), reset (R). Vehicle Studio: **Drive** button for each car.
+- **Manual gearbox** option (Settings): Left Shift / Left Ctrl or gamepad bumpers; reverse from 1st at a standstill;
+  over-revving downshifts are refused.
+- **Dents**: damaged body panels now show as dents at the front, rear, sides or roof - on parked, listed and driven
+  cars. Repairing the body removes them.
+- **All parts** view (Inspection → All parts): every component with its condition, and how the car's condition
+  changes power, brakes, grip and shocks.
+- 10 new tests (104 total).
+
 ## v5.0-dev — Phase 2a "Vehicle Framework"
 **Driving**
 - **Realistic driving**: every car now drives on wheel physics (Rigidbody + 4 WheelColliders) with suspension,

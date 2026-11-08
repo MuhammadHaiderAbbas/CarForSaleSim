@@ -41,6 +41,13 @@ namespace CarSales.Sim
             }
             return c;
         }
+
+        /// <summary>Manual gearbox: W is always throttle and S always brake; the gear (incl. R) is chosen by the driver.</summary>
+        public static DriveCommand MapManual(float axis, bool inReverse)
+        {
+            axis = axis < -1f ? -1f : axis > 1f ? 1f : axis;
+            return new DriveCommand { Throttle = axis > 0f ? axis : 0f, Brake = axis < 0f ? -axis : 0f, WantReverse = inReverse };
+        }
     }
 
     /// <summary>Driver aids. Inputs are WheelCollider slip values (forward slip: + spinning, - locking).</summary>

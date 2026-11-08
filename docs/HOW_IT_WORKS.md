@@ -358,4 +358,10 @@ Won cars appear in the auction car park — drive or tow them home.
   and `condition` are caches maintained by `CarParts` — always change condition through `CarParts`
   (`Set`, `Damage(car, zone, amount)`, `Wear`, `RepairAll`). `CarParts.Effects(car)` gives the `DrivingEffects`
   the physics uses. Component ids are saved as numbers: only add new ones (`ComponentCatalog`).
-
+- **Dents:** `DentModel.ZoneDepths(components)` → depth per zone from the body panels; `CarDamageVisual.Apply(model, car)`
+  copies the meshes (never the shared ones) and moves vertices near the damaged end/side. Called by `CarDisplay.Refresh`
+  and when driving. Only meshes with Read/Write enabled can be dented.
+- **Manual gearbox:** `GameSettings.ManualGearbox` → `Powertrain.Manual`; `WheelVehicleController` reads the `GearUp`/`GearDown`
+  actions and calls `Powertrain.ShiftUp/ShiftDown`; `DriveInput.MapManual` makes W = throttle and S = brake.
+- **Test track:** `CarSalesTestTrack.cs` (editor) builds the scene; `TestTrackController` (runtime) spawns cars on its own
+  (sets `CarSalesServices.Database`, no other services) and measures performance.

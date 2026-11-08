@@ -76,6 +76,9 @@ namespace CarSales.EditorTools
 
                 Progress("Main menu", 0.95f);
                 BuildMainMenuScene(mats, db);
+
+                Progress("Test track", 0.97f);
+                BuildTestTrackScene(mats, db, actions);
                 EditorSceneManager.OpenScene(ScenePath);
 
                 AssetDatabase.SaveAssets();
@@ -83,6 +86,7 @@ namespace CarSales.EditorTools
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog("Car Sales Simulator",
                     "Done!\n\nGame scene: " + ScenePath + "\nMain menu: " + MenuScenePath +
+                    "\nTest track: " + TestTrackScenePath +
                     "\n\nPress PLAY here to jump straight in, or open the MainMenu scene for the full flow.\n\n" +
                     "E interact | F drive | Tab inventory | M map | P phone | Esc menu\nSleep at home to end the day.\nF1 +$10,000 (debug) | F5/F9 save/load | F12 delete save",
                     "Let's go");
@@ -119,6 +123,7 @@ namespace CarSales.EditorTools
             { "interactAction", "Interact" }, { "toggleShopAction", "ToggleShop" }, { "closeAction", "CloseMenu" },
             { "brakeAction", "Jump" }, { "exitAction", "Interact" }, { "inventoryAction", "Inventory" },
             { "vehicleAction", "Vehicle" }, { "mapAction", "Map" }, { "phoneAction", "Phone" }, { "cameraAction", "CameraView" },
+            { "gearUpAction", "GearUp" }, { "gearDownAction", "GearDown" },
         };
 
         /// <summary>Re-links every empty/broken InputActionReference in open scenes and Car Sales prefabs.</summary>
@@ -224,7 +229,7 @@ namespace CarSales.EditorTools
             return true;
         }
 
-        class ActionRefs { public InputActionReference move, look, jump, sprint, interact, toggleShop, closeMenu, inventory, vehicle, map, phone, cameraView; }
+        class ActionRefs { public InputActionReference move, look, jump, sprint, interact, toggleShop, closeMenu, inventory, vehicle, map, phone, cameraView, gearUp, gearDown; }
 
         static ActionRefs LoadActions()
         {
@@ -235,7 +240,8 @@ namespace CarSales.EditorTools
             {
                 move = Find("Move"), look = Find("Look"), jump = Find("Jump"), sprint = Find("Sprint"),
                 interact = Find("Interact"), toggleShop = Find("ToggleShop"), closeMenu = Find("CloseMenu"), inventory = Find("Inventory"),
-                vehicle = Find("Vehicle"), map = Find("Map"), phone = Find("Phone"), cameraView = Find("CameraView")
+                vehicle = Find("Vehicle"), map = Find("Map"), phone = Find("Phone"), cameraView = Find("CameraView"),
+                gearUp = Find("GearUp"), gearDown = Find("GearDown")
             };
             if (refs.move && refs.look && refs.interact) return refs;   // the rest fall back to defaults at runtime
             EditorUtility.DisplayDialog("Car Sales Simulator",
@@ -668,6 +674,8 @@ namespace CarSales.EditorTools
             Set(drive, "exitAction", a.interact);
             Set(drive, "vehicleAction", a.vehicle);
             Set(drive, "cameraAction", a.cameraView);
+            Set(drive, "gearUpAction", a.gearUp);
+            Set(drive, "gearDownAction", a.gearDown);
             systems.AddComponent<DebugCheats>();
 
             // The UI builds itself at runtime (UIManager.Awake).

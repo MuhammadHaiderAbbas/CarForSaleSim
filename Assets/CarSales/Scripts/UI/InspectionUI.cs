@@ -31,7 +31,9 @@ namespace CarSales
             claimText = UIFactory.Text(left, "", 17, UIFactory.Warn, TextAlignmentOptions.Left);
             worstText = UIFactory.Text(left, "", 16, UIFactory.TextDim, TextAlignmentOptions.TopLeft);
             UIFactory.Spacer(left);
-            UIFactory.Btn(left, "Back", UIFactory.Neutral, Back, 48f);
+            var buttons = UIFactory.HRow(left, 48f, 10f);
+            UIFactory.Btn(buttons, "All parts", UIFactory.Accent, () => CarSalesServices.UI.parts.Show(car, owned), 48f);
+            UIFactory.Btn(buttons, "Back", UIFactory.Neutral, Back, 48f);
 
             var right = UIFactory.VCol(body, 10f, "Right");
             UIFactory.LE(UIFactory.Text(right, "Inspection Report", 24, UIFactory.TextMain, TextAlignmentOptions.Left, true), h: 34);
