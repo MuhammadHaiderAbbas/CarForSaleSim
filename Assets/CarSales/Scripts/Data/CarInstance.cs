@@ -29,5 +29,8 @@ namespace CarSales
         public float worldRotationY;
         public float fuel = 100f;       // 0-100 %
         public bool personal;           // the player's own car - never sold to customers
+
+        /// <summary>Display name of the car model (not saved).</summary>
+        public string Name => CarSalesServices.Database && CarSalesServices.Database.Get(carId) ? CarSalesServices.Database.Get(carId).displayName : carId;
     }
 }

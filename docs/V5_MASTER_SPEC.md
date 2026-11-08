@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1 (blueprint, nothing in this document is implemented yet)
+**Status:** Draft 1. Phase 1 code is written (see [Phase 1 status](#phase-1-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -772,6 +772,36 @@ play-test checklist ✅, docs/CHANGELOG updated, commit tagged.
 5. EditMode tests: ledger balances, save round-trip, v4 fixture migration, corrupt-file recovery.
 **Done when:** all v4 gameplay works unchanged; old v4 save loads; deleting/corrupting `save.json` restores
 from backup; ≥ 40 tests green.
+
+#### Phase 1 status
+Code complete, compile-checked, **47 EditMode tests passing** (run outside Unity, since the Foundation layer has no
+engine dependency). Waiting for the in-Editor play-test below. Changes from the plan above:
+
+| Plan | What was built | Why |
+|---|---|---|
+| `Assets/CarSales/Core/` + `CarSales.Core` | `Assets/CarSales/Foundation/` + `CarSales.Foundation` (`noEngineReferences: true`) | `Scripts/Core/` already exists; two "Core" folders would be confusing. No engine refs means the tests can run anywhere. |
+| Newtonsoft Json | Own small JSON reader for the save envelope (`MiniJson`); module data stays `JsonUtility` | One package fewer to install; the envelope only needs a few fields; module text passes through byte-for-byte. |
+| ServiceRegistry, ConfigRegistry, SimRandom, RegionProfile | Deferred | Nothing uses them yet. They arrive with the first system that needs them (Region with documents in Phase 5). |
+| `CarSales.Sim` assembly | Deferred to Phase 2 | No simulation logic has moved yet. |
+| 3 manual slots + 1 autosave slot | 3 slots, each with 3 rotating backups; nightly autosave goes to the active slot | Simpler to understand; the backups cover the "bad autosave" case. |
+| DailyReport built from the ledger | Report keeps its v4 numbers and adds a ledger "In / Out" breakdown | Keeps the v4 report working (rule R1). |
+
+**What Phase 1 added:** `EventBus` + events (`MoneyChanged`, `TransactionPosted`, `DayStarted`, `DayEnded`, `WeekEnded`,
+`QuarterEnded`, `GameSaved`, `GameLoaded`) · `Ledger` (21 categories, summaries, reconcile, compaction after 60 days,
+lifetime totals) · every money movement in the game tagged with a category · `GameCalendar` (weekday, week, quarter,
+year) · Save v5 (`SaveEnvelope`, `SaveStore`, `SaveMigrations`, `SaveValidator`), automatic import of the v4 save
+into a slot · main menu **New Game / Load Game** slot picker with delete · Bank page **Account statement** · morning
+report money breakdown · weekday on the HUD clock · Test Framework added to the installer.
+
+**Phase 1 play-test checklist (in Unity):**
+1. Run *Tools → Car Sales → 2. Build Everything*; Console has no red errors.
+2. *Window → General → Test Runner → EditMode → Run All*: 47 tests green.
+3. With an old v4 save present: Main Menu → **Continue** loads it (slot 1), your cash and cars are unchanged.
+4. Buy, repair, refuel and sell a car; open the computer → **Bank**: each one is a line in the statement.
+5. Sleep: the morning report shows the In/Out breakdown; the HUD clock shows the weekday.
+6. Main Menu → **New Game** in slot 2, play a day, sleep; **Load Game** shows slots 1 and 2 with day and cash.
+7. Quit Play mode, open the save folder (*Tools → Car Sales → Show Save Folder*), corrupt `slot_2/save.json`
+   (delete half of it), load slot 2: it loads from a backup with a "Save recovered" message.
 
 ### Phase 2 — Vehicle Framework (L)
 1. `IVehicleDriver`; ArcadeCarController implements it; TestDriveManager uses only the interface.

@@ -8,6 +8,7 @@ namespace CarSales
         const string SensitivityKey = "CarSales.MouseSensitivity";
         const string VolumeKey = "CarSales.Volume";
         public const string NewGameFlagKey = "CarSales.StartNewGame";
+        const string ActiveSlotKey = "CarSales.ActiveSlot";
 
         static bool loaded;
         static float sensitivity, volume;
@@ -30,6 +31,13 @@ namespace CarSales
         {
             get { Load(); return volume; }
             set { Load(); volume = value; PlayerPrefs.SetFloat(VolumeKey, value); PlayerPrefs.Save(); AudioListener.volume = value; }
+        }
+
+        /// <summary>The save slot the game reads and writes (1-3). Chosen in the main menu.</summary>
+        public static int ActiveSlot
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetInt(ActiveSlotKey, 1), 1, CarSales.Foundation.SaveStore.SlotCount);
+            set { PlayerPrefs.SetInt(ActiveSlotKey, Mathf.Clamp(value, 1, CarSales.Foundation.SaveStore.SlotCount)); PlayerPrefs.Save(); }
         }
 
         public static void Apply() => AudioListener.volume = Volume;

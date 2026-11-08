@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -126,12 +127,12 @@ namespace CarSales
                 var props = CarSalesServices.Properties;
                 int carsForRent = CarSalesServices.Inventory.OwnedCars.Count(c => !c.personal);
                 int rent = baseRent + rentPerCar * carsForRent + (props ? props.DailyCosts : 0);
-                CarSalesServices.Economy.ForceSpend(rent);
+                CarSalesServices.Economy.ForceSpend(rent, TxCategory.Rent, $"Rent & bills ({carsForRent} cars in stock)");
                 int interest = CarSalesServices.Bank ? CarSalesServices.Bank.ChargeInterest() : 0;
                 int income = props ? props.DailyIncome : 0;
-                if (income > 0) CarSalesServices.Economy.AddMoney(income);
+                if (income > 0) CarSalesServices.Economy.AddMoney(income, TxCategory.PropertyIncome, "Property income");
                 int fee = passedOut ? passOutFee : 0;
-                if (fee > 0) CarSalesServices.Economy.ForceSpend(fee);
+                if (fee > 0) CarSalesServices.Economy.ForceSpend(fee, TxCategory.Fines, "Passed out - taxi & clinic");
 
                 Today.rent = rent;
                 Today.interest = interest;
@@ -151,7 +152,11 @@ namespace CarSales
                 }
 
                 var report = Today;
-                StartDay(CurrentDay + 1, passedOut ? 60f : 100f);
+                int endedDay = CurrentDay;
+                EventBus.Publish(new DayEnded(endedDay, passedOut));
+                if (GameCalendar.IsLastDayOfWeek(endedDay)) EventBus.Publish(new WeekEnded(GameCalendar.WeekOf(endedDay)));
+                if (GameCalendar.IsLastDayOfQuarter(endedDay)) EventBus.Publish(new QuarterEnded(GameCalendar.QuarterOf(endedDay)));
+                StartDay(endedDay + 1, passedOut ? 60f : 100f);
                 CarSalesServices.Marketplace.RefreshListings();
                 if (CarSalesServices.Auction) CarSalesServices.Auction.GenerateLots();
                 if (CarSalesServices.Messages) CarSalesServices.Messages.GenerateDaily(CurrentDay);
@@ -176,6 +181,7 @@ namespace CarSales
             CheckOpenState(true);
             OnTimeChanged?.Invoke(Hour);
             OnDayStarted?.Invoke(CurrentDay);
+            EventBus.Publish(new DayStarted(CurrentDay));
         }
 
         /// <summary>Compatibility: start a fresh day.</summary>

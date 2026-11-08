@@ -2,6 +2,7 @@
     "name": "CarSales.Editor",
     "rootNamespace": "CarSales.EditorTools",
     "references": [
+        "CarSales.Foundation",
         "CarSales.Runtime",
         "Unity.InputSystem",
         "Unity.TextMeshPro",

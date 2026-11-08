@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -83,7 +84,7 @@ namespace CarSales
             working = false;
             backButton.interactable = true;
             int cost = CarValueCalculator.CleanCost();
-            if (!CarSalesServices.Economy.TrySpend(cost)) { CarSalesServices.UI.Error("Not enough money!"); Refresh(); return; }
+            if (!CarSalesServices.Economy.TrySpend(cost, TxCategory.Cleaning, $"Car wash - {car.Data.Name}", car.Data.instanceId)) { CarSalesServices.UI.Error("Not enough money!"); Refresh(); return; }
             car.Data.cleanliness = 100f;
             car.Data.repairSpent += cost;
             CarSalesServices.DayCycle.RegisterExpense(cost);

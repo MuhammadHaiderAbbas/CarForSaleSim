@@ -70,7 +70,12 @@
 
 `CarState` flow: `InTransit → NeedsRepair / Ready → Listed → Sold`.
 
-Save file: `Application.persistentDataPath/carsales_save.json` (**Tools → Car Sales → Show Save Folder**).
+Saves (v5): `Application.persistentDataPath/saves/slot_1..3/save.json` plus `save.json.bak1..3`
+(**Tools → Car Sales → Show Save Folder**). The file is an envelope (`Foundation/Save/SaveEnvelope.cs`) with a checksum
+and one JSON block per system: `game` (the `SaveData` above) and `ledger` (every money movement). Writes are atomic
+(temp file, then replace) and loading falls back to the newest valid backup. A v4 `carsales_save.json` is moved into
+the first free slot automatically. Money must go through `EconomyManager.AddMoney/TrySpend/ForceSpend` with a
+`TxCategory`, so it appears in the bank statement and reports.
 
 ## 5. Economy formulas
 All in `Scripts/Systems/CarValueCalculator.cs`. Balance the game by changing these numbers.

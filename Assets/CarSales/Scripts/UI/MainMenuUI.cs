@@ -1,3 +1,5 @@
+using System;
+using CarSales.Foundation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,8 +13,18 @@ namespace CarSales
         [SerializeField] string gameScene = "DealershipTest";
         GameObject mainPanel;
         SettingsUI settings;
-        Button continueButton;
+        Button continueButton, loadButton;
         TextMeshProUGUI infoText;
+
+        // Save slots
+        SaveStore store;
+        GameObject slotPanel;
+        TextMeshProUGUI slotTitle, slotHint;
+        readonly Button[] slotButtons = new Button[SaveStore.SlotCount];
+        readonly TextMeshProUGUI[] slotLabels = new TextMeshProUGUI[SaveStore.SlotCount];
+        readonly Button[] deleteButtons = new Button[SaveStore.SlotCount];
+        bool slotModeNew;
+        int confirmOverwrite = -1, confirmDelete = -1;
 
         void Awake()
         {
@@ -55,12 +67,13 @@ namespace CarSales
             infoText = UIFactory.Text(panel.transform, "", 17, UIFactory.TextDim, TextAlignmentOptions.Center);
             UIFactory.LE(infoText, h: 30);
 
-            continueButton = UIFactory.Btn(panel.transform, "Continue", UIFactory.Good, () => LoadGame(false), 70f, 24f);
-            UIFactory.Btn(panel.transform, "New Game", UIFactory.Accent, () => LoadGame(true), 70f, 24f);
+            continueButton = UIFactory.Btn(panel.transform, "Continue", UIFactory.Good, ContinueLatest, 70f, 24f);
+            UIFactory.Btn(panel.transform, "New Game", UIFactory.Accent, () => OpenSlots(true), 70f, 24f);
+            loadButton = UIFactory.Btn(panel.transform, "Load Game", UIFactory.AccentDark, () => OpenSlots(false), 70f, 24f);
             UIFactory.Btn(panel.transform, "Settings", UIFactory.Neutral, () => { mainPanel.SetActive(false); settings.Show(); }, 70f, 24f);
             UIFactory.Btn(panel.transform, "Quit", UIFactory.Bad, PauseMenuUI.QuitGame, 70f, 24f);
             UIFactory.Spacer(panel.transform);
-            var version = UIFactory.Text(panel.transform, "v3.0", 14, new Color(1f, 1f, 1f, 0.4f), TextAlignmentOptions.Center);
+            var version = UIFactory.Text(panel.transform, "v" + SaveManager.GameVersion, 14, new Color(1f, 1f, 1f, 0.4f), TextAlignmentOptions.Center);
             UIFactory.LE(version, h: 20);
 
             var settingsRoot = UIFactory.Rect("Settings", transform);
@@ -69,22 +82,135 @@ namespace CarSales
             settings.Build();
             settings.showOnBackInMenu = mainPanel;
             settingsRoot.gameObject.SetActive(false);
+
+            BuildSlotPanel();
+        }
+
+        void BuildSlotPanel()
+        {
+            var panel = UIFactory.Panel(transform, "SlotPanel", new Color(0.03f, 0.06f, 0.13f, 0.95f), 1f);
+            slotPanel = panel.gameObject;
+            UIFactory.Place(panel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(90f, 0f), new Vector2(760f, 840f));
+            panel.gameObject.AddComponent<Outline>().effectColor = UIFactory.Line;
+            UIFactory.Vertical(panel, 40, 18f);
+            slotTitle = UIFactory.Text(panel.transform, "", 44, UIFactory.TextMain, TextAlignmentOptions.Center, true);
+            UIFactory.LE(slotTitle, h: 60);
+            slotHint = UIFactory.Text(panel.transform, "", 17, UIFactory.TextDim, TextAlignmentOptions.Center);
+            UIFactory.LE(slotHint, h: 44);
+            for (int i = 0; i < SaveStore.SlotCount; i++)
+            {
+                int slot = i + 1;
+                var row = UIFactory.HRow(panel.transform, 132, 12, "Slot" + slot);
+                slotButtons[i] = UIFactory.Btn(row, "Slot", UIFactory.CardLight, () => PickSlot(slot), out slotLabels[i], 132f, 20f);
+                UIFactory.LE(slotButtons[i], flexW: 1);
+                slotLabels[i].alignment = TextAlignmentOptions.MidlineLeft;
+                slotLabels[i].margin = new Vector4(22f, 0f, 10f, 0f);
+                deleteButtons[i] = UIFactory.Btn(row, "Delete", UIFactory.Bad, () => DeleteSlot(slot), 132f, 18f);
+                UIFactory.LE(deleteButtons[i], w: 130);
+            }
+            UIFactory.Spacer(panel.transform);
+            UIFactory.Btn(panel.transform, "Back", UIFactory.Neutral, CloseSlots, 64f, 22f);
+            slotPanel.SetActive(false);
+        }
+
+        void OpenSlots(bool newGame)
+        {
+            slotModeNew = newGame;
+            confirmOverwrite = confirmDelete = -1;
+            mainPanel.SetActive(false);
+            slotPanel.SetActive(true);
+            RefreshSlots();
+        }
+
+        void CloseSlots()
+        {
+            slotPanel.SetActive(false);
+            mainPanel.SetActive(true);
+            RefreshMain();
+        }
+
+        void RefreshSlots()
+        {
+            slotTitle.text = slotModeNew ? "NEW GAME" : "LOAD GAME";
+            slotHint.text = slotModeNew ? "Pick a slot for your new career. Each slot keeps 3 automatic backups."
+                                        : "Pick a save to continue. The game saves every night when you sleep.";
+            for (int i = 0; i < SaveStore.SlotCount; i++)
+            {
+                int slot = i + 1;
+                var info = store.Peek(slot);
+                string head = $"<size=110%><b>SLOT {slot}</b></size>";
+                string body;
+                if (!info.Exists) body = "<color=#9fb0cc>Empty</color>";
+                else if (!info.Readable) body = $"<color={UIFactory.Hex(UIFactory.Bad)}>Damaged - cannot be loaded</color>";
+                else
+                {
+                    string when = info.SavedAtUtc > DateTime.MinValue ? info.SavedAtUtc.ToLocalTime().ToString("dd MMM yyyy  HH:mm") : "unknown time";
+                    body = $"{info.Label}   <color={UIFactory.Hex(UIFactory.Gold)}>{UIFactory.Money(info.Money)}</color>\n" +
+                           $"<size=85%><color=#9fb0cc>Saved {when}{(info.FromBackup ? "  (restored from backup)" : "")}</color></size>";
+                }
+                if (confirmOverwrite == slot) body = $"<color={UIFactory.Hex(UIFactory.Warn)}>Overwrite this save? Click again to confirm.</color>";
+                if (confirmDelete == slot) body = $"<color={UIFactory.Hex(UIFactory.Bad)}>Delete this save and its backups? Click Delete again.</color>";
+                slotLabels[i].text = head + "\n" + body;
+                slotButtons[i].interactable = slotModeNew || info.Readable;
+                deleteButtons[i].gameObject.SetActive(info.Exists);
+            }
+        }
+
+        void PickSlot(int slot)
+        {
+            confirmDelete = -1;
+            if (slotModeNew)
+            {
+                if (store.Exists(slot) && confirmOverwrite != slot) { confirmOverwrite = slot; RefreshSlots(); return; }
+                StartGame(slot, true);
+            }
+            else StartGame(slot, false);
+        }
+
+        void DeleteSlot(int slot)
+        {
+            confirmOverwrite = -1;
+            if (confirmDelete != slot) { confirmDelete = slot; RefreshSlots(); return; }
+            store.Delete(slot);
+            confirmDelete = -1;
+            RefreshSlots();
+        }
+
+        void ContinueLatest()
+        {
+            int slot = store.MostRecentSlot();
+            if (slot > 0) StartGame(slot, false);
+        }
+
+        void RefreshMain()
+        {
+            int latest = store.MostRecentSlot();
+            bool any = false;
+            for (int s = 1; s <= SaveStore.SlotCount; s++) any |= store.Peek(s).Readable;
+            continueButton.interactable = latest > 0;
+            loadButton.interactable = any;
+            if (latest > 0)
+            {
+                var info = store.Peek(latest);
+                infoText.text = $"Continue: slot {latest} - {info.Label}, {UIFactory.Money(info.Money)}";
+            }
+            else infoText.text = "No saved game yet - start a New Game!";
         }
 
         void Start()
         {
-            bool hasSave = SaveManager.SaveExists();
-            continueButton.interactable = hasSave;
-            infoText.text = hasSave ? "A saved game was found." : "No saved game yet - start a New Game!";
+            store = SaveManager.OpenStore();
+            RefreshMain();
         }
 
-        void LoadGame(bool newGame)
+        void StartGame(int slot, bool newGame)
         {
             if (!Application.CanStreamedLevelBeLoaded(gameScene))
             {
-                infoText.text = $"Scene '{gameScene}' is not in the build scene list.";
+                infoText.text = slotHint.text = $"Scene '{gameScene}' is not in the build scene list.";
                 return;
             }
+            GameSettings.ActiveSlot = slot;
             if (newGame) PlayerPrefs.SetInt(GameSettings.NewGameFlagKey, 1);
             SceneManager.LoadScene(gameScene);
         }

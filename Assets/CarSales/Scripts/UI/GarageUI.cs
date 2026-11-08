@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -151,7 +152,7 @@ namespace CarSales
             working = false;
             backButton.interactable = true;
             int total = Total();
-            if (!CarSalesServices.Economy.TrySpend(total)) { CarSalesServices.UI.Error("Not enough money!"); Refresh(); return; }
+            if (!CarSalesServices.Economy.TrySpend(total, TxCategory.Repair, (fullService ? "Full service - " : "Repairs - ") + car.Data.Name, car.Data.instanceId)) { CarSalesServices.UI.Error("Not enough money!"); Refresh(); return; }
             var d = car.Data;
             if (fullService) CarParts.RepairAll(d);
             else foreach (var p in selected) CarParts.Set(d, p, 100f);

@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -174,7 +175,7 @@ namespace CarSales
             a.Lots.Remove(lot);
             if (leader == "You")
             {
-                if (CarSalesServices.Economy.TrySpend(currentBid))
+                if (CarSalesServices.Economy.TrySpend(currentBid, TxCategory.Auction, $"Auction win - {lot.Name}", lot.instanceId))
                 {
                     lot.purchasePrice = currentBid;
                     lot.state = CarValueCalculator.DefaultState(lot);
