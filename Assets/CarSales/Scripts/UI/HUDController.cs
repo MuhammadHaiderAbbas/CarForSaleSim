@@ -7,7 +7,7 @@ namespace CarSales
     /// <summary>In-game HUD: day/clock/goal, money, minimap, speedometer, key hints, interaction prompt.</summary>
     public class HUDController : UIPanel
     {
-        TextMeshProUGUI clockText, shopText, goalText, moneyText, repText, loanText, promptText, speedText, unreadText, energyText, gpsText, fuelText;
+        TextMeshProUGUI unitText, clockText, shopText, goalText, moneyText, repText, loanText, promptText, speedText, unreadText, energyText, gpsText, fuelText;
         UIFactory.Bar energyBar;
         Image gpsArrow, gpsPanel;
         MinimapMarker gpsMarker;
@@ -18,7 +18,7 @@ namespace CarSales
         PlayerInteractor interactor;
         CharacterController playerBody;
 
-        const float MaxGaugeKmh = 100f;
+        const float MaxGaugeKmh = 200f;
 
         public override void Build()
         {
@@ -84,7 +84,7 @@ namespace CarSales
             speedFill.fillAmount = 0f;
             speedText = UIFactory.Text(gauge.transform, "0", 42, UIFactory.TextMain, TextAlignmentOptions.Center, true);
             UIFactory.Place(speedText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(120f, 50f));
-            var unit = UIFactory.Text(gauge.transform, "KM/H", 14, UIFactory.TextDim, TextAlignmentOptions.Center, true);
+            var unit = unitText = UIFactory.Text(gauge.transform, "KM/H", 14, UIFactory.TextDim, TextAlignmentOptions.Center, true);
             UIFactory.Place(unit.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -26f), new Vector2(80f, 20f));
             fuelText = UIFactory.Text(gauge.transform, "", 14, UIFactory.Gold, TextAlignmentOptions.Center, true);
             UIFactory.Place(fuelText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -4f), new Vector2(160f, 22f));
@@ -195,8 +195,9 @@ namespace CarSales
             float kmh = drive && drive.IsDriving ? drive.SpeedKmh
                        : playerBody ? new Vector3(playerBody.velocity.x, 0f, playerBody.velocity.z).magnitude * 3.6f : 0f;
             speedText.text = Mathf.RoundToInt(kmh).ToString();
+            unitText.text = drive && drive.IsDriving ? $"<color={UIFactory.Hex(UIFactory.Gold)}>{drive.Gear}</color>  KM/H" : "KM/H";
             speedFill.fillAmount = Mathf.Clamp01(kmh / MaxGaugeKmh) * 0.8f;
-            speedFill.color = kmh > 70f ? UIFactory.Warn : UIFactory.Accent;
+            speedFill.color = kmh > 130f ? UIFactory.Warn : UIFactory.Accent;
 
             // Prompt
             string prompt;

@@ -1,5 +1,33 @@
 # Changelog
 
+## v5.0-dev — Phase 2a "Vehicle Framework"
+**Driving**
+- **Realistic driving**: every car now drives on wheel physics (Rigidbody + 4 WheelColliders) with suspension,
+  anti-roll bars, weight and grip. Front-, rear- or four-wheel drive depending on the car.
+- **Engine and automatic gearbox**: torque curves, up/down shifts, kick-down, rev limiter, engine braking, reverse gear.
+  Electric cars: instant torque, one gear, regenerative braking.
+- **Driver aids**: ABS, traction control, stability control (each can be switched off in Settings).
+- **10 handling classes** (city hatch, family hatch, sedan, sports sedan, SUV, pickup, van, sports, luxury, electric
+  hatch) with realistic 0-100 km/h times and top speeds; petrol/diesel/hybrid/electric variants.
+- Controls: S brakes and reverses when stopped, **Space = handbrake**, **C = camera** (chase / far / bonnet), **F3 = telemetry**.
+- HUD speedometer shows the gear and goes up to 200 km/h. Engine sound pitched by rpm.
+- *Settings → Physics: Arcade* brings back the v4 handling. Cars that can't be set up fall back to it automatically.
+
+**Car condition**
+- The 6 condition bars are now made of **~45 individual parts** (engine internals, timing belt, oil, each brake
+  pad set, shocks, each tyre, each body panel, paint, glass, 12V battery...). Electric cars have a traction battery,
+  motor and inverter instead of an engine. Old saves convert automatically.
+- **Condition affects driving**: a worn engine is slower, worn pads brake later, bald tyres slide, worn shocks bounce,
+  bad alignment pulls to one side, a dead battery means the car won't start.
+- **Crashes damage the side that was hit** (front, rear, left, right, roof, underside). Driving wears parts (tyres, pads, oil...).
+- Fuel use depends on how hard you drive.
+- The inspection report lists the parts in the worst shape.
+
+**Tools**
+- **Vehicle Studio** (*Tools → Car Sales → Vehicle Studio*): each car's class, mass, 0-100, top speed and braking;
+  "Make editable" creates a physics profile you can tune in the Inspector (kept when you Build Everything).
+- 47 new tests (94 total).
+
 ## v5.0-dev — Phase 1 "Foundation"
 **Saves**
 - **3 save slots** (Main Menu → New Game / Load Game), each with **3 automatic backups**.

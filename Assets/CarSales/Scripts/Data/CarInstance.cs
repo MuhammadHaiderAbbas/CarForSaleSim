@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using CarSales.Sim;
 using UnityEngine;
 
 namespace CarSales
@@ -19,7 +21,7 @@ namespace CarSales
         public int listedPrice;
         public CarState state;
         public int parkingSpotIndex = -1;
-        public float[] parts;           // per-part condition (see CarParts)
+        public float[] parts;           // per-group condition, kept in sync with `components` (see CarParts)
         public bool inspected;          // a paid/free inspection revealed the true condition
 
         // v4: physical location, fuel, personal car
@@ -29,6 +31,9 @@ namespace CarSales
         public float worldRotationY;
         public float fuel = 100f;       // 0-100 %
         public bool personal;           // the player's own car - never sold to customers
+
+        // v5: every individual component (engine internals, pads, each tyre, each panel...). See CarSales.Sim.ComponentCatalog.
+        public List<ComponentState> components = new List<ComponentState>();
 
         /// <summary>Display name of the car model (not saved).</summary>
         public string Name => CarSalesServices.Database && CarSalesServices.Database.Get(carId) ? CarSalesServices.Database.Get(carId).displayName : carId;

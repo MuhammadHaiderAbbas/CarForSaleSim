@@ -3,6 +3,7 @@
     "rootNamespace": "CarSales.Tests",
     "references": [
         "CarSales.Foundation",
+        "CarSales.Sim",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using CarSales.Sim;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,7 +13,7 @@ namespace CarSales
         CarInstance car;
         CarDisplay owned;   // null = marketplace listing
         RawImage photo;
-        TextMeshProUGUI nameText, overallText, verdictText, claimText;
+        TextMeshProUGUI nameText, overallText, verdictText, claimText, worstText;
         Image verdictPanel;
         readonly List<Image> icons = new List<Image>();
         readonly List<TextMeshProUGUI> values = new List<TextMeshProUGUI>();
@@ -27,6 +29,7 @@ namespace CarSales
             nameText = UIFactory.Text(left, "", 26, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             overallText = UIFactory.Text(left, "", 20, UIFactory.TextDim, TextAlignmentOptions.Left);
             claimText = UIFactory.Text(left, "", 17, UIFactory.Warn, TextAlignmentOptions.Left);
+            worstText = UIFactory.Text(left, "", 16, UIFactory.TextDim, TextAlignmentOptions.TopLeft);
             UIFactory.Spacer(left);
             UIFactory.Btn(left, "Back", UIFactory.Neutral, Back, 48f);
 
@@ -82,6 +85,12 @@ namespace CarSales
                 bars[i].SetColor(c);
                 values[i].text = $"<color={UIFactory.Hex(c)}>{CarParts.Label(v)}</color>  {v:0}%";
             }
+            // The individual parts in the worst shape (v5 component model).
+            var worst = car.components.Where(x => x.health < 65f).OrderBy(x => x.health).Take(5)
+                .Select(x => $"<color={UIFactory.Hex(CarParts.LabelColor(x.health))}>{ComponentCatalog.Get(x.Id)?.Name ?? x.Id.ToString()} {x.health:0}%</color>").ToList();
+            var pt = CarParts.PowertrainOf(car);
+            worstText.text = $"{pt}, {VehicleProfileResolver.ClassOf(def)} handling, {car.mileage:N0} km\n" +
+                             (worst.Count > 0 ? "<b>Needs attention:</b>\n" + string.Join("\n", worst) : "No individual part below 65%.");
             verdictPanel.color = CarParts.LabelColor(car.condition);
             verdictText.text = car.condition >= 85 ? "Vehicle is in Excellent Condition!"
                              : car.condition >= 65 ? "Vehicle is in Good Condition!"

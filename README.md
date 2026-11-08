@@ -13,6 +13,9 @@ energy and sleeping, night lighting, a town map with GPS, and a phone. See [CHAN
 **V5.0 in progress.** The full development blueprint (architecture, script-by-script plan, phases, tests) is in
 [docs/V5_MASTER_SPEC.md](docs/V5_MASTER_SPEC.md). Phase 1 is in: 3 save slots with automatic backups, a bank
 account statement of every transaction, and automated tests (*Window → General → Test Runner → EditMode → Run All*).
+Phase 2 adds **realistic driving** (wheel physics, engine and automatic gearbox, ABS/traction/stability control, a
+different feel per car class) and **~45 individual car parts** behind the 6 condition bars. *Settings → Physics*
+switches back to the old arcade handling; *Tools → Car Sales → Vehicle Studio* shows and tunes each car's performance.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
@@ -49,7 +52,10 @@ account statement of every transaction, and automated tests (*Window → General
 | Shift / Space | Sprint / jump |
 | **E** | Interact (cars, computer, desks, doors, signs) — while driving: park / refuel / wash / repair when prompted |
 | **F** | Get into the car you're looking at / get out (the car stays where you leave it) |
-| *Driving:* W/S, A/D, Space | Throttle/reverse, steer, brake |
+| *Driving:* W / S | Accelerate / brake (hold S when stopped to reverse) |
+| *Driving:* A/D, Space | Steer, handbrake |
+| *Driving:* **C** | Camera: chase / far chase / bonnet |
+| *Driving:* **F3** | Telemetry overlay (speed, rpm, gear, wheel slip, assists) |
 | **Tab** | Inventory (dealer computer, anywhere) |
 | **M** | Town map + GPS + taxi |
 | **P** | Phone: tow truck (move any car) and taxi (move yourself) |
