@@ -58,7 +58,7 @@ namespace CarSales.EditorTools
 
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
                 if (AssetDatabase.IsValidFolder(Gen)) AssetDatabase.DeleteAsset(Gen);
-                foreach (var f in new[] { "Materials", "Data/Cars", "Prefabs/CarModels", "Scenes" })
+                foreach (var f in new[] { "Materials", "Data/Cars", "Prefabs/CarModels", "Scenes", "Resources" })
                     EnsureFolder(Gen + "/" + f);
 
                 Progress("Materials", 0.08f);
@@ -416,7 +416,7 @@ namespace CarSales.EditorTools
                 AssetDatabase.CreateAsset(def, $"{Gen}/Data/Cars/Car_{s.id}.asset");
                 db.cars.Add(def);
             }
-            AssetDatabase.CreateAsset(db, $"{Gen}/Data/CarDatabase.asset");
+            AssetDatabase.CreateAsset(db, $"{Gen}/Resources/{CarDatabase.ResourceName}.asset");   // in Resources: scenes can find it even without a reference
             return db;
         }
 

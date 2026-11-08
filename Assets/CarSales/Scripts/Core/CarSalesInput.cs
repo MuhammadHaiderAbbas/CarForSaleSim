@@ -26,7 +26,7 @@ namespace CarSales
                 action = Fallback(actionName);
                 if (action != null && warned.Add(actionName))
                     Debug.LogWarning($"[CarSales] Input action '{actionName}' is not linked - using built-in default keys. " +
-                                     "Run Tools > Car Sales > 2. Build Everything to re-link it.");
+                                     "Open this scene and run Tools > Car Sales > Re-link Input Actions (or 2. Build Everything).");
             }
             if (action != null && !action.enabled) action.Enable();
             return action;

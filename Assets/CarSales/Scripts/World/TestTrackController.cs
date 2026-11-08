@@ -47,6 +47,7 @@ namespace CarSales
 
         void Awake()
         {
+            if (!database) database = CarDatabase.LoadDefault();
             CarSalesServices.Database = database;
             if (database) cars.AddRange(database.cars.FindAll(c => c && c.displayPrefab));
             string wanted = PlayerPrefs.GetString(CarPrefKey, "");

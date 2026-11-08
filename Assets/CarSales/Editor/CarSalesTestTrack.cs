@@ -104,9 +104,41 @@ namespace CarSales.EditorTools
             }
 
             EditorSceneManager.SaveScene(scene, TestTrackScenePath);
+            VerifySavedLinks(TestTrackScenePath, db, a);
             var list = EditorBuildSettings.scenes.Where(s => s.path != TestTrackScenePath).ToList();
             list.Add(new EditorBuildSettingsScene(TestTrackScenePath, true));
             EditorBuildSettings.scenes = list.ToArray();
+        }
+
+        /// <summary>
+        /// Re-opens the saved scene and checks the controller's references survived saving; repairs them if not.
+        /// (A user reported them arriving empty; the runtime also falls back to Resources and default keys.)
+        /// </summary>
+        static void VerifySavedLinks(string path, CarDatabase db, ActionRefs a)
+        {
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<TestTrackController>();
+            if (!controller) { Debug.LogError("[CarSales] Test track: controller missing after saving the scene."); return; }
+            var so = new SerializedObject(controller);
+            var missing = new System.Collections.Generic.List<string>();
+            void Check(string field, Object value)
+            {
+                var p = so.FindProperty(field);
+                if (p == null || p.objectReferenceValue != null || value == null) return;
+                missing.Add(field);
+                p.objectReferenceValue = value;
+            }
+            Check("database", db);
+            if (a != null)
+            {
+                Check("moveAction", a.move); Check("brakeAction", a.jump); Check("cameraAction", a.cameraView);
+                Check("gearUpAction", a.gearUp); Check("gearDownAction", a.gearDown);
+            }
+            if (missing.Count == 0) return;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.LogWarning("[CarSales] Test track: these links were lost when saving and have been re-applied: " + string.Join(", ", missing));
         }
 
         static void Board(Transform parent, Mats m, Vector3 pos, string text)
