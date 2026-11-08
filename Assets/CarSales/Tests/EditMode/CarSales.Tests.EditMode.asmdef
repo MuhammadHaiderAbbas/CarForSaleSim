@@ -4,6 +4,7 @@
     "references": [
         "CarSales.Foundation",
         "CarSales.Sim",
+        "CarSales.Studio.Core",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

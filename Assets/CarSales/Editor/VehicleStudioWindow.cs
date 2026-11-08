@@ -93,7 +93,7 @@ namespace CarSales.EditorTools
             EditorGUILayout.EndScrollView();
         }
 
-        static void DriveOnTestTrack(CarDefinition car)
+        public static void DriveOnTestTrack(CarDefinition car)
         {
             if (!File.Exists(CarSalesSetupWizard.TestTrackScenePath))
             {
