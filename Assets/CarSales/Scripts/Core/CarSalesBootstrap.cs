@@ -9,6 +9,7 @@ namespace CarSales
 
         void Awake()
         {
+            if (!database) database = CarDatabase.LoadDefault();
             CarSalesServices.Database = database;
             if (!database) Debug.LogError("[CarSales] No CarDatabase assigned on CarSalesBootstrap.");
         }

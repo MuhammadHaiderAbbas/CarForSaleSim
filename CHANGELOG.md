@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.0-dev — Test track fix
+- The test track no longer depends on its scene references: the car database now lives in
+  `Generated/Resources/CarSalesDatabase.asset` and is found automatically, input falls back to the default keys.
+- Build Everything re-opens the saved test track scene and repairs any links that were lost (and logs which).
+- The "input action is not linked" warning now points to *Tools → Car Sales → Re-link Input Actions*.
+
 ## v5.0-dev — Phase 2b "Test Track"
 - **Test track** scene (built by Build Everything; *Tools → Car Sales → 5. Open Test Track*): long straight with
   distance boards, braking zone, slalom, bumps, skid pad, ramp and knock-over cones. Measures 0-100 km/h, braking
