@@ -412,3 +412,12 @@ Won cars appear in the auction car park — drive or tow them home.
   (`board`, `mechanicHired`; worked in `WorkshopManager.MechanicWork`), `PartsCounter` (sets `WorkshopManager.AtCounter`),
   world sites in `Editor/CarSalesServiceCentre.cs`.
 
+## 17. Auctions (Phase 6)
+- **Rules** (`Sim/Auction/AuctionEngine.cs`, tested): `AuctionRules` (fees, VAT, invoices, late fees, storage, reports,
+  `GenerateBidders`, `MaxBid` (§8.3), `ResolveProxy`, `LiveAiBid`, `SoftClose`, `Hammer`, `SellerAcceptChance`).
+- **AuctionManager** (runtime): `AuctionState` (save module `auction`); calendar (`EnsureSchedule`), lot cars generated
+  and shaped per sale type, AI interest per lot (seeded), online lots updated twice a second, hall sales run live when
+  `AuctionManager.PlayerInHall()` else instantly, invoices/payment/collection, nightly late fees and storage.
+- **World:** `AuctionHall` (box, stage, screen), `AuctionYard` (bays; rebuilt when the yard lots change),
+  `CarDisplay.InitializeForAuction` (lot number tag; E opens the lot). Overlay: `AuctionHallHUD`. Terminal: `AuctionUI`.
+

@@ -33,7 +33,9 @@ Phase 5a adds **hidden faults**, **step-by-step inspections** (walk-around, inte
 lift, history check), **paperwork and history** (logbook, keys, MOT, service book, write-offs, finance, clocking),
 **MOT tests**, and a **Workshop** app for parts and repairs. Phase 5b adds your own **service centre** (lift, tyre and MOT bays),
 **hands-on** inspections and repairs (hold E on markers), a **Workshop Board**, a hireable **mechanic** and the
-**Parts Direct** counter in town.
+**Parts Direct** counter in town. Phase 6 rebuilds the **auctions**: a calendar of hall, online and salvage
+sales, a walk-in sale hall where you raise your paddle (E), a viewing yard, AI bidders with personalities, proxy
+bids, invoices with fees and VAT, and collection from the car park.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

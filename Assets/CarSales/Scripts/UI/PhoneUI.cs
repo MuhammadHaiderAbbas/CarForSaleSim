@@ -133,7 +133,7 @@ namespace CarSales
             g.spacing = new Vector2(8f, 8f);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = 3;
-            UIFactory.LE(grid, h: 3 * 104f + 2 * 8f);
+            UIFactory.LE(grid, h: 4 * 104f + 3 * 8f);
             var ui = CarSalesServices.UI;
             int unread = msgs ? msgs.UnreadCount : 0;
             AppIcon(grid, "Messages" + (unread > 0 ? $" ({unread})" : ""), "M", UIFactory.Accent, () => Open(App.Messages));
@@ -144,6 +144,8 @@ namespace CarSales
             AppIcon(grid, "My cars", "C", UIFactory.Special, () => ui.inventory.Show());
             AppIcon(grid, "Market", "Mk", UIFactory.AccentDark, () => ui.marketplace.Show());
             AppIcon(grid, "Real estate", "H", UIFactory.Home, () => ui.realEstate.Show());
+            AppIcon(grid, "Auctions", "A", UIFactory.Bad, () => ui.auction.Show());
+            AppIcon(grid, "Workshop", "W", UIFactory.Warn, () => ui.computerHub.Workshop.ShowBoard());
             AppIcon(grid, "Settings", "S", UIFactory.Neutral, () => ui.settings.Show());
         }
 

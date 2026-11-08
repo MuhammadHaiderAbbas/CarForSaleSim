@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.0-dev — Phase 6 "Auctions"
+- **Auction calendar** with five sale types: dealer, fleet, salvage, repossession (hall) and timed online sales.
+- **Walk-in sale hall**: lots roll onto the stage, the auctioneer calls *going once, going twice, sold*, and you bid by
+  raising your paddle (E). Absentee bids work when you're not there.
+- **Viewing yard** with numbered bays: read the condition report, inspect the car, check its history, leave a bid.
+- **Online sales** with maximum (proxy) bids, outbid notifications and soft close.
+- **AI bidders** with personalities (traders, exporters, breakers, mechanics, franchise and private buyers) who bid
+  from the condition report.
+- **Buyer accounts** (refundable deposit), **invoices** with buyer's premium, internet fee and VAT, late fees,
+  cancellation, storage, collection from the car park.
+- Auctions app on the computer and phone.
+- 11 new tests (232 total).
+
 ## v5.0-dev — Phase 5b "Your own workshop"
 - **AUTO WORLD Service Centre** next to your dealership: mechanical bay with a lift, tyre bay, MOT bay.
 - **Hands-on work**: walk around a car and hold E on glowing markers to inspect it (wheels, bonnet, interior,

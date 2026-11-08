@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-4 and 5a are merged; Phase 5b code is written (see [Phase 5 status](#phase-5-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-5 are merged; Phase 6 code is written (see [Phase 6 status](#phase-6-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1017,6 +1017,29 @@ parts + time + money and change value; an MOT can pass/fail with advisories; a h
 5. Salvage/fleet/repossession event types; risks.
 **Done when (audit acceptance):** you can register, inspect lots, bid live in the hall and online, win, pay the
 invoice (fees + VAT in the ledger), and collect the car (drive/tow), and lose lots to AI bidders who bid sensibly.
+
+#### Phase 6 status
+**Code complete** (232 EditMode tests, compile-checked; not run in Unity). Every acceptance point has a path:
+
+| Item | Built |
+|---|---|
+| Engine | `Sim/Auction/AuctionEngine.cs`: venues (Auction Center hall, TradeNet online, SalvageBid online), events, lots, condition reports (grade 1-5, listed faults/damage, keys, starts, V5C, mileage verified; reliability 85% / 75% / 50%), buyer accounts, invoices, increments ($50/100/250/500), buyer's premium table, $20 internet fee, VAT 20% on fees, 2-day payment, $50/day late, cancel after 5 days (deposit kept), 3 free storage days then $15/day, reserves and provisional bids, proxy bidding, soft close (+2 min). |
+| AI bidders | 16 persistent bidders, 7 archetypes (private, small trader, franchise grade 4+, exporter likes Japanese/4x4, breaker salvage floor, mechanic, dealer group) with the §8.3 formula from the report (never the truth), budgets and lots-per-day limits. |
+| Calendar | Dealer sales Tue/Thu/Sat 11:00, fleet Wed 13:00, repossessions Fri 14:00 (hall); TradeNet every day and SalvageBid Mon/Thu (lots close 14:00-20:00). Published 7 days ahead, catalogues 2 days before. |
+| Sale types & risks | Fleet: good, full service, 2 keys. Salvage: body damage, Cat N/S, missing keys, "non-runners" that only need a battery, no title guarantee. Repossession: one key, missing logbooks, finance cleared by the hall. Reports can miss faults; salvage reports may over-state keys. |
+| Hall | Walk-in hall: seats, stage (lot car on it), rostrum with auctioneer, big screen. Inside during a sale: overlay with lot, bid, leader, *going once / twice / sold* (4 s each, reset by bids); **E raises your paddle**. Not there: lots go every 6 game minutes with your absentee max. |
+| Yard | 12 numbered bays: today's and tomorrow's hall lots for viewing; E on a car → lot (report, history check, inspect - no road test, max bid, watch). |
+| Online terminal | Auctions app (desk, computer desktop, phone): Calendar, Catalogue (lot list + detail), My bids (sortable), Invoices (pay; GPS to the car park), Accounts (register $500 deposit / close and refund). Online lots: max bid, live current price, outbid toast + message, soft close. |
+| Money | Paying posts VehiclePurchase (hammer), Auction (fees), VAT, Fines (late); deposits in *Deposits*; storage in Auction. Car appears in the Auction Center car park; collected once it leaves (drive or tow). |
+| Save | Module `auction` v1 (events, lots, lot cars, invoices, accounts, bidders). |
+
+**Phase 6 play-test checklist:**
+1. Build Everything, Play. Auctions app → Calendar; Accounts: register at the Auction Center and TradeNet.
+2. Day before a hall sale: walk the yard, open a lot, inspect it (walk-around, bonnet...), set a max bid on another.
+3. Sale day: be in the hall at the start: watch the calls, press E to bid, win a lot; lose one to an AI bidder.
+4. Online: set a max on a TradeNet lot; get outbid (toast), raise it; win at close.
+5. Pay the invoices (Accounts app shows fees + VAT); drive or tow the car out of the car park; skip paying one to see late fees.
+6. Salvage: find a "non-runner", scan it (battery), win it cheaply.
 
 ### Phase 7 — Dealership operations: sourcing, customers, staff (XL)
 1. MarketModel (price index, seasons, supply/demand) + competitors (off-screen) + competitor research page.

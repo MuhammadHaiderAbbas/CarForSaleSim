@@ -15,6 +15,8 @@ namespace CarSales
         public bool IsForSaleListing { get; private set; }
         public CarDefinition Definition { get; private set; }
         public Transform BrowsePoint => browsePoint ? browsePoint : transform;
+        /// <summary>Set for cars standing in the auction yard / on the stage (phase 6).</summary>
+        public string AuctionLotId { get; private set; }
         CarVisual visual;
 
         public void InitializeForSale(CarInstance listing)
@@ -28,6 +30,16 @@ namespace CarSales
                 priceTag.gameObject.SetActive(true);
                 priceTag.text = $"${listing.purchasePrice:N0}";
             }
+        }
+
+        /// <summary>A lot in the auction yard: shows its lot number; E opens the lot (report, inspection, bids).</summary>
+        public void InitializeForAuction(CarInstance car, string lotId, int lotNo)
+        {
+            InitializeForSale(car);
+            AuctionLotId = lotId;
+            if (priceTag) priceTag.text = $"LOT {lotNo}";
+            var rb = GetComponent<Rigidbody>();
+            if (rb) rb.isKinematic = true;
         }
 
         public void Initialize(CarInstance data)
@@ -79,6 +91,12 @@ namespace CarSales
 
         public string GetInteractionText()
         {
+            if (!string.IsNullOrEmpty(AuctionLotId))
+            {
+                var lot = CarSalesServices.Auction ? CarSalesServices.Auction.Lot(AuctionLotId) : null;
+                return lot == null ? $"{Definition.displayName}" :
+                    $"[E] Lot {lot.lotNo}: {Definition.year} {Definition.brand} {Definition.displayName}  |  grade {lot.report.grade}  |  guide ${lot.estimate:N0}";
+            }
             if (IsForSaleListing)
                 return $"[E] For sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  ${Data.purchasePrice:N0}  |  free inspection on site";
             string name = $"{Definition.year} {Definition.brand} {Definition.displayName}";
@@ -88,6 +106,7 @@ namespace CarSales
 
         public void Interact(GameObject interactor)
         {
+            if (!string.IsNullOrEmpty(AuctionLotId)) { CarSalesServices.UI.auction.ShowLot(AuctionLotId, this); return; }
             if (IsForSaleListing) CarSalesServices.UI.vehicleDetails.ShowPhysical(this);
             else CarSalesServices.UI.carMenu.Show(this);
         }

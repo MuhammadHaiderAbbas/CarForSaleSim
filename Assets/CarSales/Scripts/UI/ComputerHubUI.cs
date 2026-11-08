@@ -123,7 +123,7 @@ namespace CarSales
             Tile("Dashboard", "D", UIFactory.Accent, () => ShowPage(Home), Home);
             Tile("My Cars", "S", UIFactory.Good, () => ShowPage(Inventory), Inventory);
             Tile("Marketplace", "M", UIFactory.Info, () => ShowPage(Marketplace), Marketplace);
-            Tile("Auctions", "A", UIFactory.Bad, AuctionInfo);
+            Tile("Auctions", "A", UIFactory.Bad, () => CarSalesServices.UI.auction.Show());
             Tile("Messages", "@", UIFactory.Gold, () => ShowPage(Messages), Messages);
             Tile("Bank", "B", UIFactory.Personal, () => ShowPage(Bank), Bank);
             Tile("Accounts", "%", UIFactory.Home, () => ShowPage(Accounts), Accounts);
@@ -172,22 +172,6 @@ namespace CarSales
         void Soon(string label, string glyph, int phase) =>
             Tile(label, glyph, UIFactory.Neutral, () => UIFactory.Confirm(label, $"The {label} app arrives with a later update (V5 phase {phase}). " +
                 "Until then use the other apps on this desktop.", "OK", UIFactory.Accent, null), null, true);
-
-        void AuctionInfo()
-        {
-            var a = CarSalesServices.Auction;
-            string body = a
-                ? $"Auctions run at the Auction Center from {a.OpenHour:00}:00 to {a.CloseHour:00}:00. " +
-                  (a.Lots.Count > 0 ? $"{a.Lots.Count} lots are waiting today." : "No more lots today; new cars arrive tomorrow.") +
-                  "\n\nBid in person at the auction desk. Online bidding comes with the auction update (phase 6)."
-                : "There is no auction house in this town.";
-            var place = MapPlace.All.FirstOrDefault(p => p && p.placeName.ToLowerInvariant().Contains("auction"));
-            if (place)
-                UIFactory.Modal(CarSalesServices.UI.transform, "Auctions", body,
-                    ("Close", UIFactory.Neutral, null),
-                    ("Set GPS", UIFactory.Accent, () => { GpsSystem.SetTarget(place); CarSalesServices.UI.Success("GPS", "Route set to " + place.placeName); }));
-            else UIFactory.Confirm("Auctions", body, "OK", UIFactory.Accent, null);
-        }
 
         // ------------------------------------------------------------------ TASKBAR
         void BuildTaskbar()

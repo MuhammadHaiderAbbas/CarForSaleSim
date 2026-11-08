@@ -16,8 +16,8 @@ namespace CarSales
     public class SaveManager : MonoBehaviour
     {
         public const string LegacyFileName = "carsales_save.json";
-        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop";
-        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1;   // game v6: per-car components
+        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction";
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-dev";
 
         [SerializeField] bool loadOnStart = true;
@@ -77,6 +77,7 @@ namespace CarSales
             if (CarSalesServices.Bank) CarSalesServices.Bank.SetLoan(0);
             if (CarSalesServices.Progress) CarSalesServices.Progress.ResetProgress();
             if (CarSalesServices.Workshop) CarSalesServices.Workshop.ResetState();
+            if (CarSalesServices.Auction) CarSalesServices.Auction.ResetState();
             CarSalesServices.DayCycle.StartDay(1, 100f);
 
             var cars = new List<CarInstance>();
@@ -180,6 +181,7 @@ namespace CarSales
             env.Set(GameModule, GameModuleVersion, JsonUtility.ToJson(data, true));
             env.Set(LedgerModule, LedgerModuleVersion, JsonUtility.ToJson(eco.Ledger.State));
             if (CarSalesServices.Workshop) env.Set(WorkshopModule, WorkshopModuleVersion, JsonUtility.ToJson(CarSalesServices.Workshop.GetState()));
+            if (CarSalesServices.Auction) env.Set(AuctionModule, AuctionModuleVersion, JsonUtility.ToJson(CarSalesServices.Auction.GetState()));
             try
             {
                 Store.Write(ActiveSlot, env);
@@ -206,6 +208,7 @@ namespace CarSales
             SaveData data;
             LedgerState ledger = null;
             WorkshopState workshop = null;
+            AuctionState auction = null;
             try
             {
                 var game = result.Envelope.Get(GameModule);
@@ -223,6 +226,12 @@ namespace CarSales
                 {
                     Migrations.Migrate(ws, WorkshopModuleVersion);
                     workshop = JsonUtility.FromJson<WorkshopState>(ws.Data);
+                }
+                var au = result.Envelope.Get(AuctionModule);
+                if (au != null)
+                {
+                    Migrations.Migrate(au, AuctionModuleVersion);
+                    auction = JsonUtility.FromJson<AuctionState>(au.Data);
                 }
             }
             catch (Exception e)
@@ -248,7 +257,7 @@ namespace CarSales
             if (CarSalesServices.Messages) CarSalesServices.Messages.SetMessages(data.messages);
             CarSalesServices.Vehicles.RebuildAll();
             CarSalesServices.Marketplace.SetListings(data.marketListings, data.lotListings);
-            if (CarSalesServices.Auction) CarSalesServices.Auction.GenerateLots();
+            if (CarSalesServices.Auction) CarSalesServices.Auction.SetState(auction);
             DayCycleManager.TeleportPlayerHome();
 
             if (!string.IsNullOrEmpty(result.Message)) CarSalesServices.UI.Toast(ToastType.Warning, "Save recovered", result.Message);

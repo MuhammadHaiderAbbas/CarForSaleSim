@@ -46,7 +46,7 @@ namespace CarSales.EditorTools
             BuildPartsShop(Site(env, "PartsDirect", new Vector3(-12f, 0f, -38f), 180f), m);
             BuildCarWashCenter(Site(env, "CarWashCenter", new Vector3(100f, 0f, -38f), 180f), m);
             BuildUsedCarMarket(Site(env, "UsedCarMarket", new Vector3(-100f, 0f, -38f), 180f), m, carDisplayPrefab);
-            BuildAuctionCenter(Site(env, "AuctionCenter", new Vector3(-110f, 0f, 112f), 0f), m);
+            BuildAuctionCenter(Site(env, "AuctionCenter", new Vector3(-110f, 0f, 112f), 0f), m, carDisplayPrefab);
 
             Progress("Homes & properties", 0.65f);
             refs.playerStart = BuildHome(Site(env, "Home_Trailer", new Vector3(40f, 0f, 106f), 0f), m, PropertyManager.StarterHome, "Starter Trailer", 0);
@@ -581,18 +581,58 @@ namespace CarSales.EditorTools
         }
 
         // ------------------------------------------------------------------ AUCTION CENTER
-        static void BuildAuctionCenter(Transform g, Mats m)
+        static void BuildAuctionCenter(Transform g, Mats m, CarDisplay carDisplayPrefab)
         {
-            Solid(g, "Building", new Vector3(0f, 4f, 9f), new Vector3(26f, 8f, 18f), m.buildings[1]);
-            for (int i = 0; i < 6; i++)
-                Deco(g, "Window", PrimitiveType.Cube, new Vector3(-10f + i * 4f, 4.5f, -0.03f), new Vector3(2.4f, 3f, 0.06f), m.windowsGlow);
+            // Sale hall you can walk into (phase 6): seats, stage, rostrum, big screen.
+            Solid(g, "HallFloor", new Vector3(0f, 0.02f, 9f), new Vector3(26f, 0.04f, 18f), m.floor);
+            Solid(g, "Wall_Back", new Vector3(0f, 4f, 18f), new Vector3(26.3f, 8f, 0.3f), m.buildings[1]);
+            Solid(g, "Wall_W", new Vector3(-13f, 4f, 9f), new Vector3(0.3f, 8f, 18f), m.buildings[1]);
+            Solid(g, "Wall_E", new Vector3(13f, 4f, 9f), new Vector3(0.3f, 8f, 18f), m.buildings[1]);
+            Solid(g, "Front_W", new Vector3(-8f, 4f, 0f), new Vector3(10f, 8f, 0.3f), m.buildings[1]);
+            Solid(g, "Front_E", new Vector3(8f, 4f, 0f), new Vector3(10f, 8f, 0.3f), m.buildings[1]);
+            Solid(g, "Front_Header", new Vector3(0f, 6.25f, 0f), new Vector3(6f, 3.5f, 0.3f), m.buildings[1]);
+            Solid(g, "Roof", new Vector3(0f, 8.15f, 9f), new Vector3(26.8f, 0.3f, 18.8f), m.roof);
+            for (int i = 0; i < 4; i++)
+                Deco(g, "Window", PrimitiveType.Cube, new Vector3(i < 2 ? -11f + i * 4f : 7f + (i - 2) * 4f, 4.5f, -0.18f), new Vector3(2.4f, 3f, 0.06f), m.windowsGlow);
             FrontSign(g, 26f, 0f, 7.2f, "AUCTION CENTER", new Color(1f, 0.85f, 0.4f), m.signBoard);
             Solid(g, "EntranceCanopy", new Vector3(0f, 3.4f, -1.8f), new Vector3(8f, 0.3f, 3.6f), m.signBoard);
             foreach (float x in new[] { -3.7f, 3.7f })
                 Solid(g, "CanopyPost", new Vector3(x, 1.7f, -3.4f), new Vector3(0.25f, 3.4f, 0.25f), m.metal);
             Solid(g, "Apron", new Vector3(0f, 0.012f, -5f), new Vector3(30f, 0.024f, 8f), m.asphalt);
-            var desk = InteractBox(g, "AuctionDesk", new Vector3(0f, 0.6f, -1.2f), new Vector3(3f, 1.2f, 0.9f), m.desk);
-            Deco(g, "Gavel", PrimitiveType.Cube, new Vector3(0.6f, 1.25f, -1.2f), new Vector3(0.3f, 0.1f, 0.1f), m.trunk);
+
+            for (int row = 0; row < 4; row++)
+                foreach (float x in new[] { -6f, 6f })
+                {
+                    Solid(g, "Bench", new Vector3(x, 0.45f, 3.5f + row * 1.7f), new Vector3(8f, 0.1f, 0.5f), m.desk);
+                    Deco(g, "BenchBack", PrimitiveType.Cube, new Vector3(x, 0.8f, 3.75f + row * 1.7f), new Vector3(8f, 0.5f, 0.06f), m.desk);
+                }
+            Solid(g, "Stage", new Vector3(0f, 0.12f, 12.6f), new Vector3(10f, 0.2f, 5f), m.platform);
+            Deco(g, "StageRing", PrimitiveType.Cube, new Vector3(0f, 0.23f, 10.05f), new Vector3(10f, 0.02f, 0.1f), m.ringGlow);
+            var stage = Child("Stage", g, new Vector3(0f, 0.24f, 12.6f));
+            stage.localRotation = Quaternion.Euler(0f, 90f, 0f);
+            Solid(g, "Rostrum", new Vector3(6.8f, 0.7f, 15.6f), new Vector3(2.2f, 1.4f, 1f), m.signBoard);
+            Deco(g, "Gavel", PrimitiveType.Cube, new Vector3(6.8f, 1.45f, 15.4f), new Vector3(0.3f, 0.1f, 0.1f), m.trunk);
+            var auctioneer = Deco(g, "Auctioneer", PrimitiveType.Capsule, new Vector3(6.8f, 1.6f, 16.4f), new Vector3(0.55f, 0.9f, 0.55f), m.customer);
+            auctioneer.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            Deco(g, "ScreenPanel", PrimitiveType.Cube, new Vector3(-2f, 5.2f, 17.8f), new Vector3(7f, 3.2f, 0.1f), m.screen);
+            var screen = Text3D("Screen", g, new Vector3(-2f, 5.2f, 17.72f), "AUCTION CENTER", 9f, Color.white);
+            screen.rectTransform.sizeDelta = new Vector2(6.6f, 3f);
+            screen.enableAutoSizing = true;
+            screen.fontSizeMin = 1f;
+            screen.fontSizeMax = 9f;
+            PointLight(g, new Vector3(0f, 7f, 6f), 18f, 1.6f, new Color(1f, 0.92f, 0.8f));
+            PointLight(g, new Vector3(0f, 6f, 13f), 12f, 2.2f, new Color(1f, 0.95f, 0.9f));
+
+            var hall = g.gameObject.AddComponent<AuctionHall>();
+            hall.center = new Vector3(0f, 4f, 9f);
+            hall.size = new Vector3(26f, 8f, 18f);
+            hall.stage = stage;
+            hall.screen = screen;
+            Set(hall, "displayPrefab", carDisplayPrefab);
+
+            // Registration desk under the canopy.
+            var desk = InteractBox(g, "AuctionDesk", new Vector3(-2.2f, 0.6f, -1.2f), new Vector3(2.6f, 1.2f, 0.9f), m.desk);
+            Deco(g, "DeskScreen", PrimitiveType.Cube, new Vector3(-2.2f, 1.35f, -1.2f), new Vector3(0.6f, 0.4f, 0.05f), m.screen);
             PointLight(g, new Vector3(0f, 3f, -2f), 10f, 1.4f, new Color(1f, 0.9f, 0.75f));
             var zone = AddZone(g, ServiceType.Auction, "Auction Car Park", new Vector3(0f, 2f, -5f), new Vector3(30f, 4f, 8f),
                                new Vector3(-12f, 0.05f, -5f), new Vector3(-8f, 0.05f, -5f), new Vector3(8f, 0.05f, -5f), new Vector3(12f, 0.05f, -5f));
@@ -600,6 +640,25 @@ namespace CarSales.EditorTools
             var sd = desk.AddComponent<ServiceDesk>();
             sd.zone = zone;
             sd.type = ServiceType.Auction;
+
+            // Viewing yard with 12 numbered bays (east side).
+            Solid(g, "YardPad", new Vector3(25f, 0.01f, 7f), new Vector3(20f, 0.02f, 21f), m.asphalt);
+            SignText(g, new Vector3(25f, 3.2f, -3.6f), "VIEWING YARD", 6f, new Color(1f, 0.85f, 0.4f), new Vector2(8f, 1f));
+            Solid(g, "YardSignPost", new Vector3(25f, 1.4f, -3.4f), new Vector3(0.2f, 2.8f, 0.2f), m.metal);
+            var bays = new List<Transform>();
+            for (int r = 0; r < 2; r++)
+                for (int i = 0; i < 6; i++)
+                {
+                    float x = 17.2f + i * 3.15f, z = r == 0 ? 2.5f : 12f;
+                    var b = Child($"YardBay_{bays.Count + 1}", g, new Vector3(x, 0.03f, z));
+                    b.localRotation = Quaternion.Euler(0f, r == 0 ? 0f : 180f, 0f);
+                    bays.Add(b);
+                    Deco(g, "BayLine", PrimitiveType.Cube, new Vector3(x - 1.575f, 0.025f, z), new Vector3(0.1f, 0.01f, 5f), m.line);
+                    SignText(g, new Vector3(x, 0.6f, r == 0 ? -0.4f : 14.9f), (bays.Count).ToString(), 4f, Color.white, new Vector2(1f, 0.6f));
+                }
+            var yard = g.gameObject.AddComponent<AuctionYard>();
+            yard.bays = bays.ToArray();
+            Set(yard, "displayPrefab", carDisplayPrefab);
             AddMapPlace(g.gameObject, "Auction Center", "A", UIFactory.Bad, new Vector3(0f, 0.1f, -9f));
         }
 
