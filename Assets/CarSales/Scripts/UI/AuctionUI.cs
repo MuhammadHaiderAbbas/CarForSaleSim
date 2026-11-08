@@ -48,7 +48,7 @@ namespace CarSales
             leaderText = UIFactory.Text(right, "", 20, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             timerText = UIFactory.Text(right, "", 16, UIFactory.TextDim, TextAlignmentOptions.Left);
             timerBar = UIFactory.ProgressBar(right, UIFactory.Good, 14f);
-            var logBg = UIFactory.Panel(right, "Log", new Color(0f, 0f, 0f, 0.25f), 1.6f);
+            var logBg = UIFactory.Panel(right, "Log", UIFactory.Overlay, 1.6f);
             UIFactory.LE(logBg, flexH: 1);
             UIFactory.Vertical(logBg, 10, 0f);
             var logContent = UIFactory.ScrollList(logBg.transform, 2f, "LogScroll");

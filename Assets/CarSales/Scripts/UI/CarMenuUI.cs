@@ -58,7 +58,7 @@ namespace CarSales
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 3;
             UIFactory.LE(gridRt, h: 190);
-            driveButton = UIFactory.Btn(gridRt, "Drive (F)", new Color(0.55f, 0.3f, 0.8f), () => CarSalesServices.TestDrive.StartDrive(car), 54f, 17f);
+            driveButton = UIFactory.Btn(gridRt, "Drive (F)", UIFactory.Special, () => CarSalesServices.TestDrive.StartDrive(car), 54f, 17f);
             UIFactory.Btn(gridRt, "Inspect", UIFactory.Neutral, () => CarSalesServices.UI.inspection.Show(car.Data, car), 54f, 17f);
             priceButton = UIFactory.Btn(gridRt, "Set Price", UIFactory.Good, () => CarSalesServices.UI.priceUI.Show(car), out priceLabel, 54f, 16f);
             repairButton = UIFactory.Btn(gridRt, "Repair", UIFactory.Warn, () => Service(ServiceType.Workshop), out repairLabel, 54f, 15f);
@@ -116,7 +116,7 @@ namespace CarSales
             profit.text = d.personal ? "-" : $"<color={UIFactory.Hex(value - inv >= 0 ? UIFactory.Good : UIFactory.Bad)}>{UIFactory.Money(value - inv)}</color>";
             listed.text = d.state == CarState.Listed ? UIFactory.Money(d.listedPrice) : "Not listed";
 
-            stateChip.color = d.personal ? new Color(0.1f, 0.6f, 0.65f) : d.state == CarState.Listed ? UIFactory.Good : d.state == CarState.NeedsRepair ? UIFactory.Warn : UIFactory.Neutral;
+            stateChip.color = d.personal ? UIFactory.Personal : d.state == CarState.Listed ? UIFactory.Good : d.state == CarState.NeedsRepair ? UIFactory.Warn : UIFactory.Neutral;
             stateChipText.text = d.personal ? "PERSONAL CAR" : d.state == CarState.Listed ? "FOR SALE" : d.state == CarState.NeedsRepair ? "NEEDS REPAIR" : "READY";
 
             driveButton.interactable = CarSalesServices.TestDrive && !CarSalesServices.TestDrive.IsDriving && d.fuel > 0.5f;

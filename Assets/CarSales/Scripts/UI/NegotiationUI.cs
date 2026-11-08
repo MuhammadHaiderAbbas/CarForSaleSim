@@ -29,7 +29,7 @@ namespace CarSales
             moodText = UIFactory.Text(info, "", 16, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             patienceBar = UIFactory.ProgressBar(info, UIFactory.Good, 12f);
 
-            var chatBg = UIFactory.Panel(body, "ChatBg", new Color(0f, 0f, 0f, 0.25f), 1.4f);
+            var chatBg = UIFactory.Panel(body, "ChatBg", UIFactory.Overlay, 1.4f);
             UIFactory.LE(chatBg, flexH: 1);
             UIFactory.Vertical(chatBg, 10, 0f);
             chat = UIFactory.ScrollList(chatBg.transform, 10f, "Chat");
@@ -116,7 +116,7 @@ namespace CarSales
             var v = UIFactory.Vertical(bubble, 0, 2f);
             v.padding = new RectOffset(16, 16, 10, 10);
             var who = UIFactory.Text(bubble.transform, fromPlayer ? "You" : session.Customer.Profile.customerName, 14,
-                                     fromPlayer ? new Color(0.85f, 0.92f, 1f) : UIFactory.Gold, TextAlignmentOptions.Left, true);
+                                     fromPlayer ? UIFactory.ChatPlayer : UIFactory.Gold, TextAlignmentOptions.Left, true);
             var t = UIFactory.Text(bubble.transform, text, 19, UIFactory.TextMain, TextAlignmentOptions.Left);
             float width = Mathf.Min(560f, t.GetPreferredValues(text, 560f, 0f).x + 40f);
             UIFactory.LE(bubble, w: Mathf.Max(160f, width), flexW: 0);

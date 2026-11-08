@@ -89,6 +89,7 @@ namespace CarSales.EditorTools
             cam.farClipPlane = 1500f;
             cam.cullingMask = ~((1 << StudioLayer) | (1 << MinimapLayer));
             camGo.AddComponent<AudioListener>();
+            SetUpLooks(cam);
 
             var controllerGo = new GameObject("TestTrackController");
             var controller = controllerGo.AddComponent<TestTrackController>();

@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.0-dev — Phase 4a "Design system & lighting"
+- **Themes**: Dark (original), Light, High contrast and a Custom theme asset; every colour in the UI now comes from the
+  theme (a test enforces it). Button text adapts automatically for contrast.
+- **Interface size** setting (80-130%), applied immediately.
+- Windows **fade in**; gamepad users get the first button selected.
+- **New phone**: home screen with clock, date, notifications and apps (Messages, Bank, Tow truck, Taxi, Map, My cars,
+  Market, Real estate, Settings). Bank, Tow, Taxi and Messages work right on the phone.
+- **Lighting**: URP post-processing (ACES tonemapping, bloom, colour grading, vignette, anti-aliasing) on all cameras;
+  your newest Poly Haven sky is used automatically; the sky darkens at night and ambient light follows it.
+- 2 new tests (189 total).
+
 ## v5.0-dev — Phase 3b "Online sources & characters"
 - Asset Studio **Online** tab:
   - **Sketchfab**: search downloadable models (thumbnails, author, licence and whether it can ship), then

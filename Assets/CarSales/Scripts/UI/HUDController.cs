@@ -23,7 +23,7 @@ namespace CarSales
         public override void Build()
         {
             // Top-left: day, shop state, goal
-            var tl = UIFactory.Panel(Root, "TopLeft", new Color(0.03f, 0.06f, 0.13f, 0.78f), 1.3f);
+            var tl = UIFactory.Panel(Root, "TopLeft", UIFactory.HudBg, 1.3f);
             UIFactory.Place(tl.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(20f, -20f), new Vector2(660f, 178f));
             var tlv = UIFactory.Vertical(tl, 16, 4f);
             tlv.padding = new RectOffset(20, 18, 14, 14);
@@ -35,10 +35,10 @@ namespace CarSales
             var barHolder = UIFactory.VCol(energyRow, 0f, "BarHolder");
             barHolder.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
             energyBar = UIFactory.ProgressBar(barHolder, UIFactory.Good, 10f);
-            goalText = UIFactory.Text(tl.transform, "", 16, new Color(0.55f, 0.85f, 1f), TextAlignmentOptions.Left);
+            goalText = UIFactory.Text(tl.transform, "", 16, UIFactory.Info, TextAlignmentOptions.Left);
 
             // Top-right: money
-            var tr = UIFactory.Panel(Root, "TopRight", new Color(0.03f, 0.06f, 0.13f, 0.78f), 1.3f);
+            var tr = UIFactory.Panel(Root, "TopRight", UIFactory.HudBg, 1.3f);
             UIFactory.Place(tr.rectTransform, Vector2.one, Vector2.one, new Vector2(-20f, -20f), new Vector2(330f, 116f));
             var trv = UIFactory.Vertical(tr, 14, 2f, TextAnchor.UpperRight);
             trv.padding = new RectOffset(18, 20, 12, 12);
@@ -47,7 +47,7 @@ namespace CarSales
             loanText = UIFactory.Text(tr.transform, "", 16, UIFactory.Warn, TextAlignmentOptions.Right);
 
             // Top-centre: GPS
-            gpsPanel = UIFactory.Panel(Root, "GPS", new Color(0.03f, 0.06f, 0.13f, 0.85f), 3f);
+            gpsPanel = UIFactory.Panel(Root, "GPS", UIFactory.HudBgStrong, 3f);
             UIFactory.Place(gpsPanel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(460f, 54f));
             gpsArrow = UIFactory.SpriteImage(gpsPanel.transform, "Arrow", UIFactory.Arrow, UIFactory.Gold, 30f);
             UIFactory.Place(gpsArrow.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(32f, 0f), new Vector2(30f, 30f));
@@ -71,7 +71,7 @@ namespace CarSales
             UIFactory.Place(north.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 4f), new Vector2(30f, 26f));
 
             // Speedometer
-            var gauge = UIFactory.SpriteImage(Root, "Speedometer", UIFactory.Circle, new Color(0.03f, 0.06f, 0.13f, 0.85f), 150f);
+            var gauge = UIFactory.SpriteImage(Root, "Speedometer", UIFactory.Circle, UIFactory.HudBgStrong, 150f);
             UIFactory.Place(gauge.rectTransform, Vector2.zero, Vector2.zero, new Vector2(282f, 30f), new Vector2(150f, 150f));
             var ringBg = UIFactory.SpriteImage(gauge.transform, "RingBg", UIFactory.Ring, UIFactory.Ghost, 136f);
             ringBg.rectTransform.anchoredPosition = Vector2.zero;
@@ -90,7 +90,7 @@ namespace CarSales
             UIFactory.Place(fuelText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -4f), new Vector2(160f, 22f));
 
             // Bottom-right: key hints
-            var keys = UIFactory.Panel(Root, "KeyHints", new Color(0.03f, 0.06f, 0.13f, 0.7f), 1.5f);
+            var keys = UIFactory.Panel(Root, "KeyHints", UIFactory.HudBg, 1.5f);
             UIFactory.Place(keys.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20f, 20f), new Vector2(250f, 284f));
             var kv = UIFactory.Vertical(keys, 14, 6f);
             kv.padding = new RectOffset(16, 14, 14, 14);
@@ -103,13 +103,13 @@ namespace CarSales
             UIFactory.KeyHint(keys.transform, "Esc", "Menu");
 
             // Bottom-centre prompt
-            promptPanel = UIFactory.Panel(Root, "Prompt", new Color(0.03f, 0.06f, 0.13f, 0.85f), 3f);
+            promptPanel = UIFactory.Panel(Root, "Prompt", UIFactory.HudBgStrong, 3f);
             UIFactory.Place(promptPanel.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 120f), new Vector2(980f, 52f));
             promptText = UIFactory.Text(promptPanel.transform, "", 22, UIFactory.TextMain, TextAlignmentOptions.Center, true);
             UIFactory.Stretch(promptText.rectTransform, 6f);
 
             // Crosshair
-            var cross = UIFactory.SpriteImage(Root, "Crosshair", UIFactory.Circle, new Color(1f, 1f, 1f, 0.85f), 8f);
+            var cross = UIFactory.SpriteImage(Root, "Crosshair", UIFactory.Circle, UIFactory.Crosshair, 8f);
             UIFactory.Place(cross.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(8f, 8f));
         }
 
@@ -143,7 +143,7 @@ namespace CarSales
             minimapCamera.orthographic = true;
             minimapCamera.orthographicSize = 34f;
             minimapCamera.clearFlags = CameraClearFlags.SolidColor;
-            minimapCamera.backgroundColor = new Color(0.08f, 0.12f, 0.2f);
+            minimapCamera.backgroundColor = UIFactory.MapBg;
             minimapCamera.cullingMask = ~((1 << ThumbnailService.StudioLayer) | (1 << 5));
             minimapCamera.nearClipPlane = 1f;
             minimapCamera.farClipPlane = 200f;

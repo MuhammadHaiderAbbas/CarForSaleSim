@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-3a are merged; Phase 3b code is written (see [Phase 3 status](#phase-3-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-3 are merged; Phase 4a code is written (see [Phase 4 status](#phase-4-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -914,6 +914,29 @@ shapes, but the first real download is the test. Report any "Unexpected answer" 
 5. Replace placeholder cars/characters/buildings with imported assets you choose (via Asset Studio).
 **Done when:** every existing screen uses the theme; no hard-coded colours remain (lint test); phone replaces the old phone.
 
+#### Phase 4 status
+**Phase 4a: code complete** (189 EditMode tests incl. the colour lint, compile-checked with URP; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Theme | `UITheme` / `UIPalette` (~40 colour tokens + open-animation time); presets **Dark** (original), **Light**, **High contrast**, and **Custom** (`Create > CarSales > UI Theme`, saved as `Resources/CarSalesUITheme`). `UIFactory` colours read the theme; every hard-coded colour in the screens replaced by tokens; button text picks dark/light automatically for contrast. |
+| Lint | `UiLintTests`: no literal colours in `Scripts/UI` except the theme itself (and two constants in UIFactory). |
+| Motion & navigation | Windows fade/scale in (`UITransition`, real time so it works while paused); with a gamepad the first button gets focus. |
+| UI scale | Settings → Interface size 80-130%, applied immediately (game and main menu). |
+| Phone | New phone: status bar (time, cash, energy), home screen with clock, date, notifications and 9 apps. Tow, Taxi, Bank (balance, loan, today, recent transactions) and Messages run on the phone; Map, My cars, Market, Real estate, Settings open their screens. `ShowTow(car)` kept. |
+| Lighting | Build Everything adds URP post-processing to the game, menu and test-track cameras (ACES tonemapping, bloom, colour adjustments, vignette, SMAA; profile `Generated/Settings/PostProcessing.asset`) and uses the newest Poly Haven sky from the Asset Studio. `DayNightLighting` dims the sky at night (on a runtime copy of the material) and refreshes ambient light/reflections from it. |
+
+**Phase 4b (next):** redesigns of the HUD (minimal), dealer computer (desktop with apps), vehicle file (tabs),
+marketplace and map; cinematic main menu; more components (tables, tabs, modals); reflection probes for the
+showroom; replacing placeholders with your imported assets (step 5).
+
+**Phase 4a play-test checklist:**
+1. Build Everything (adds post-processing; uses your Poly Haven sky if you imported one), Play.
+2. Settings: change *Interface size* (instant) and *Theme* (Light / High contrast; reload the game to see it).
+3. Open any windows: they fade in; with a gamepad, a button is selected.
+4. P: the new phone - check the clock, notifications, Bank, Tow (move a car), Taxi, and the other apps.
+5. Watch a sunset and a night: the sky gets darker, lamps glow (bloom).
+6. Test Runner: `UiLintTests` green.
 ### Phase 5 — Inspection, workshop, documents (L)
 1. PlayerKnowledge + inspection methods + Inspection Mode (sockets, checklist).
 2. Fault catalogue (40), progression, DTC scanner upgrade.

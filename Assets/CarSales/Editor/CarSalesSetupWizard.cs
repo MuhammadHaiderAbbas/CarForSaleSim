@@ -638,6 +638,7 @@ namespace CarSales.EditorTools
             cam.fieldOfView = 70f;
             cam.cullingMask = ~((1 << StudioLayer) | (1 << MinimapLayer));
             camGo.AddComponent<AudioListener>();
+            SetUpLooks(cam);
 
             var fpc = player.AddComponent<SimpleFirstPersonController>();
             Set(fpc, "cameraPivot", pivot);
@@ -742,6 +743,7 @@ namespace CarSales.EditorTools
             cam.fieldOfView = 50f;
             cam.cullingMask = ~((1 << StudioLayer) | (1 << MinimapLayer));
             camGo.AddComponent<AudioListener>();
+            SetUpLooks(cam);
 
             new GameObject("Audio").AddComponent<AudioManager>();
             var es = new GameObject("EventSystem", typeof(EventSystem));

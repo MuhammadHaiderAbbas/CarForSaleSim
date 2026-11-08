@@ -24,6 +24,8 @@ approve them into the game. Imported cars go on sale and can be driven. Release 
 doesn't allow a commercial game. **If this repository is public, don't commit paid assets.**
 Its **Online** tab searches and downloads Sketchfab models (with your own API token) and Poly Haven skies and
 materials; imported characters can walk around as customers.
+Phase 4a adds **themes** (Dark / Light / High contrast / custom), an **interface size** setting, window animations,
+a new **phone** with apps, and **post-processing + HDRI sky** lighting.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

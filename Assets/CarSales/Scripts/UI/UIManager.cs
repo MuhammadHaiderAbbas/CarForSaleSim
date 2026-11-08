@@ -103,9 +103,15 @@ namespace CarSales
             var scaler = GetComponent<CanvasScaler>();
             if (!scaler) scaler = gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.referenceResolution = GameSettings.UiReferenceResolution;
             scaler.matchWidthOrHeight = 0.5f;
             if (!GetComponent<GraphicRaycaster>()) gameObject.AddComponent<GraphicRaycaster>();
+        }
+
+        void ApplyUiScale(float _)
+        {
+            var scaler = GetComponent<CanvasScaler>();
+            if (scaler) scaler.referenceResolution = GameSettings.UiReferenceResolution;
         }
 
         T Create<T>(string name, bool active = false) where T : UIPanel
@@ -128,6 +134,7 @@ namespace CarSales
             if (inventoryKey != null) inventoryKey.performed += OnInventoryInput;
             if (mapKey != null) mapKey.performed += OnMapInput;
             if (phoneKey != null) phoneKey.performed += OnPhoneInput;
+            GameSettings.OnUiScaleChanged += ApplyUiScale;
         }
 
         void OnMapInput(InputAction.CallbackContext _)
@@ -148,6 +155,7 @@ namespace CarSales
             if (inventoryKey != null) inventoryKey.performed -= OnInventoryInput;
             if (mapKey != null) mapKey.performed -= OnMapInput;
             if (phoneKey != null) phoneKey.performed -= OnPhoneInput;
+            GameSettings.OnUiScaleChanged -= ApplyUiScale;
             Time.timeScale = 1f;
         }
 
@@ -183,6 +191,7 @@ namespace CarSales
             panel.SetActive(true);
             panel.transform.SetAsLastSibling();
             if (toastArea) toastArea.SetAsLastSibling();
+            UITransition.Play(panel);
             Time.timeScale = IsPausePanel(panel) ? 0f : 1f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;

@@ -13,6 +13,7 @@ namespace CarSales
         const string ActiveSlotKey = "CarSales.ActiveSlot";
         const string DrivingKey = "CarSales.DrivingModel", AbsKey = "CarSales.ABS", TcsKey = "CarSales.TCS", EscKey = "CarSales.ESC";
         const string ManualKey = "CarSales.ManualGearbox";
+        const string ThemeKey = "CarSales.UITheme", UiScaleKey = "CarSales.UIScale";
 
         static bool loaded;
         static float sensitivity, volume;
@@ -61,6 +62,24 @@ namespace CarSales
             get => PlayerPrefs.GetInt(ManualKey, 0) == 1;
             set => SetFlag(ManualKey, value);
         }
+
+        /// <summary>Colour theme of the UI. Screens use it the next time they are built (load a game / main menu).</summary>
+        public static UIThemeChoice Theme
+        {
+            get => (UIThemeChoice)Mathf.Clamp(PlayerPrefs.GetInt(ThemeKey, 0), 0, 3);
+            set { PlayerPrefs.SetInt(ThemeKey, (int)value); PlayerPrefs.Save(); UITheme.Reload(); }
+        }
+
+        /// <summary>Size of the whole UI, 0.8 - 1.3 (applies immediately).</summary>
+        public static float UiScale
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetFloat(UiScaleKey, 1f), 0.8f, 1.3f);
+            set { PlayerPrefs.SetFloat(UiScaleKey, Mathf.Clamp(value, 0.8f, 1.3f)); PlayerPrefs.Save(); OnUiScaleChanged?.Invoke(UiScale); }
+        }
+        public static event System.Action<float> OnUiScaleChanged;
+
+        /// <summary>CanvasScaler reference resolution for the current UI scale (bigger scale = smaller reference).</summary>
+        public static Vector2 UiReferenceResolution => new Vector2(1920f, 1080f) / UiScale;
 
         static bool Flag(string key) => PlayerPrefs.GetInt(key, 1) == 1;
         static void SetFlag(string key, bool on) { PlayerPrefs.SetInt(key, on ? 1 : 0); PlayerPrefs.Save(); }

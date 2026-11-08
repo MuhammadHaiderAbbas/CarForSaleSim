@@ -24,7 +24,7 @@ namespace CarSales
             var body = UIFactory.Window(Root, "Town Map", new Vector2(1500f, 920f), CloseAll);
             UIFactory.Horizontal(body, 0, 24f, TextAnchor.UpperLeft).childForceExpandHeight = true;
 
-            var frame = UIFactory.Panel(body, "MapFrame", new Color(0.05f, 0.08f, 0.14f), 1.2f);
+            var frame = UIFactory.Panel(body, "MapFrame", UIFactory.MapFrame, 1.2f);
             UIFactory.LE(frame, w: MapPixels, h: MapPixels, flexW: 0);
             frame.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             mapImage = UIFactory.Rect("Map", frame.transform).gameObject.AddComponent<RawImage>();
@@ -57,7 +57,7 @@ namespace CarSales
                 mapCam = go.AddComponent<Camera>();
                 mapCam.orthographic = true;
                 mapCam.clearFlags = CameraClearFlags.SolidColor;
-                mapCam.backgroundColor = new Color(0.08f, 0.12f, 0.2f);
+                mapCam.backgroundColor = UIFactory.MapBg;
                 mapCam.cullingMask = ~((1 << ThumbnailService.StudioLayer) | (1 << 5));
                 mapCam.nearClipPlane = 1f;
                 mapCam.farClipPlane = 600f;

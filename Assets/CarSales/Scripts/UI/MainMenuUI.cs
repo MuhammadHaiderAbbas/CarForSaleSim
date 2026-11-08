@@ -43,14 +43,14 @@ namespace CarSales
             var scaler = GetComponent<CanvasScaler>();
             if (!scaler) scaler = gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.referenceResolution = GameSettings.UiReferenceResolution;
             scaler.matchWidthOrHeight = 0.5f;
             if (!GetComponent<GraphicRaycaster>()) gameObject.AddComponent<GraphicRaycaster>();
         }
 
         void Build()
         {
-            var panel = UIFactory.Panel(transform, "MainPanel", new Color(0.03f, 0.06f, 0.13f, 0.92f), 1f);
+            var panel = UIFactory.Panel(transform, "MainPanel", UIFactory.MenuBg, 1f);
             mainPanel = panel.gameObject;
             UIFactory.Place(panel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(90f, 0f), new Vector2(600f, 840f));
             var outline = panel.gameObject.AddComponent<Outline>();
@@ -73,7 +73,7 @@ namespace CarSales
             UIFactory.Btn(panel.transform, "Settings", UIFactory.Neutral, () => { mainPanel.SetActive(false); settings.Show(); }, 70f, 24f);
             UIFactory.Btn(panel.transform, "Quit", UIFactory.Bad, PauseMenuUI.QuitGame, 70f, 24f);
             UIFactory.Spacer(panel.transform);
-            var version = UIFactory.Text(panel.transform, "v" + SaveManager.GameVersion, 14, new Color(1f, 1f, 1f, 0.4f), TextAlignmentOptions.Center);
+            var version = UIFactory.Text(panel.transform, "v" + SaveManager.GameVersion, 14, UIFactory.TextFaint, TextAlignmentOptions.Center);
             UIFactory.LE(version, h: 20);
 
             var settingsRoot = UIFactory.Rect("Settings", transform);
@@ -88,7 +88,7 @@ namespace CarSales
 
         void BuildSlotPanel()
         {
-            var panel = UIFactory.Panel(transform, "SlotPanel", new Color(0.03f, 0.06f, 0.13f, 0.95f), 1f);
+            var panel = UIFactory.Panel(transform, "SlotPanel", UIFactory.MenuBg, 1f);
             slotPanel = panel.gameObject;
             UIFactory.Place(panel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(90f, 0f), new Vector2(760f, 840f));
             panel.gameObject.AddComponent<Outline>().effectColor = UIFactory.Line;
@@ -196,6 +196,10 @@ namespace CarSales
             }
             else infoText.text = "No saved game yet - start a New Game!";
         }
+
+        void OnEnable() => GameSettings.OnUiScaleChanged += ApplyUiScale;
+        void OnDisable() => GameSettings.OnUiScaleChanged -= ApplyUiScale;
+        void ApplyUiScale(float _) { var s = GetComponent<CanvasScaler>(); if (s) s.referenceResolution = GameSettings.UiReferenceResolution; }
 
         void Start()
         {

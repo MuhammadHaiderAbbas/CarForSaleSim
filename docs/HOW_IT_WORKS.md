@@ -379,3 +379,12 @@ Won cars appear in the auction car park — drive or tow them home.
 - **Licences:** `LicencePolicy.Check` decides; `LicenceBuildCheck` (IPreprocessBuildWithReport) fails release builds with
   blocked assets and writes `CREDITS.txt` after each build.
 
+## 15. UI design system (Phase 4)
+- **Colours:** always `UIFactory.<Token>` (e.g. `UIFactory.CardBg`, `UIFactory.Good`, `UIFactory.HudBg`). They read
+  `UITheme.Current` (`Scripts/UI/Framework/UITheme.cs`). To add a colour, add a field to `UIPalette`, give it a value
+  in `Dark()` (Light/High contrast inherit it), and expose it in UIFactory. `UiLintTests` fails on literal colours.
+- **Buttons:** `UIFactory.Btn` picks the label colour with `ContrastText`; `SetButtonColor` keeps it readable.
+- **Windows:** `UIManager.Open` plays `UITransition` (fade + scale, unscaled time) and focuses the first button for gamepads.
+- **Scale:** `GameSettings.UiScale` → CanvasScaler reference resolution (`GameSettings.UiReferenceResolution`).
+- **Post-processing:** `CarSalesLooks.cs` (editor, compiled when URP is installed: `CARSALES_URP`).
+

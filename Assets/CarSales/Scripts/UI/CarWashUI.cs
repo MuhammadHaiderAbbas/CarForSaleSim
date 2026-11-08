@@ -24,7 +24,7 @@ namespace CarSales
             cleanBar = UIFactory.ProgressBar(body, UIFactory.Accent, 16f);
             costText = UIFactory.Text(body, "", 26, UIFactory.Gold, TextAlignmentOptions.Left, true);
             statusText = UIFactory.Text(body, "", 18, UIFactory.Accent, TextAlignmentOptions.Left, true);
-            progress = UIFactory.ProgressBar(body, new Color(0.4f, 0.8f, 1f), 14f);
+            progress = UIFactory.ProgressBar(body, UIFactory.Info, 14f);
             UIFactory.Spacer(body);
             var row = UIFactory.HRow(body, 56, 12);
             backButton = UIFactory.Btn(row, "Back", UIFactory.Neutral, Back, 54f);
