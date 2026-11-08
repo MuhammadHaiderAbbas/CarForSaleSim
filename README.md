@@ -10,8 +10,9 @@ Reach a **$1,000,000** net worth to win (or go bankrupt trying).
 live auctions vs. AI bidders, a walk-around used car lot, 3 dealerships, homes & properties, a real 24-hour day with
 energy and sleeping, night lighting, a town map with GPS, and a phone. See [CHANGELOG.md](CHANGELOG.md).
 
-**Next: V5.0.** The full development blueprint (architecture, script-by-script plan, phases, tests) is in
-[docs/V5_MASTER_SPEC.md](docs/V5_MASTER_SPEC.md).
+**V5.0 in progress.** The full development blueprint (architecture, script-by-script plan, phases, tests) is in
+[docs/V5_MASTER_SPEC.md](docs/V5_MASTER_SPEC.md). Phase 1 is in: 3 save slots with automatic backups, a bank
+account statement of every transaction, and automated tests (*Window → General → Test Runner → EditMode → Run All*).
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
@@ -144,7 +145,8 @@ Full steps are in [docs/HOW_IT_WORKS.md → Moving into a city](docs/HOW_IT_WORK
 | No interaction prompt | The object isn't on Layer 20 *Interactable*, or the Player's *PlayerInteractor* mask isn't set. |
 | UI buttons don't click | The EventSystem must use **Input System UI Input Module**. |
 | Mouse is stuck / visible | Click inside the Game view. Esc closes menus. |
-| Old save after changes | Press **F12** in Play mode, or **Tools → Car Sales → Delete Save File**. |
+| Old save after changes | Press **F12** in Play mode (deletes the active slot), or **Tools → Car Sales → Delete All Saves**. |
+| "Save recovered" message | The latest save file was damaged; the game loaded the newest good backup. Nothing to do. |
 
 ---
 

@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,7 +62,7 @@ namespace CarSales
             var p = Get(id);
             if (p == null) { message = "Unknown property."; return false; }
             if (Owns(id)) { message = "You already own this."; return false; }
-            if (!CarSalesServices.Economy.TrySpend(p.price)) { message = $"You need {UIFactory.Money(p.price)} to buy {p.displayName}."; return false; }
+            if (!CarSalesServices.Economy.TrySpend(p.price, TxCategory.PropertyPurchase, $"Bought {p.displayName}", p.id)) { message = $"You need {UIFactory.Money(p.price)} to buy {p.displayName}."; return false; }
             owned.Add(id);
             CarSalesServices.DayCycle.RegisterExpense(p.price);
             CarSalesServices.PlaySfx(Sfx.Success);

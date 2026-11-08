@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -121,7 +122,7 @@ namespace CarSales
             if (!car.inspected)
             {
                 int fee = CarValueCalculator.InspectionCost();
-                if (fee > 0 && !CarSalesServices.Economy.TrySpend(fee)) { CarSalesServices.UI.Error("Not enough money for an inspection."); return; }
+                if (fee > 0 && !CarSalesServices.Economy.TrySpend(fee, TxCategory.Inspection, $"Inspection - {car.Name}", car.instanceId)) { CarSalesServices.UI.Error("Not enough money for an inspection."); return; }
                 if (fee > 0) CarSalesServices.DayCycle.RegisterExpense(fee);
                 car.inspected = true;
             }

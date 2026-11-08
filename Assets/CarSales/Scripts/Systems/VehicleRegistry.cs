@@ -1,3 +1,4 @@
+using CarSales.Foundation;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -153,12 +154,12 @@ namespace CarSales
         {
             int cost = RefuelCost(car.Data);
             if (cost <= 0) { CarSalesServices.UI.Notify("The tank is already full."); return false; }
-            if (!CarSalesServices.Economy.TrySpend(cost))
+            if (!CarSalesServices.Economy.TrySpend(cost, TxCategory.Fuel, $"Fuel - {car.Definition.displayName}", car.Data.instanceId))
             {
                 // Buy as much as you can afford
                 int affordable = Mathf.Max(0, CarSalesServices.Economy.Money);
                 if (affordable <= 0) { CarSalesServices.UI.Error("Not enough money for fuel!"); return false; }
-                CarSalesServices.Economy.TrySpend(affordable);
+                CarSalesServices.Economy.TrySpend(affordable, TxCategory.Fuel, $"Fuel (partial) - {car.Definition.displayName}", car.Data.instanceId);
                 car.Data.fuel = Mathf.Min(100f, car.Data.fuel + affordable / fuelPricePerPercent);
                 cost = affordable;
             }
@@ -176,7 +177,7 @@ namespace CarSales
             var d = car.Data;
             int value = CarValueCalculator.MarketValue(d);
             int profit = price - d.purchasePrice - d.repairSpent;
-            CarSalesServices.Economy.AddMoney(price);
+            CarSalesServices.Economy.AddMoney(price, TxCategory.VehicleSale, $"Sold {car.Definition.displayName}", d.instanceId);
             CarSalesServices.Economy.ChangeReputation(price <= value ? 2f : 0.5f);
             RemoveSoldCar(car, price, profit);
             CarSalesServices.PlaySfx(Sfx.Success);
@@ -193,7 +194,7 @@ namespace CarSales
             int profit = price - d.purchasePrice - d.repairSpent;
             if (CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving && CarSalesServices.TestDrive.CurrentCar == car)
                 CarSalesServices.TestDrive.EndDrive();
-            CarSalesServices.Economy.AddMoney(price);
+            CarSalesServices.Economy.AddMoney(price, TxCategory.VehicleSale, $"Wholesale - {car.Definition.displayName}", d.instanceId);
             RemoveSoldCar(car, price, profit);
             CarSalesServices.PlaySfx(Sfx.Coin);
             CarSalesServices.UI.Success("Wholesale complete", $"{car.Definition.displayName} sold to the wholesaler for {UIFactory.Money(price)}.");

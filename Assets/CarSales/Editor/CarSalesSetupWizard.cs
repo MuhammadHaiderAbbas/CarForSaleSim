@@ -172,16 +172,24 @@ namespace CarSales.EditorTools
             EditorUtility.DisplayDialog("Car Sales", $"Re-linked {fixedCount} input action field(s).", "OK");
         }
 
-        [MenuItem("Tools/Car Sales/Delete Save File", priority = 20)]
+        [MenuItem("Tools/Car Sales/Delete All Saves", priority = 20)]
         static void DeleteSave()
         {
-            string path = Path.Combine(Application.persistentDataPath, "carsales_save.json");
-            if (File.Exists(path)) { File.Delete(path); Debug.Log("[CarSales] Deleted " + path); }
-            else Debug.Log("[CarSales] No save file at " + path);
+            if (!EditorUtility.DisplayDialog("Car Sales", "Delete ALL save slots (and their backups)?", "Delete", "Cancel")) return;
+            int deleted = 0;
+            var store = new CarSales.Foundation.SaveStore(SaveManager.SavesRoot);
+            for (int s = 1; s <= CarSales.Foundation.SaveStore.SlotCount; s++)
+                if (store.Exists(s)) { store.Delete(s); deleted++; }
+            if (File.Exists(SaveManager.LegacyFilePath)) { File.Delete(SaveManager.LegacyFilePath); deleted++; }
+            Debug.Log(deleted > 0 ? $"[CarSales] Deleted {deleted} save(s) in {Application.persistentDataPath}" : "[CarSales] No saves to delete.");
         }
 
         [MenuItem("Tools/Car Sales/Show Save Folder", priority = 21)]
-        static void ShowSaveFolder() => EditorUtility.RevealInFinder(Application.persistentDataPath);
+        static void ShowSaveFolder()
+        {
+            Directory.CreateDirectory(SaveManager.SavesRoot);
+            EditorUtility.RevealInFinder(SaveManager.SavesRoot);
+        }
 
         // ------------------------------------------------------------------ CHECKS
         static bool CheckTextMeshPro()

@@ -1,5 +1,26 @@
 # Changelog
 
+## v5.0-dev — Phase 1 "Foundation"
+**Saves**
+- **3 save slots** (Main Menu → New Game / Load Game), each with **3 automatic backups**.
+- Crash-safe writing: a save is written to a temp file and only then replaces the old one.
+- Checksums: a damaged save loads the newest good backup instead ("Save recovered" message).
+- Damaged values (NaN fuel, duplicate car ids, missing lists) are repaired on load.
+- Your v4 save is moved into slot 1 automatically - nothing is lost.
+- *Tools → Car Sales → Delete All Saves* replaces *Delete Save File*.
+
+**Money**
+- Every money movement is recorded in a **ledger** with a category (car sales, repairs, fuel, rent, loans...).
+- Computer → **Bank** now has an **Account statement** (last 40 transactions, today's in/out, balance).
+- The morning report shows where yesterday's money came from and went.
+
+**Calendar**
+- Weeks and quarters: the HUD clock shows the weekday (Day 1 is a Monday). Weekly/quarterly events are ready for wages and VAT later.
+
+**Under the hood**
+- New engine-free `CarSales.Foundation` assembly (EventBus, Ledger, GameCalendar, save store).
+- First automated tests: 47 EditMode tests (*Window → General → Test Runner*). The installer now adds the Test Framework package.
+
 ## v4.0 "Open Town"
 **World**
 - A whole town: main road, north road and two avenues, street trees and lamps, skyline.
