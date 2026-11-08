@@ -18,6 +18,10 @@ different feel per car class) and **~45 individual car parts** behind the 6 cond
 switches back to the old arcade handling; *Tools → Car Sales → Vehicle Studio* shows and tunes each car's performance.
 Phase 2b adds a **test track** (*Tools → Car Sales → 5. Open Test Track*, or **Drive** in Vehicle Studio) that measures
 0-100 km/h, braking distance and cornering g, a **manual gearbox** option, **visible dents**, and an **All parts** view.
+Phase 3 adds the **Asset Studio** (*Tools → Car Sales → Asset Studio*): import real 3D cars, buildings, props and
+characters (FBX, OBJ, GLB/glTF...), fix their scale and materials, set up wheels and paint, record their licence, and
+approve them into the game. Imported cars go on sale and can be driven. Release builds refuse assets whose licence
+doesn't allow a commercial game. **If this repository is public, don't commit paid assets.**
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using CarSales.Sim;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -28,8 +27,6 @@ namespace CarSales
 
         const float SteerSpeed = 140f;        // degrees per second
         const float HoldBrakeTorque = 600f;   // keeps a stopped car from creeping
-        static readonly Regex WheelName = new Regex("(wheel|tyre|tire)", RegexOptions.IgnoreCase);
-        static readonly Regex NotAWheel = new Regex("(steer|spare|cover|arch|well)", RegexOptions.IgnoreCase);
 
         public InputAction MoveAction { get; set; }
         public InputAction BrakeAction { get; set; }
@@ -87,17 +84,37 @@ namespace CarSales
             var renderers = model.GetComponentsInChildren<Renderer>();
             if (renderers.Length == 0) throw new InvalidOperationException("The car model has no renderers.");
 
-            // 1. Find wheel meshes and group them (tyre + hub/rim) by position.
-            var found = new List<(Vector3 center, float radius, List<Transform> parts)>();
-            foreach (var r in renderers)
+            // 1. Find the wheels: from the Asset Studio's VehicleRig if there is one, else by mesh name and position.
+            var corners = new List<(Vector3 center, float radius, List<Transform> parts)>();
+            var rig = model.GetComponentInChildren<VehicleRig>();
+            if (rig && rig.HasAllWheels)
             {
-                if (!WheelName.IsMatch(r.name) || NotAWheel.IsMatch(r.name)) continue;
-                Vector3 c = transform.InverseTransformPoint(r.bounds.center);
-                float radius = r.bounds.extents.y;
-                if (radius < 0.15f || radius > 0.8f) continue;
-                found.Add((c, radius, new List<Transform> { r.transform }));
+                foreach (var w in rig.Wheels)
+                {
+                    var rs = w.GetComponentsInChildren<Renderer>();
+                    if (rs.Length == 0) { corners.Clear(); break; }
+                    var b = rs[0].bounds;
+                    foreach (var r in rs) b.Encapsulate(r.bounds);
+                    corners.Add((transform.InverseTransformPoint(b.center), b.extents.y, new List<Transform> { w }));
+                }
             }
-            var corners = PickCorners(found);
+            if (corners.Count != 4)
+            {
+                corners.Clear();
+                var found = new List<(Vector3 center, float radius, List<Transform> parts)>();
+                var candidates = new List<WheelCandidate>();
+                foreach (var r in renderers)
+                {
+                    if (!WheelDetection.LooksLikeWheel(r.name)) continue;
+                    Vector3 c = transform.InverseTransformPoint(r.bounds.center);
+                    float radius = r.bounds.extents.y;
+                    if (radius < 0.15f || radius > 0.8f) continue;
+                    candidates.Add(new WheelCandidate { Id = found.Count, Name = r.name, X = c.x, Y = c.y, Z = c.z, Radius = radius });
+                    found.Add((c, radius, new List<Transform> { r.transform }));
+                }
+                var picked = WheelDetection.AssignCorners(candidates);
+                if (picked != null) foreach (int i in picked) corners.Add(found[i]);
+            }
 
             // 2. Body bounds from everything that isn't a wheel.
             bool any = false;
@@ -108,7 +125,7 @@ namespace CarSales
                 Vector3 c = transform.InverseTransformPoint(r.bounds.center);
                 foreach (var w in corners)
                 {
-                    if (w.parts.Contains(r.transform)) { isWheelPart = true; break; }
+                    if (w.parts.Exists(p => r.transform == p || r.transform.IsChildOf(p))) { isWheelPart = true; break; }
                     if (Vector3.Distance(c, w.center) < w.radius * 1.05f && r.bounds.extents.y <= w.radius * 1.1f)
                     {
                         w.parts.Add(r.transform);   // hub, rim, brake disc...
@@ -194,31 +211,6 @@ namespace CarSales
             float s = 0f;
             foreach (var x in list) s += f(x);
             return list.Count > 0 ? s / list.Count : 0f;
-        }
-
-        /// <summary>One wheel per corner: front-left, front-right, rear-left, rear-right (lowest mesh wins).</summary>
-        List<(Vector3 center, float radius, List<Transform> parts)> PickCorners(List<(Vector3 center, float radius, List<Transform> parts)> found)
-        {
-            var result = new List<(Vector3 center, float radius, List<Transform> parts)>();
-            if (found.Count < 4) return result;
-            float cx = 0f, cz = 0f;
-            foreach (var f in found) { cx += f.center.x; cz += f.center.z; }
-            cx /= found.Count; cz /= found.Count;
-            for (int q = 0; q < 4; q++)
-            {
-                bool wantFront = q < 2, wantLeft = q % 2 == 0;
-                int best = -1;
-                for (int i = 0; i < found.Count; i++)
-                {
-                    var f = found[i];
-                    if ((f.center.z > cz) != wantFront || (f.center.x < cx) != wantLeft) continue;
-                    if (best < 0 || f.center.y < found[best].center.y - 0.01f || (Mathf.Abs(f.center.y - found[best].center.y) <= 0.01f && f.radius > found[best].radius))
-                        best = i;
-                }
-                if (best < 0) return new List<(Vector3 center, float radius, List<Transform> parts)>();
-                result.Add(found[best]);
-            }
-            return result;
         }
 
         Bounds LocalBounds(Renderer r)

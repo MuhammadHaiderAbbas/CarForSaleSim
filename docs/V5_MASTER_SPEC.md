@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1 and 2a are merged; Phase 2b code is written (see [Phase 2 status](#phase-2-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-2 are merged; Phase 3a code is written (see [Phase 3 status](#phase-3-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -866,6 +866,31 @@ driving test. Phase 2b (below) is not started.
 **Done when (audit acceptance):** you import at least 1 vehicle, 1 building, 1 character and 1 prop from external
 sources; the vehicle drives, the building works as a site, the character walks as a customer, all with licence records.
 
+#### Phase 3 status
+**Phase 3a: code complete** (157 EditMode tests passing, compile-checked, waiting for you to import real models):
+
+| Step | Built |
+|---|---|
+| 1 | *Tools → Car Sales → Asset Studio* (Import / Library / Licences tabs). `AssetRegistry` (`Library/Resources/CarSalesAssetRegistry.asset`) with an `AssetRecord` + `LicenceInfo` per asset; `LicencePolicy` (CC0/CC BY/BY-SA/NC/ND, Asset Store, purchased, editorial, unknown); credits generator; release builds fail on blocked licences, development builds warn; `CREDITS.txt` written next to every build. |
+| 2 | Import from a file picker, drag & drop (files or project models), the Drop folder (`Art/_Drop`), or any model already in the project (Asset Store). Copies the model plus textures/.bin/.mtl into `Art/<Category>/<Name>/Source`, sets import options (Read/Write for cars, no animation for props, no cameras/lights). Analysis: triangles, meshes, materials, skinned meshes, size. Scale & orientation guess (unit mix-ups cm/mm/inch, Z-up exports, length along X), editable. "Fix materials for URP": extracts embedded materials, converts Built-in Standard/legacy shaders to URP Lit, fills missing textures from file names (`_BaseColor`, `_Normal`, `_AO`...). Colliders per category. |
+| 3 | Wheel detection by name + position (`WheelDetection`, shared with the runtime), manual correction with 4 dropdowns; paint-material picker (multi-slot paint in `CarVisual`); car data (fictional brand, category, year, price, fuel). Approve → prefab with `VehicleRig` + `CarVisual`, `CarDefinition` in `Data/Cars` added to the car list (kept by Build Everything) → drive it on the test track. |
+| 4 | Basic templates: Building/Environment (mesh colliders, static), Prop/Interior (box collider), Character (capsule + Animator). |
+| 6 | Validation checklist (budgets from §11, size range, wheels, paint, licence) blocks Approve on errors; interactive previews of the source and the result; versioned prefabs with **Roll back** (same GUID, so references survive) and **Remove**. |
+
+**Phase 3b (next):** Sketchfab connector (search + download with your API token) and Poly Haven (HDRIs/textures);
+building → working Site (entrances, NavMesh, dealership/workshop function, with World Builder in Phase 8);
+characters as customers (humanoid avatar check, animator controller, NavMeshAgent); LOD generation; a preview
+scene with a scale reference. Real models only come from you - the audit's acceptance needs 1 car, 1 building,
+1 character and 1 prop.
+
+**Phase 3 play-test checklist:**
+1. Download a free CC0 or CC BY car (e.g. from Sketchfab as FBX or GLB) and note the author/licence.
+2. *Asset Studio → Import model file...*; category Vehicle; fill in the licence.
+3. Check *Final size* (~4-5 m long) and the turn: the car's front must face +Z (try 180° if it drives backwards).
+4. Check the 4 wheels and tick the paint material(s); fill in the car data.
+5. *Fix materials for URP* if it looks pink; *Approve*; *Drive on test track*.
+6. Back in the town, the car appears for sale (marketplace / used lot) and can be painted, bought, driven and dented.
+7. *Licences* tab → *Write CREDITS.txt*.
 ### Phase 4 — UI design system & visual pass (L)
 1. `UITheme` + component library; screen stack, transitions, focus navigation, UI scale.
 2. Redesign HUD, main menu (save slots), dealer computer desktop, vehicle file, marketplace, map.

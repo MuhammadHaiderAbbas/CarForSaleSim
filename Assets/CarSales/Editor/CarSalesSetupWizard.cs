@@ -416,6 +416,13 @@ namespace CarSales.EditorTools
                 AssetDatabase.CreateAsset(def, $"{Gen}/Data/Cars/Car_{s.id}.asset");
                 db.cars.Add(def);
             }
+            // Cars imported with the Asset Studio live in Assets/CarSales/Data/Cars and are kept on every rebuild.
+            if (AssetDatabase.IsValidFolder(Root + "/Data/Cars"))
+                foreach (var g in AssetDatabase.FindAssets("t:CarDefinition", new[] { Root + "/Data/Cars" }))
+                {
+                    var imported = AssetDatabase.LoadAssetAtPath<CarDefinition>(AssetDatabase.GUIDToAssetPath(g));
+                    if (imported && imported.displayPrefab && !db.cars.Contains(imported)) db.cars.Add(imported);
+                }
             AssetDatabase.CreateAsset(db, $"{Gen}/Resources/{CarDatabase.ResourceName}.asset");   // in Resources: scenes can find it even without a reference
             return db;
         }

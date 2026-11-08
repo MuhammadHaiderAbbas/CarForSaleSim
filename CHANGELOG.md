@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.0-dev — Phase 3a "Asset Studio"
+- **Asset Studio** (*Tools → Car Sales → Asset Studio*): bring external models into the game.
+  - Import from a file, drag & drop, the Drop folder (`Assets/CarSales/Art/_Drop`) or any model in the project.
+  - Measures triangles, meshes, materials and size; guesses the scale (cm/mm/inch mix-ups) and orientation
+    (Z-up exports, sideways models); everything can be adjusted.
+  - *Fix materials for URP*: pink Built-in materials become URP Lit; missing textures are found by file name.
+  - Cars: wheels detected by name and position (or picked by hand), paint materials chosen, car data entered →
+    a drivable car prefab and a car definition that appears for sale. *Drive on test track* button.
+  - Buildings, props, interiors and characters get colliders (and an Animator for characters).
+  - Every import needs a **licence record**; release builds refuse non-commercial / unknown licences, development
+    builds only warn; `CREDITS.txt` is generated (button, and next to every build).
+  - Library: versions with **Roll back** and **Remove**.
+- Car paint works on imported models (several material slots, URP / glTF / Built-in colour properties).
+- Cars in `Assets/CarSales/Data/Cars` (imports) are kept when you run Build Everything.
+- 53 new tests (157 total).
+
 ## v5.0-dev — Test track fix
 - The test track no longer depends on its scene references: the car database now lives in
   `Generated/Resources/CarSalesDatabase.asset` and is found automatically, input falls back to the default keys.

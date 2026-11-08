@@ -365,3 +365,17 @@ Won cars appear in the auction car park — drive or tow them home.
   actions and calls `Powertrain.ShiftUp/ShiftDown`; `DriveInput.MapManual` makes W = throttle and S = brake.
 - **Test track:** `CarSalesTestTrack.cs` (editor) builds the scene; `TestTrackController` (runtime) spawns cars on its own
   (sets `CarSalesServices.Database`, no other services) and measures performance.
+
+## 14. Asset Studio (Phase 3)
+- **Assemblies:** `CarSales.Studio.Core` (engine-free: licences, credits, scale/texture/validation heuristics, tested),
+  `CarSales.Studio.Editor` (window, pipeline, build hooks). Wheel detection is in `CarSales.Sim.WheelDetection`
+  and used by both the Studio and `WheelVehicleController`.
+- **Folders:** `Assets/CarSales/Art/<Category>/<Name>/Source` (original files), `.../Materials` (extracted materials),
+  `.../<Name>.prefab` (game-ready), `.../History` (previous versions); `Assets/CarSales/Data/Cars` (imported car
+  definitions); `Assets/CarSales/Library/Resources/CarSalesAssetRegistry.asset` (records + licences).
+- **Prefab layout:** root (name) → `Model` (the original model, scaled/turned/centred on the ground). Cars: `VehicleRig`
+  (4 wheel transforms) and `CarVisual` (paint renderers + material slots) on the root; the game builds the physics
+  around it at runtime.
+- **Licences:** `LicencePolicy.Check` decides; `LicenceBuildCheck` (IPreprocessBuildWithReport) fails release builds with
+  blocked assets and writes `CREDITS.txt` after each build.
+
