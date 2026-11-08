@@ -3,6 +3,7 @@
     "rootNamespace": "CarSales.EditorTools",
     "references": [
         "CarSales.Foundation",
+        "CarSales.Sim",
         "CarSales.Runtime",
         "Unity.InputSystem",
         "Unity.TextMeshPro",

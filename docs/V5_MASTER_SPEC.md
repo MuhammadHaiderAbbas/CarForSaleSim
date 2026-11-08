@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phase 1 code is written (see [Phase 1 status](#phase-1-status)); everything else is still a plan.
+**Status:** Draft 1. Phase 1 is merged; Phase 2a code is written (see [Phase 2 status](#phase-2-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -814,6 +814,32 @@ report money breakdown · weekday on the HUD clock · Test Framework added to th
 **Done when:** every placeholder car drives on wheel physics with distinct handling per category (your
 judgement), ABS/TCS work, crashes damage specific parts and lower value, Arcade fallback still works.
 
+#### Phase 2 status
+**Phase 2a is code complete:** compile-checked, **94 EditMode tests passing** (47 new), waiting for your in-Editor
+driving test. Phase 2b (below) is not started.
+
+| Plan | What was built | Notes |
+|---|---|---|
+| Steps 1-2 | `IVehicleDriver`; `WheelVehicleController` (Rigidbody + 4 WheelColliders, anti-roll bars, downforce, speed-sensitive steering); `CarSales.Sim` assembly with `Powertrain` (engine torque curves, automatic gearbox with kick-down and anti-hunting, reverse, electric drive with regen), `DriveInput` (S brakes then reverses), `DriveAssists` (ABS, TCS, ESC), 10 class presets × 4 powertrains | Every preset is checked by `PerformanceEstimator` in the tests: e.g. city hatch 0-100 in 12.0 s, sports car 5.5 s / 290 km/h, about 39 m to stop from 100 km/h. |
+| Step 3 | No prefab changes needed: the controller is built at runtime around any model (wheels found by name, or placed from the body size). Settings: Realistic / Arcade, ABS, TCS, ESC | If a model can't be set up, the game falls back to arcade handling and logs why. |
+| Step 4 | ~45 components (`ComponentCatalog`) in the 6 v4 groups; `CarParts` is now a façade over them; old saves convert automatically (game save module v6) | Valuation v2 **deferred** until the market model (Phase 7) so prices don't change before they can be play-tested. |
+| Step 5 | Crashes hit the side of the car that was hit (front/rear/left/right/roof/underside); fuel use depends on engine load; wear per km for every part; condition changes power, brakes, grip, damping, steering pull and whether the car starts; code-made engine sound | Mesh deformation and recorded engine sounds: Phase 2b / Phase 10. Cinemachine replaced by a small built-in camera (`VehicleCamera`, C cycles chase / far / bonnet) to avoid another package. |
+| Step 6 | **Vehicle Studio** window (Tools → Car Sales → Vehicle Studio): every car's class, mass, 0-100, top speed, braking; "Make editable" creates a profile asset in `Assets/CarSales/Data/Physics/` (survives Build Everything) | Test-track scene: Phase 2b. In-game **F3 telemetry** overlay (speed, rpm, gear, slip per wheel, active assists, condition effects). |
+| Step 7 | Tests for torque curve, shifting, anti-hunting, reverse, EV, assists, steering limit, fuel, class performance, component weights, conversion, damage zones, wear, driving effects | |
+
+**Phase 2b (next):** test-track scene; tuning pass from your driving feedback; optional mesh deformation;
+component detail view in the car menu; manual gearbox option.
+
+**Phase 2 play-test checklist (in Unity):**
+1. Build Everything, Play. Get into your own car (F): it drives on wheels, the HUD shows the gear next to KM/H.
+2. Accelerate hard on the main road: it shifts up through the gears; lift off: it slows down (engine braking).
+3. Hold S while moving: it brakes; keep holding when stopped: it reverses ("R"). Space: handbrake slide.
+4. Press C: chase / far chase / bonnet camera. Press F3: telemetry.
+5. Drive the sports car and the pickup: they should feel clearly different (power, weight, body roll).
+6. Crash into a wall nose-first: "Front damaged"; the inspection report lists the damaged front parts.
+7. Settings → Physics: ARCADE, get in again: the old handling still works.
+8. Park on a dealership spot (E), refuel (E at the pumps), get out (F): all as before.
+9. Tell me how it feels: too slippery, too grippy, rolls too much, too fast or too slow?
 ### Phase 3 — Asset Studio (L, needs you to supply assets)
 1. Studio window shell, `AssetRecord`, `LicenceRecord`, `AssetRegistry`, credits generator, release-build licence validator.
 2. Local/Drop-folder ingest, Analyse, Normalise, Materials (URP Lit), Colliders, LODs.

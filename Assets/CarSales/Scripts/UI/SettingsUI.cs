@@ -8,12 +8,12 @@ namespace CarSales
     public class SettingsUI : UIPanel
     {
         Slider sensitivity, volume;
-        TextMeshProUGUI sensitivityLabel, volumeLabel;
+        TextMeshProUGUI sensitivityLabel, volumeLabel, drivingLabel, absLabel, tcsLabel, escLabel;
         public GameObject showOnBackInMenu;
 
         public override void Build()
         {
-            var body = UIFactory.Window(Root, "Settings", new Vector2(680f, 460f), Back);
+            var body = UIFactory.Window(Root, "Settings", new Vector2(720f, 640f), Back);
             UIFactory.Vertical(body, 0, 12f);
             sensitivityLabel = UIFactory.Text(body, "", 21, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             sensitivity = UIFactory.MakeSlider(body, UIFactory.Accent, 32f);
@@ -24,6 +24,20 @@ namespace CarSales
             volume = UIFactory.MakeSlider(body, UIFactory.Good, 32f);
             volume.minValue = 0f; volume.maxValue = 1f;
             volume.onValueChanged.AddListener(v => { GameSettings.Volume = v; UpdateLabels(); });
+            UIFactory.Spacer(body, 0f).GetComponent<LayoutElement>().minHeight = 10f;
+
+            UIFactory.Text(body, "DRIVING", 16, UIFactory.TextDim, TextAlignmentOptions.Left, true);
+            UIFactory.Btn(body, "", UIFactory.AccentDark, () =>
+            {
+                GameSettings.Driving = GameSettings.Driving == DrivingModel.Realistic ? DrivingModel.Arcade : DrivingModel.Realistic;
+                UpdateLabels();
+            }, out drivingLabel, 52f, 19f);
+            var assists = UIFactory.HRow(body, 52f, 10f);
+            UIFactory.Btn(assists, "", UIFactory.Neutral, () => { GameSettings.Abs = !GameSettings.Abs; UpdateLabels(); }, out absLabel, 52f, 18f);
+            UIFactory.Btn(assists, "", UIFactory.Neutral, () => { GameSettings.TractionControl = !GameSettings.TractionControl; UpdateLabels(); }, out tcsLabel, 52f, 18f);
+            UIFactory.Btn(assists, "", UIFactory.Neutral, () => { GameSettings.StabilityControl = !GameSettings.StabilityControl; UpdateLabels(); }, out escLabel, 52f, 18f);
+            var note = UIFactory.Text(body, "Applies the next time you get into a car. F3 while driving shows telemetry.", 15, UIFactory.TextDim);
+            UIFactory.LE(note, h: 24);
             UIFactory.Spacer(body);
             UIFactory.Btn(body, "Back", UIFactory.Neutral, Back, 52f);
         }
@@ -53,6 +67,11 @@ namespace CarSales
         {
             sensitivityLabel.text = $"Mouse sensitivity: {GameSettings.MouseSensitivity:0.00}";
             volumeLabel.text = $"Volume: {GameSettings.Volume * 100f:0}%";
+            if (!drivingLabel) return;
+            drivingLabel.text = GameSettings.Driving == DrivingModel.Realistic ? "Physics: REALISTIC (wheels, gearbox, weight)" : "Physics: ARCADE (simple)";
+            absLabel.text = "ABS: " + (GameSettings.Abs ? "ON" : "OFF");
+            tcsLabel.text = "Traction control: " + (GameSettings.TractionControl ? "ON" : "OFF");
+            escLabel.text = "Stability: " + (GameSettings.StabilityControl ? "ON" : "OFF");
         }
     }
 }

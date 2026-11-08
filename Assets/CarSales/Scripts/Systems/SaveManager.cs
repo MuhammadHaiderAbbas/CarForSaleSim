@@ -17,7 +17,7 @@ namespace CarSales
     {
         public const string LegacyFileName = "carsales_save.json";
         public const string GameModule = "game", LedgerModule = "ledger";
-        public const int GameModuleVersion = 5, LedgerModuleVersion = 1;
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-dev";
 
         [SerializeField] bool loadOnStart = true;

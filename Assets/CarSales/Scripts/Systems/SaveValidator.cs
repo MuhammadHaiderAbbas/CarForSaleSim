@@ -63,6 +63,11 @@ namespace CarSales
             if (c.listedPrice < 0) { c.listedPrice = 0; fixes++; }
             if (c.parts != null)
                 for (int i = 0; i < c.parts.Length; i++) fixes += Clamp(ref c.parts[i], 0f, 100f, 50f);
+            if (c.components != null)
+            {
+                fixes += c.components.RemoveAll(x => x == null);
+                foreach (var comp in c.components) fixes += Clamp(ref comp.health, 0f, 100f, 50f);
+            }
             CarParts.EnsureParts(c);
             return fixes;
         }

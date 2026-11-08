@@ -341,3 +341,21 @@ Dealership (daily rent; links to a `DealershipManager` by `propertyId`), Investm
 5 lots per day, 10:00–17:00. Starting bid = 35% of the claimed value. 2–4 AI bidders with secret maximums
 (50–102% of the TRUE value). The 12 s timer resets to 6 s after every bid; you win if you're highest when it hits zero.
 Won cars appear in the auction car park — drive or tow them home.
+
+## 13. v5 vehicle framework (Phase 2)
+- **Assemblies:** `CarSales.Foundation` (events, ledger, saves) ← `CarSales.Sim` (vehicle simulation, no Unity code)
+  ← `CarSales.Runtime` (MonoBehaviours, UI). Logic in Foundation/Sim is covered by EditMode tests.
+- **Driving:** `TestDriveManager.StartDrive` builds a driving object from the car's model. In Realistic mode it adds
+  `WheelVehicleController.Setup(...)`: a Rigidbody, a box collider from the body, and a WheelCollider per wheel mesh
+  (names containing wheel/tyre/tire; invisible wheels at the body corners if there are none). Each FixedUpdate:
+  `DriveInput.Map` (W/S → throttle, brake, reverse) → `Powertrain.Step` (engine + gearbox → wheel torque) →
+  TCS/ABS/ESC per wheel → steering limit → anti-roll bars → downforce. Arcade mode (or a failed setup) uses
+  `ArcadeCarController`. Both implement `IVehicleDriver`.
+- **Profiles:** `VehicleProfileResolver.For(CarDefinition)` → the definition's `physicsOverride` asset, else the preset
+  `VehicleProfiles.For(class, powertrain)`. Class comes from the category (and price for hatchbacks/sedans),
+  powertrain from `fuelType`. Tune with Vehicle Studio; profile assets live in `Assets/CarSales/Data/Physics/`.
+- **Components:** `CarInstance.components` (list of `ComponentState {id, health}`) is the truth; `CarInstance.parts[6]`
+  and `condition` are caches maintained by `CarParts` — always change condition through `CarParts`
+  (`Set`, `Damage(car, zone, amount)`, `Wear`, `RepairAll`). `CarParts.Effects(car)` gives the `DrivingEffects`
+  the physics uses. Component ids are saved as numbers: only add new ones (`ComponentCatalog`).
+

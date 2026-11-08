@@ -64,6 +64,7 @@ namespace CarSales
             fallback["Vehicle"] = Button("Vehicle", "<Keyboard>/f", "<Gamepad>/buttonNorth");
             fallback["Map"] = Button("Map", "<Keyboard>/m", "<Gamepad>/dpad/up");
             fallback["Phone"] = Button("Phone", "<Keyboard>/p", "<Gamepad>/dpad/down");
+            fallback["CameraView"] = Button("CameraView", "<Keyboard>/c", "<Gamepad>/rightStickPress");
         }
 
         static InputAction Button(string name, string keyboard, string gamepad)

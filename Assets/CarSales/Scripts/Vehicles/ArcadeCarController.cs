@@ -9,7 +9,7 @@ namespace CarSales
     /// W/S = throttle/reverse, A/D = steer, Brake action = handbrake.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
-    public class ArcadeCarController : MonoBehaviour
+    public class ArcadeCarController : MonoBehaviour, IVehicleDriver
     {
         public float maxSpeed = 22f;        // m/s (~80 km/h)
         public float reverseSpeed = 6f;
@@ -27,6 +27,12 @@ namespace CarSales
 
         /// <summary>Raised when hitting something hard. Parameter = impact speed (m/s).</summary>
         public event Action<float> OnCrash;
+        public event Action<VehicleImpact> OnImpact;
+
+        // Arcade cars have no real engine: fake values for the HUD and engine sound.
+        public float Rpm => 900f + Mathf.Abs(Speed) / Mathf.Max(1f, maxSpeed) * 5000f;
+        public string GearLabel => Speed < -0.3f ? "R" : "D";
+        public float Load { get; private set; }
 
         CharacterController controller;
         float verticalVelocity, crashCooldown;
@@ -39,6 +45,7 @@ namespace CarSales
             if (dt <= 0f) return;
             Vector2 input = MoveAction != null ? MoveAction.ReadValue<Vector2>() : Vector2.zero;
             if (OutOfFuel) input.y = 0f;
+            Load = Mathf.Abs(input.y);
             bool brake = BrakeAction != null && BrakeAction.IsPressed();
 
             float speed = Speed;
@@ -67,6 +74,7 @@ namespace CarSales
                 {
                     crashCooldown = 1f;
                     OnCrash?.Invoke(Mathf.Abs(speed));
+                    OnImpact?.Invoke(new VehicleImpact { Speed = Mathf.Abs(speed), LocalPoint = new Vector3(0f, 0.6f, speed >= 0f ? 2.5f : -2.5f) });
                 }
                 speed *= 0.3f;
             }

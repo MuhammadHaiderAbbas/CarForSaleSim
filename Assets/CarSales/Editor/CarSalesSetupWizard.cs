@@ -118,7 +118,7 @@ namespace CarSales.EditorTools
             { "moveAction", "Move" }, { "lookAction", "Look" }, { "jumpAction", "Jump" }, { "sprintAction", "Sprint" },
             { "interactAction", "Interact" }, { "toggleShopAction", "ToggleShop" }, { "closeAction", "CloseMenu" },
             { "brakeAction", "Jump" }, { "exitAction", "Interact" }, { "inventoryAction", "Inventory" },
-            { "vehicleAction", "Vehicle" }, { "mapAction", "Map" }, { "phoneAction", "Phone" },
+            { "vehicleAction", "Vehicle" }, { "mapAction", "Map" }, { "phoneAction", "Phone" }, { "cameraAction", "CameraView" },
         };
 
         /// <summary>Re-links every empty/broken InputActionReference in open scenes and Car Sales prefabs.</summary>
@@ -224,7 +224,7 @@ namespace CarSales.EditorTools
             return true;
         }
 
-        class ActionRefs { public InputActionReference move, look, jump, sprint, interact, toggleShop, closeMenu, inventory, vehicle, map, phone; }
+        class ActionRefs { public InputActionReference move, look, jump, sprint, interact, toggleShop, closeMenu, inventory, vehicle, map, phone, cameraView; }
 
         static ActionRefs LoadActions()
         {
@@ -235,7 +235,7 @@ namespace CarSales.EditorTools
             {
                 move = Find("Move"), look = Find("Look"), jump = Find("Jump"), sprint = Find("Sprint"),
                 interact = Find("Interact"), toggleShop = Find("ToggleShop"), closeMenu = Find("CloseMenu"), inventory = Find("Inventory"),
-                vehicle = Find("Vehicle"), map = Find("Map"), phone = Find("Phone")
+                vehicle = Find("Vehicle"), map = Find("Map"), phone = Find("Phone"), cameraView = Find("CameraView")
             };
             if (refs.move && refs.look && refs.interact) return refs;   // the rest fall back to defaults at runtime
             EditorUtility.DisplayDialog("Car Sales Simulator",
@@ -405,6 +405,8 @@ namespace CarSales.EditorTools
                 def.transmission = s.gearbox;
                 def.description = s.desc;
                 def.displayPrefab = model;
+                // Tuned handling (Vehicle Studio) lives outside Generated, so it survives a rebuild.
+                def.physicsOverride = AssetDatabase.LoadAssetAtPath<VehiclePhysicsProfileAsset>($"{VehicleStudioWindow.ProfileFolder}/Physics_{s.id}.asset");
                 AssetDatabase.CreateAsset(def, $"{Gen}/Data/Cars/Car_{s.id}.asset");
                 db.cars.Add(def);
             }
@@ -665,6 +667,7 @@ namespace CarSales.EditorTools
             Set(drive, "brakeAction", a.jump);
             Set(drive, "exitAction", a.interact);
             Set(drive, "vehicleAction", a.vehicle);
+            Set(drive, "cameraAction", a.cameraView);
             systems.AddComponent<DebugCheats>();
 
             // The UI builds itself at runtime (UIManager.Awake).
