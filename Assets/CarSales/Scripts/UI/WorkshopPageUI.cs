@@ -14,10 +14,15 @@ namespace CarSales
     public class WorkshopPageUI : ComputerPage
     {
         static readonly string[] TierNames = { "Used", "Aftermarket", "OEM" };
-        static readonly string[] SupplierNames = { "Motor factor (today)", "Online (-15%, tomorrow)", "Breaker's yard (used)" };
+        static readonly string[] SupplierNames = { "Motor factor", "Online -15%, tomorrow", "Breaker's yard (used)", "Counter -10%" };
+        static readonly string[] ColumnNames = { "Waiting for parts", "Ready to start", "In progress", "Done today" };
 
         UIFactory.TabBar views, tiers, suppliers;
-        RectTransform carList, repairs, parts, jobs, papers, repairsView, partsView, jobsView, papersView;
+        RectTransform carList, repairs, parts, jobs, papers, repairsView, partsView, jobsView, papersView, boardView, staffRow;
+        readonly RectTransform[] columns = new RectTransform[4];
+        TextMeshProUGUI staffText;
+        Button hireButton;
+        string boardFilterCar;
         TextMeshProUGUI carHeader;
         string selectedId;
         bool showAll;
@@ -27,9 +32,34 @@ namespace CarSales
         public override void Build()
         {
             UIFactory.Vertical(Area, 0, 10f);
-            views = UIFactory.Tabs(Area, new[] { "Repairs", "Parts", "Jobs", "MOT & paperwork" }, _ => Refresh(), 42f, 200f, 16f);
+            views = UIFactory.Tabs(Area, new[] { "Board", "Repairs", "Parts", "Garage jobs", "MOT & paperwork" }, _ => Refresh(), 42f, 190f, 16f);
             var host = UIFactory.Rect("Views", Area);
             UIFactory.LE(host, flexH: 1, flexW: 1);
+
+            // Board (kanban)
+            boardView = View(host, "Board");
+            UIFactory.Vertical(boardView, 0, 10f);
+            var staff = UIFactory.Panel(boardView, "Staff", UIFactory.CardBg, 1.8f);
+            staffRow = staff.rectTransform;
+            UIFactory.LE(staff, h: 62);
+            var sh = UIFactory.Horizontal(staff, 10, 12f);
+            sh.padding = new RectOffset(16, 12, 8, 8);
+            staffText = UIFactory.Text(staff.transform, "", 16, UIFactory.TextMain, TextAlignmentOptions.Left);
+            UIFactory.LE(staffText, flexW: 1);
+            hireButton = UIFactory.Btn(staff.transform, "Hire", UIFactory.Good, ToggleMechanic, 42f, 15f);
+            UIFactory.LE(hireButton, h: 42, w: 200, flexW: 0);
+            var cols = UIFactory.Rect("Columns", boardView);
+            UIFactory.LE(cols, flexH: 1, flexW: 1);
+            UIFactory.Horizontal(cols, 0, 12f, TextAnchor.UpperLeft, true).childForceExpandHeight = true;
+            for (int i = 0; i < 4; i++)
+            {
+                var col = UIFactory.Panel(cols, ColumnNames[i], UIFactory.WithAlpha(UIFactory.CardBg, 0.5f), 1.6f);
+                UIFactory.LE(col, flexW: 1, flexH: 1);
+                var cv = UIFactory.Vertical(col, 10, 6f);
+                cv.padding = new RectOffset(10, 10, 10, 10);
+                UIFactory.SectionTitle(col.transform, ColumnNames[i]);
+                columns[i] = UIFactory.ScrollList(col.transform, 6f, "Cards");
+            }
 
             // Repairs
             repairsView = View(host, "Repairs");
@@ -42,7 +72,7 @@ namespace CarSales
             UIFactory.LE(carHeader, h: 52);
             var opts = UIFactory.HRow(right, 38, 10, "Options", false);
             tiers = UIFactory.Tabs(opts, TierNames, i => { tier = (PartTier)i; Refresh(); }, 36f, 120f, 14f);
-            suppliers = UIFactory.Tabs(opts, SupplierNames, i => { supplier = (Supplier)i; Refresh(); }, 36f, 200f, 13f);
+            suppliers = UIFactory.Tabs(opts, SupplierNames, i => { supplier = (Supplier)i; Refresh(); }, 36f, 170f, 13f);
             var allBtn = UIFactory.Btn(right, "Show all jobs for this car", UIFactory.CardLight, () => { showAll = !showAll; Refresh(); }, 32f, 14f);
             UIFactory.LE(allBtn, h: 32, w: 260, flexW: 0);
             repairs = UIFactory.ScrollList(right, 6f, "JobList");
@@ -61,6 +91,7 @@ namespace CarSales
 
             views.Select(0, false);
             tiers.Select((int)tier, false);
+            suppliers.SetInteractable(3, false);
             suppliers.Select((int)supplier, false);
         }
 
@@ -89,19 +120,24 @@ namespace CarSales
         public override void Refresh()
         {
             if (views == null) return;
-            repairsView.gameObject.SetActive(views.Index == 0);
-            partsView.gameObject.SetActive(views.Index == 1);
-            jobsView.gameObject.SetActive(views.Index == 2);
-            papersView.gameObject.SetActive(views.Index == 3);
+            boardView.gameObject.SetActive(views.Index == 0);
+            repairsView.gameObject.SetActive(views.Index == 1);
+            partsView.gameObject.SetActive(views.Index == 2);
+            jobsView.gameObject.SetActive(views.Index == 3);
+            papersView.gameObject.SetActive(views.Index == 4);
             if (!WS) return;
             int running = WS.Jobs.Count;
-            views.SetLabel(2, running > 0 ? $"Jobs ({running})" : "Jobs");
+            views.SetLabel(3, running > 0 ? $"Garage jobs ({running})" : "Garage jobs");
+            bool counter = WS.AtCounter;
+            suppliers.SetInteractable(3, counter);
+            if (!counter && supplier == Supplier.Counter) { supplier = Supplier.MotorFactor; suppliers.Select(0, false); }
             switch (views.Index)
             {
-                case 1: RenderParts(); break;
-                case 2: RenderJobs(); break;
-                case 3: RenderPapers(); break;
-                default: RenderRepairs(); break;
+                case 1: RenderRepairs(); break;
+                case 2: RenderParts(); break;
+                case 3: RenderJobs(); break;
+                case 4: RenderPapers(); break;
+                default: RenderBoard(); break;
             }
         }
 
@@ -167,12 +203,102 @@ namespace CarSales
             var order = UIFactory.Btn(row.transform, hasParts ? "In stock" : "Order parts", UIFactory.Accent, () => WS.OrderParts(car, job, tier, supplier), 40f, 14f);
             UIFactory.LE(order, h: 40, w: 120, flexW: 0);
             order.interactable = !hasParts && available;
-            var garage = UIFactory.Btn(row.transform, $"Garage\n<size=80%>{UIFactory.Money(WorkshopCatalog.LabourCost(job))}</size>", UIFactory.Good, () => WS.StartGarageJob(car, job, tier), 40f, 14f);
+            var plan = UIFactory.Btn(row.transform, "Add to\nboard", UIFactory.CardLight, () => WS.AddToBoard(car, job, tier), 40f, 13f);
+            UIFactory.LE(plan, h: 44, w: 80, flexW: 0);
+            var garage = UIFactory.Btn(row.transform, $"Town garage\n<size=80%>{UIFactory.Money(WorkshopCatalog.LabourCost(job))}</size>", UIFactory.Good, () => WS.StartGarageJob(car, job, tier), 40f, 13f);
             UIFactory.LE(garage, h: 44, w: 110, flexW: 0);
             garage.interactable = hasParts && !garageBusy;
-            var diy = UIFactory.Btn(row.transform, $"Do it yourself\n<size=80%>{job.Hours * 1.2f:0.#} h, {WorkshopCatalog.DiyFailChance(WS.Skill) * 100f:0}% risk</size>", UIFactory.Warn, () => WS.DoItYourself(car, job, tier), 40f, 13f);
-            UIFactory.LE(diy, h: 44, w: 150, flexW: 0);
+            var hand = UIFactory.Btn(row.transform, $"By hand (bay)\n<size=80%>{job.Hours * HandsOn.TimeFactor:0.#} h, {WorkshopCatalog.DiyFailChance(WS.Skill) * HandsOn.RiskFactor * 100f:0}% risk</size>", UIFactory.Warn, () => WS.StartHandsOnRepair(car, job, tier), 40f, 12f);
+            UIFactory.LE(hand, h: 44, w: 120, flexW: 0);
+            hand.interactable = hasParts && !garageBusy;
+            var diy = UIFactory.Btn(row.transform, $"Quick DIY\n<size=80%>{job.Hours * 1.2f:0.#} h, {WorkshopCatalog.DiyFailChance(WS.Skill) * 100f:0}% risk</size>", UIFactory.Neutral, () => WS.DoItYourself(car, job, tier), 40f, 12f);
+            UIFactory.LE(diy, h: 44, w: 110, flexW: 0);
             diy.interactable = hasParts && !garageBusy;
+        }
+
+        // ------------------------------------------------------------------ BOARD
+        /// <summary>Opens the Workshop app on the board (optionally only one car's cards).</summary>
+        public void ShowBoard(string carId = null)
+        {
+            boardFilterCar = carId;
+            Show();
+            views.Select(0, false);
+            Refresh();
+        }
+
+        /// <summary>Opened from the Parts Direct counter: Repairs with counter prices.</summary>
+        public void ShowCounter()
+        {
+            Show();
+            views.Select(1, false);
+            supplier = Supplier.Counter;
+            suppliers.SetInteractable(3, true);
+            suppliers.Select(3, false);
+            Refresh();
+        }
+
+        void ToggleMechanic()
+        {
+            if (WS.MechanicHired) UIFactory.Confirm("Let the mechanic go", "Their current job goes back on the board and the parts back on the shelf.", "Let go", UIFactory.Bad, () => WS.FireMechanic());
+            else UIFactory.Confirm("Hire a mechanic", $"{UIFactory.Money(BoardLogic.MechanicWage)} a day, paid every morning. They work {BoardLogic.WorkStart:00}:00-{BoardLogic.WorkEnd:00}:00 on the Ready column " +
+                                   "at your service centre (no labour bills), with a good but not perfect hand.", "Hire", UIFactory.Good, () => WS.HireMechanic());
+        }
+
+        void RenderBoard()
+        {
+            bool centre = WorkStation.Exists(StationType.Mechanical);
+            var working = WS.Board.FirstOrDefault(b => b.byMechanic && !b.done);
+            staffText.text = WS.MechanicHired
+                ? $"<b>Mechanic</b>  -  {UIFactory.Money(BoardLogic.MechanicWage)}/day  -  " + (working != null ? $"working on {WorkshopCatalog.Job(working.job)?.Name} ({working.hoursLeft:0.0} h left)" : "waiting for a Ready job")
+                  + (centre ? "" : $"\n<color={UIFactory.Hex(UIFactory.Warn)}>No service centre in this town yet: run Build Everything.</color>")
+                : "<b>No mechanic</b>  -  do the jobs by hand at your bays, send them to the town garage, or hire a mechanic.";
+            hireButton.GetComponentInChildren<TextMeshProUGUI>().text = WS.MechanicHired ? "Let go" : $"Hire ({UIFactory.Money(BoardLogic.MechanicWage)}/day)";
+            UIFactory.SetButtonColor(hireButton, WS.MechanicHired ? UIFactory.Neutral : UIFactory.Good);
+
+            foreach (var c in columns) UIFactory.ClearChildren(c);
+            var cards = WS.Board.Where(b => boardFilterCar == null || b.carId == boardFilterCar).ToList();
+            foreach (var card in cards) Card(card, WS.ColumnOf(card));
+            for (int i = 0; i < 4; i++)
+                if (columns[i].childCount == 0) UIFactory.EmptyState(columns[i], i == 0 ? "Plan jobs from Repairs" : "-", null);
+            if (boardFilterCar != null)
+            {
+                var b = UIFactory.Btn(columns[0], "Show every car", UIFactory.CardLight, () => { boardFilterCar = null; Refresh(); }, 32f, 13f);
+                b.transform.SetAsFirstSibling();
+            }
+        }
+
+        void Card(BoardCard card, BoardColumn column)
+        {
+            var car = Cars.Find(c => c.instanceId == card.carId);
+            var job = WorkshopCatalog.Job(card.job);
+            if (job == null) return;
+            var parent = columns[(int)column];
+            var p = UIFactory.Panel(parent, card.id, UIFactory.CardBg, 1.8f);
+            var v = UIFactory.Vertical(p, 10, 4f);
+            v.padding = new RectOffset(12, 12, 10, 10);
+            p.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            UIFactory.Text(p.transform, $"<b>{job.Name}</b>", 15, UIFactory.TextMain, TextAlignmentOptions.Left).textWrappingMode = TextWrappingModes.Normal;
+            var running = WS.Jobs.FirstOrDefault(j => j.carId == card.carId && j.job == card.job);
+            string status = column == BoardColumn.InProgress ? (card.byMechanic ? $"Your mechanic: {card.hoursLeft:0.0} h left" : running != null ? $"Town garage: {running.hoursLeft:0.0} h left" : "") :
+                            column == BoardColumn.Done ? "Finished" :
+                            column == BoardColumn.WaitingForParts ? string.Join(", ", WS.Missing(job, (PartTier)card.tier).Select(m => $"{m.count} x {WorkshopCatalog.Part(m.part)?.Name}")) : "Parts in storage";
+            UIFactory.Text(p.transform, $"{car?.Name ?? "(car sold)"}  -  {TierNames[card.tier]}\n<color={UIFactory.Hex(UIFactory.TextDim)}>{status}</color>", 13, UIFactory.TextMain, TextAlignmentOptions.Left).textWrappingMode = TextWrappingModes.Normal;
+            if (car == null || column == BoardColumn.Done || column == BoardColumn.InProgress) return;
+            var row = UIFactory.HRow(p.transform, 34, 6, "Buttons");
+            var t = (PartTier)card.tier;
+            if (column == BoardColumn.WaitingForParts)
+            {
+                bool ok = WS.Missing(job, t).All(m => WS.Available(supplier, m.part, t));
+                var order = UIFactory.Btn(row, ok ? $"Order ({WorkshopManager.SupplierName(supplier)})" : "Not available", UIFactory.Accent, () => WS.OrderParts(car, job, t, supplier), 34f, 12f);
+                order.interactable = ok;
+            }
+            else
+            {
+                UIFactory.Btn(row, "By hand", UIFactory.Warn, () => WS.StartHandsOnRepair(car, job, t), 34f, 12f);
+                UIFactory.Btn(row, "Garage", UIFactory.Good, () => WS.StartGarageJob(car, job, t), 34f, 12f);
+            }
+            var x = UIFactory.Btn(row, "X", UIFactory.Neutral, () => WS.RemoveCard(card), 34f, 12f);
+            UIFactory.LE(x, h: 34, w: 34, flexW: 0);
         }
 
         // ------------------------------------------------------------------ PARTS

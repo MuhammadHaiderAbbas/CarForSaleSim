@@ -31,7 +31,9 @@ dealer computer into a **desktop** (with an **Accounts** app), adds a tabbed **v
 placeholder buildings, trees, lamps and benches for your imported models (Asset Studio → *Town*).
 Phase 5a adds **hidden faults**, **step-by-step inspections** (walk-around, interior, bonnet, scanner, road test,
 lift, history check), **paperwork and history** (logbook, keys, MOT, service book, write-offs, finance, clocking),
-**MOT tests**, and a **Workshop** app for parts and repairs.
+**MOT tests**, and a **Workshop** app for parts and repairs. Phase 5b adds your own **service centre** (lift, tyre and MOT bays),
+**hands-on** inspections and repairs (hold E on markers), a **Workshop Board**, a hireable **mechanic** and the
+**Parts Direct** counter in town.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

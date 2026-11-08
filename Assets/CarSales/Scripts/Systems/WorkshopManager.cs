@@ -16,6 +16,9 @@ namespace CarSales
         public List<WorkshopJob> jobs = new List<WorkshopJob>();
         public bool hasScanner;
         public float skill = 0.3f;
+        // Phase 5b
+        public List<BoardCard> board = new List<BoardCard>();
+        public bool mechanicHired;
     }
 
     /// <summary>
@@ -39,8 +42,19 @@ namespace CarSales
         /// <summary>Your inspection skill (0-1): better at noticing faults, fewer botched DIY jobs. Grows with practice.</summary>
         public float Skill => state.skill;
         public event Action OnChanged;
+        /// <summary>Hands-on inspections and repairs (markers on the car).</summary>
+        public HandsOnSession Session { get; private set; }
+        /// <summary>True while the parts counter in town is open (counter prices).</summary>
+        public bool AtCounter { get; set; }
+        public IReadOnlyList<BoardCard> Board => state.board;
+        public bool MechanicHired => state.mechanicHired;
 
-        void Awake() => CarSalesServices.Workshop = this;
+        void Awake()
+        {
+            CarSalesServices.Workshop = this;
+            Session = GetComponent<HandsOnSession>();
+            if (!Session) Session = gameObject.AddComponent<HandsOnSession>();
+        }
 
         void OnEnable() => EventBus.Subscribe<DayStarted>(OnDayStarted);
         void OnDisable() => EventBus.Unsubscribe<DayStarted>(OnDayStarted);
@@ -48,12 +62,16 @@ namespace CarSales
         void Start()
         {
             if (CarSalesServices.DayCycle) CarSalesServices.DayCycle.OnTimeChanged += OnTimeChanged;
+            if (CarSalesServices.UI) CarSalesServices.UI.OnMenuStateChanged += OnMenu;
         }
 
         void OnDestroy()
         {
             if (CarSalesServices.DayCycle) CarSalesServices.DayCycle.OnTimeChanged -= OnTimeChanged;
+            if (CarSalesServices.UI) CarSalesServices.UI.OnMenuStateChanged -= OnMenu;
         }
+
+        void OnMenu(bool open) { if (!open) AtCounter = false; }
 
         // ------------------------------------------------------------------ SAVE
         public WorkshopState GetState() => state;
@@ -63,6 +81,8 @@ namespace CarSales
             state = s ?? new WorkshopState();
             if (state.inventory == null) state.inventory = new PartsInventory();
             if (state.jobs == null) state.jobs = new List<WorkshopJob>();
+            if (state.board == null) state.board = new List<BoardCard>();
+            if (Session && Session.Running) Session.Stop(false);
             state.skill = Mathf.Clamp(state.skill <= 0f ? 0.3f : state.skill, 0f, 0.95f);
             lastHour = -1f;
             OnChanged?.Invoke();
@@ -135,15 +155,17 @@ namespace CarSales
             return true;
         }
 
-        public InspectionResult Inspect(CarInstance c, InspectMethod m, Context ctx)
+        /// <param name="freeLift">On your own lift: no fee, and it works wherever the session allows it.</param>
+        public InspectionResult Inspect(CarInstance c, InspectMethod m, Context ctx, bool freeLift = false, bool passTime = true)
         {
-            if (!CanUse(m, c, ctx, out string why)) { UI.Error(why); return null; }
+            if (!(freeLift && m == InspectMethod.Lift) && !CanUse(m, c, ctx, out string why)) { UI.Error(why); return null; }
             CarParts.EnsureParts(c);
             var info = InspectionEngine.Info(m);
             if (m == InspectMethod.History) { RunHistoryCheck(c); return null; }
-            if (info != null && info.Cost > 0 && !Pay(info.Cost, TxCategory.Inspection, $"{info.Name} - {c.Name}", c)) return null;
+            bool free = freeLift && m == InspectMethod.Lift;
+            if (!free && info != null && info.Cost > 0 && !Pay(info.Cost, TxCategory.Inspection, $"{info.Name} - {c.Name}", c)) return null;
             var r = InspectionEngine.Run(m, c.components, c.faults, c.history, c.knowledge, state.skill, rng);
-            PassTime((info?.Minutes ?? 0) / 60f);
+            if (passTime) PassTime((info?.Minutes ?? 0) / 60f);
             Practice(0.01f);
             Changed(c);
             return r;
@@ -279,11 +301,157 @@ namespace CarSales
             Spend(c, job, tier, 0);
             PassTime(job.Hours * 1.2f);
             Practice(0.02f);
+            MarkCardDone(c.instanceId, job.Id);
             if (botched) UI.Toast(ToastType.Warning, "Not quite right", $"{job.Name}: it works, but you didn't fit it perfectly.");
             else UI.Success("Job done", $"{job.Name} finished{(fixedFaults > 0 ? $", {fixedFaults} fault(s) fixed" : "")}.");
             Changed(c);
             return true;
         }
+
+        // ------------------------------------------------------------------ HANDS-ON (your own bay)
+        /// <summary>Starts doing a job by hand. The car must stand in a matching bay of your service centre.</summary>
+        public bool StartHandsOnRepair(CarInstance c, RepairJobDef job, PartTier tier)
+        {
+            var display = CarSalesServices.Vehicles ? CarSalesServices.Vehicles.GetDisplay(c.instanceId) : null;
+            var types = WorkStation.StationsFor(job);
+            if (!WorkStation.Exists(StationType.Mechanical)) { UI.Error("You have no service centre yet (run Build Everything to add it to AUTO WORLD)."); return false; }
+            if (!display || !WorkStation.BayOf(display, types)) { UI.Error($"Drive the {c.Name} into your {(types[0] == StationType.Tyres ? "tyre or mechanical" : "mechanical")} bay at the AUTO WORLD service centre first."); return false; }
+            if (JobOn(c) != null) { UI.Error("The garage is working on this car."); return false; }
+            if (!state.inventory.TakePartsFor(job, tier)) { UI.Error("Order the parts first."); return false; }
+            Session.StartRepair(display, job, tier);
+            return true;
+        }
+
+        public void ReturnParts(RepairJobDef job, PartTier tier)
+        {
+            foreach (var (part, count) in job.Parts) state.inventory.Add(part, tier, count);
+            OnChanged?.Invoke();
+        }
+
+        public void CompleteHandsOn(CarInstance c, RepairJobDef job, PartTier tier)
+        {
+            if (c == null || job == null) return;
+            bool botched = rng.NextDouble() < WorkshopCatalog.DiyFailChance(state.skill) * HandsOn.RiskFactor;
+            int fixedFaults = WorkshopCatalog.Apply(job, c.components, c.faults, tier, rng, botched);
+            Spend(c, job, tier, 0);
+            PassTime(job.Hours * HandsOn.TimeFactor);
+            Practice(0.03f);
+            MarkCardDone(c.instanceId, job.Id);
+            if (botched) UI.Toast(ToastType.Warning, "Not quite right", $"{job.Name}: it works, but something isn't seated perfectly.");
+            else UI.Success("Done by hand", $"{job.Name} on the {c.Name}{(fixedFaults > 0 ? $": {fixedFaults} fault(s) fixed" : "")}. It took {job.Hours * HandsOn.TimeFactor:0.#} h.");
+            Changed(c);
+        }
+
+        public MotRecord RunMotAtBay(CarInstance c)
+        {
+            CarParts.EnsureParts(c);
+            var rec = MotTest.Run(c.components, c.faults, c.mileage, Today, VehicleRecords.CurrentYear(Today));
+            c.documents.motHistory.Add(rec);
+            if (rec.passed) c.documents.motExpiryDay = Today + VehicleRecords.MotValidDays;
+            PassTime(0.75f);
+            Changed(c);
+            string body = rec.passed ? $"PASS. Valid for {VehicleRecords.MotValidDays} days." : "FAIL:\n- " + string.Join("\n- ", rec.fails);
+            if (rec.advisories.Count > 0) body += "\n\nAdvisories:\n- " + string.Join("\n- ", rec.advisories);
+            UIFactory.Confirm($"MOT - {c.Name}", body, "OK", rec.passed ? UIFactory.Good : UIFactory.Bad, null);
+            return rec;
+        }
+
+        // ------------------------------------------------------------------ BOARD & MECHANIC
+        public BoardCard AddToBoard(CarInstance c, RepairJobDef job, PartTier tier)
+        {
+            var existing = state.board.Find(b => !b.done && b.carId == c.instanceId && b.job == job.Id);
+            if (existing != null) { existing.tier = (int)tier; Changed(c); return existing; }
+            var card = new BoardCard { id = Guid.NewGuid().ToString("N").Substring(0, 8), job = job.Id, carId = c.instanceId, tier = (int)tier };
+            state.board.Add(card);
+            UI.Notify($"Added to the workshop board: {job.Name} ({c.Name}).");
+            Changed(c);
+            return card;
+        }
+
+        public void RemoveCard(BoardCard card)
+        {
+            if (card == null || card.byMechanic) return;
+            state.board.Remove(card);
+            Changed(null);
+        }
+
+        public BoardColumn ColumnOf(BoardCard card)
+        {
+            var running = state.jobs.Find(j => j.carId == card.carId && j.job == card.job);
+            return BoardLogic.ColumnOf(card, state.inventory, running != null);
+        }
+
+        void MarkCardDone(string carId, string jobId)
+        {
+            var card = state.board.Find(b => !b.done && b.carId == carId && b.job == jobId);
+            if (card == null) return;
+            card.done = true;
+            card.byMechanic = false;
+            card.doneDay = Today;
+        }
+
+        public bool HireMechanic()
+        {
+            if (state.mechanicHired) return true;
+            state.mechanicHired = true;
+            UI.Success("Mechanic hired", $"They work {BoardLogic.WorkStart:00}:00-{BoardLogic.WorkEnd:00}:00 on the board's ready jobs, for {UIFactory.Money(BoardLogic.MechanicWage)} a day.");
+            Changed(null);
+            return true;
+        }
+
+        public void FireMechanic()
+        {
+            state.mechanicHired = false;
+            foreach (var b in state.board) if (b.byMechanic) { b.byMechanic = false; ReturnPartsFor(b); }
+            UI.Notify("The mechanic has left.");
+            Changed(null);
+        }
+
+        void ReturnPartsFor(BoardCard b)
+        {
+            var job = WorkshopCatalog.Job(b.job);
+            if (job != null && b.hoursLeft >= 0f) ReturnParts(job, (PartTier)b.tier);
+            b.hoursLeft = -1f;
+        }
+
+        /// <summary>Your mechanic works through the Ready column during working hours at your mechanical bay.</summary>
+        void MechanicWork(float fromHour, float toHour)
+        {
+            if (!state.mechanicHired || !WorkStation.Exists(StationType.Mechanical)) return;
+            float hours = BoardLogic.WorkingHours(fromHour, toHour);
+            while (hours > 0f)
+            {
+                var card = state.board.Find(b => b.byMechanic && !b.done);
+                if (card == null)
+                {
+                    card = state.board.Find(b => !b.done && ColumnOf(b) == BoardColumn.Ready && JobOn(Car(b.carId)) == null && Car(b.carId) != null);
+                    if (card == null) return;
+                    var job = WorkshopCatalog.Job(card.job);
+                    if (!state.inventory.TakePartsFor(job, (PartTier)card.tier)) return;
+                    card.byMechanic = true;
+                    card.hoursLeft = job.Hours;
+                }
+                float work = Mathf.Min(hours, card.hoursLeft);
+                card.hoursLeft -= work;
+                hours -= work;
+                if (card.hoursLeft > 0.0001f) return;
+                var c = Car(card.carId);
+                var j = WorkshopCatalog.Job(card.job);
+                if (c != null && j != null)
+                {
+                    bool botched = rng.NextDouble() < WorkshopCatalog.DiyFailChance(BoardLogic.MechanicSkill) * HandsOn.RiskFactor;
+                    int fixedFaults = WorkshopCatalog.Apply(j, c.components, c.faults, (PartTier)card.tier, rng, botched);
+                    Spend(c, j, (PartTier)card.tier, 0);
+                    UI.Success("Your mechanic", $"{j.Name} on the {c.Name} is done{(fixedFaults > 0 ? $" ({fixedFaults} fault(s) fixed)" : "")}{(botched ? " - but it's not perfect" : "")}.");
+                    CarParts.Recalculate(c);
+                }
+                card.hoursLeft = -1f;
+                MarkCardDone(card.carId, card.job);
+                OnChanged?.Invoke();
+            }
+        }
+
+        static CarInstance Car(string id) => CarSalesServices.Inventory ? CarSalesServices.Inventory.OwnedCars.Find(x => x.instanceId == id) : null;
 
         void Spend(CarInstance c, RepairJobDef job, PartTier tier, int labour)
         {
@@ -297,8 +465,11 @@ namespace CarSales
         {
             if (lastHour < 0f || hour < lastHour) { lastHour = hour; return; }
             float delta = hour - lastHour;
+            float from = lastHour;
             lastHour = hour;
-            if (delta <= 0f || state.jobs.Count == 0) return;
+            if (delta <= 0f) return;
+            MechanicWork(from, hour);
+            if (state.jobs.Count == 0) return;
             for (int i = state.jobs.Count - 1; i >= 0; i--)
             {
                 var j = state.jobs[i];
@@ -321,6 +492,7 @@ namespace CarSales
             {
                 if (job.Id == "oil_service") { c.documents.serviceStamps++; c.documents.lastServiceKm = c.mileage; if (c.documents.service == ServiceHistory.None) c.documents.service = ServiceHistory.Partial; }
             }
+            MarkCardDone(c.instanceId, job.Id);
             UI.Success("Garage: job done", $"{job.Name} on the {c.Name} is finished{(fixedFaults > 0 ? $" ({fixedFaults} fault(s) fixed)" : "")}.");
             Changed(c);
         }
@@ -378,8 +550,19 @@ namespace CarSales
             foreach (var o in state.inventory.Receive(e.Day))
                 UI?.Notify($"Parts delivered: {o.count} x {WorkshopCatalog.Part(o.part)?.Name ?? o.part} ({(PartTier)o.tier}).");
 
+            BoardLogic.ClearOldDone(state.board, e.Day);
+            if (state.mechanicHired)
+            {
+                if (!Eco.TrySpend(BoardLogic.MechanicWage, TxCategory.Wages, "Mechanic's wage"))
+                {
+                    UI?.Toast(ToastType.Warning, "Mechanic quit", "You couldn't pay your mechanic's wage, so they left.");
+                    FireMechanic();
+                }
+                else if (CarSalesServices.DayCycle) CarSalesServices.DayCycle.RegisterExpense(BoardLogic.MechanicWage);
+            }
             var inv = CarSalesServices.Inventory;
             if (!inv) return;
+            state.board.RemoveAll(b => !b.done && !b.byMechanic && Car(b.carId) == null);
             foreach (var c in inv.OwnedCars.ToList())
             {
                 CarParts.EnsureParts(c);

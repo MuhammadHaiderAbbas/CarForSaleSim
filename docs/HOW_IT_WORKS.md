@@ -407,4 +407,8 @@ Won cars appear in the auction car park — drive or tow them home.
 - **WorkshopManager** (added by `CarSalesBootstrap` if missing): inspections, orders, garage jobs (advance with
   `DayCycle.OnTimeChanged`), DIY, MOT, paperwork, nightly fault progression, deliveries, repossession. Saved as module `workshop`.
 - **Money:** new ledger categories Parts, Labour, Paperwork, Finance settlements.
+- **Phase 5b:** `WorkStation` (bay box + console, `StationType`), `HandsOnSession`/`HandsOnSocket` (markers, hold E;
+  steps from `Sim/Workshop/Board.cs`: `HandsOn`, `HandsOnInspection`), board cards and the mechanic in `WorkshopState`
+  (`board`, `mechanicHired`; worked in `WorkshopManager.MechanicWork`), `PartsCounter` (sets `WorkshopManager.AtCounter`),
+  world sites in `Editor/CarSalesServiceCentre.cs`.
 

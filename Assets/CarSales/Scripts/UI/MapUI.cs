@@ -39,7 +39,7 @@ namespace CarSales
             switch (p.glyph)
             {
                 case "D": return PlaceKind.Dealerships;
-                case "F": case "W": case "C": return PlaceKind.Services;
+                case "F": case "W": case "C": case "P": case "S": return PlaceKind.Services;
                 case "U": case "A": return PlaceKind.CarMarkets;
                 case "H": return PlaceKind.Homes;
                 case "$": return PlaceKind.Properties;

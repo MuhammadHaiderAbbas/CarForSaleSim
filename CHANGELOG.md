@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.0-dev — Phase 5b "Your own workshop"
+- **AUTO WORLD Service Centre** next to your dealership: mechanical bay with a lift, tyre bay, MOT bay.
+- **Hands-on work**: walk around a car and hold E on glowing markers to inspect it (wheels, bonnet, interior,
+  OBD port, underneath on the lift) or to repair it bolt by bolt. Faster and safer than quick DIY.
+- **Workshop Board**: waiting for parts → ready → in progress → done, on the wall and in the Workshop app.
+- **Hire a mechanic** who works through the board during the day.
+- **Parts Direct** counter in town: 10% cheaper, take the parts with you.
+- Free MOT tests at your own MOT bay.
+- 7 new tests (221 total).
+
 ## v5.0-dev — Phase 5a "Inspection, workshop, documents"
 - **Hidden faults**: 40 kinds (misfires, head gaskets, slipping clutches, worn pads, rust, smoker's cars...). Worn cars
   have more; they get worse every day and lower the value.

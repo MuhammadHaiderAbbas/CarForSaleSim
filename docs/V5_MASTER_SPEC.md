@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-4 are merged; Phase 5a code is written (see [Phase 5 status](#phase-5-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-4 and 5a are merged; Phase 5b code is written (see [Phase 5 status](#phase-5-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -981,9 +981,25 @@ parts + time + money and change value; an MOT can pass/fail with advisories; a h
 | Value | `CarValueCalculator.MarketValue` × faults × paperwork × history (`CarRecords.ValueMultiplier`); marketplace prices use only what the seller shows, so hidden problems are your loss. |
 | UI | Inspection checklist + findings (symptom, code, MOT, repair estimate); Workshop app on the desktop (Repairs, Parts, Jobs, MOT & paperwork); vehicle file **Documents** (plate, VIN, logbook, MOT, service, keys, MOT history) and **History** (history check, your records) tabs, faults in **Condition**; marketplace badges *No logbook* / *MOT expired*; road-test findings as toasts. |
 
-**Phase 5b (next):** workstations in your own dealership (mechanical bay with lift, tyre machine, MOT bay) as world sites,
-the Workshop Board (kanban), first-person Inspection Mode with sockets (bonnet, doors, wheels) and the hold-to-unbolt
-DIY interaction, staff doing the work, parts shop counter in the town.
+**Phase 5b: code complete** (221 EditMode tests, compile-checked; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Service centre | Build Everything adds the **AUTO WORLD Service Centre** east of the main dealership (driveway from the road): **mechanical bay** with a lift, **tyre bay** (tyre changer, balancer), **MOT bay** (brake rollers, headlamp tester), parts shelves, workbench, reflection probe, map place. Each bay has a console (`WorkStation`: bay box, finds the car you parked in it). |
+| Hands-on mode | `HandsOnSession`: glowing markers on the car; look at one and **hold E**. Inspection: 4 wheels (walk-around), bonnet, driver's door (interior), OBD port (with scanner), underneath (only on your lift, free). Repairs: undo 2-4 bolts, swap the part, tighten them, in order; 20% quicker than the garage and half the botch risk. Walk 12 m away to stop (parts go back on the shelf). |
+| Workshop Board | Workshop app → **Board** (also from the board on the service-centre wall): Waiting for parts → Ready → In progress → Done today; order parts, send to the town garage, or do it by hand from a card. *Add to board* from Repairs. |
+| Mechanic | Hire one ($140/day, paid each morning; leaves if you can't pay): works 08:00-18:00 through the Ready column at your service centre, no labour bills, small botch chance. Ledger category *Wages*. |
+| Parts Direct | Parts counter in town: 10% cheaper than the motor factor, same day (`Supplier.Counter`, only while you're at the counter). |
+| MOT bay | Test your own cars for free (45 min); the town garage test stays in the app ($55). |
+| World dialogs | Dialogs opened from the world (bay consoles) now behave like menus (cursor free, player stops). |
+
+**Phase 5b play-test checklist:**
+1. Build Everything, Play. Find the service centre east of AUTO WORLD (map: S) and Parts Direct in town (P).
+2. Drive a car into the mechanical bay, use the console → *Inspect by hand*: hold E on each marker, including underneath.
+3. Workshop app → Repairs: *Add to board*; go to Parts Direct, order with the counter price; Board: card moves to Ready.
+4. Card → *By hand* with the car in the bay: undo the bolts, fit, tighten. Check the condition went up.
+5. Hire the mechanic, put two jobs on the board, wait (or sleep): they're done; wages show in Accounts.
+6. MOT bay: run a free MOT on an old car.
 
 **Phase 5a play-test checklist:**
 1. New game (or load: older cars get records the first time they're seen).

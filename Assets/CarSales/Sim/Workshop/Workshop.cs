@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace CarSales.Sim
 {
     public enum PartTier { Used = 0, Aftermarket = 1, OEM = 2 }
-    public enum Supplier { MotorFactor = 0, Online = 1, BreakersYard = 2 }
+    public enum Supplier { MotorFactor = 0, Online = 1, BreakersYard = 2, Counter = 3 }   // Counter = in person at Parts Direct
     public enum Station { Mechanical, Tyres, Body, Detailing, Diagnostic }
 
     public sealed class PartDef
@@ -210,7 +210,7 @@ namespace CarSales.Sim
 
         public static float TierFactor(PartTier t) => t == PartTier.Used ? 0.4f : t == PartTier.Aftermarket ? 0.7f : 1f;
 
-        public static float SupplierFactor(Supplier s) => s == Supplier.Online ? 0.85f : 1f;
+        public static float SupplierFactor(Supplier s) => s == Supplier.Online ? 0.85f : s == Supplier.Counter ? 0.9f : 1f;
 
         public static int LeadDays(Supplier s) => s == Supplier.Online ? 1 : 0;
 

@@ -20,7 +20,7 @@ namespace CarSales
         RawImage photo;
         TextMeshProUGUI nameText, overallText, claimText, notesText;
         RectTransform barsArea, checklist, findings;
-        Button partsButton;
+        Button partsButton, handButton;
         readonly List<string> notes = new List<string>();
 
         public override void Build()
@@ -40,6 +40,7 @@ namespace CarSales
             UIFactory.LE(barsArea, flexH: 1);
             var buttons = UIFactory.HRow(left, 46f, 10f);
             partsButton = UIFactory.Btn(buttons, "All parts", UIFactory.Accent, () => CarSalesServices.UI.parts.Show(car, owned), 46f, 17f);
+            handButton = UIFactory.Btn(buttons, "By hand", UIFactory.Warn, InspectByHand, 46f, 17f);
             UIFactory.Btn(buttons, "Back", UIFactory.Neutral, Back, 46f, 17f);
 
             var mid = UIFactory.VCol(body, 8f, "Checklist", 470f);
@@ -80,6 +81,7 @@ namespace CarSales
             float lie = car.reportedCondition - car.condition;
             claimText.text = context != WorkshopManager.Context.Owned && known && lie >= 5f ? $"The seller claimed {lie:0}% better than reality!" : "";
             partsButton.interactable = known;
+            handButton.interactable = owned && CarSalesServices.Workshop;
 
             UIFactory.ClearChildren(barsArea);
             if (known)
@@ -214,6 +216,14 @@ namespace CarSales
         {
             string found = r.found.Count == 0 ? "no new faults" : $"{r.found.Count} new: " + string.Join(", ", r.found.Select(f => f.Def.Name));
             notes.Add($"<b>{name}:</b> {found}. {string.Join(" ", r.notes.Where(n => n != "Nothing new found."))}");
+        }
+
+        /// <summary>Walk around the car and check each point yourself (on your lift: underneath too).</summary>
+        void InspectByHand()
+        {
+            if (!owned || !CarSalesServices.Workshop) return;
+            bool lift = WorkStation.BayOf(owned, StationType.Mechanical) != null;
+            CarSalesServices.Workshop.Session.StartInspection(owned, lift);
         }
 
         void Back()

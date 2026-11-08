@@ -34,6 +34,7 @@ namespace CarSales.Foundation
         Labour = 22,         // garage labour
         Paperwork = 23,      // MOT, logbook, history checks, keys
         FinanceSettlement = 24,
+        Wages = 25,
     }
 
     public static class TxCategories
@@ -68,6 +69,7 @@ namespace CarSales.Foundation
                 case TxCategory.Labour: return "Garage labour";
                 case TxCategory.Paperwork: return "MOT & paperwork";
                 case TxCategory.FinanceSettlement: return "Finance settlements";
+                case TxCategory.Wages: return "Wages";
                 default: return "Other";
             }
         }

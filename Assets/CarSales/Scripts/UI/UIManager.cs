@@ -170,7 +170,12 @@ namespace CarSales
         {
             // An open dialog (UIFactory.Modal) eats Esc first.
             var modal = transform.Find("Modal");
-            if (modal) { Destroy(modal.gameObject); return; }
+            if (modal)
+            {
+                if (openPanel == modal.gameObject) Close();
+                Destroy(modal.gameObject);
+                return;
+            }
             if (openPanel)
             {
                 if (IsModal(openPanel)) return;

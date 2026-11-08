@@ -224,13 +224,22 @@ namespace CarSales
             b.textWrappingMode = TextWrappingModes.Normal;
             var row = HRow(box.transform, 50, 12, "Buttons", true);
             var go = root.gameObject;
+            // Opened from the world (no menu open): act like a menu, so the cursor is free and the player stands still.
+            var ui = CarSalesServices.UI;
+            bool standalone = ui && canvas == ui.transform && !ui.IsMenuOpen;
             foreach (var (label, color, action) in buttons)
             {
                 var a = action;
-                Btn(row, label, color, () => { UnityEngine.Object.Destroy(go); a?.Invoke(); }, 50f, 19f);
+                Btn(row, label, color, () =>
+                {
+                    if (standalone && ui && ui.OpenPanel == go) ui.Close();
+                    UnityEngine.Object.Destroy(go);
+                    a?.Invoke();
+                }, 50f, 19f);
             }
             root.SetAsLastSibling();
-            UITransition.Play(go);
+            if (standalone) ui.Open(go);
+            else UITransition.Play(go);
             return go;
         }
 

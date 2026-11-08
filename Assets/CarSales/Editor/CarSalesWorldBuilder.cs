@@ -42,6 +42,8 @@ namespace CarSales.EditorTools
             Progress("Town services", 0.6f);
             BuildFuelStation(Site(env, "FuelStation", new Vector3(40f, 0f, -38f), 180f), m);
             BuildWorkshop(Site(env, "MechanicWorkshop", new Vector3(-45f, 0f, -38f), 180f), m, db);
+            BuildServiceCentre(Site(env, "ServiceCentre", new Vector3(50f, 0f, -2f), 0f), m);
+            BuildPartsShop(Site(env, "PartsDirect", new Vector3(-12f, 0f, -38f), 180f), m);
             BuildCarWashCenter(Site(env, "CarWashCenter", new Vector3(100f, 0f, -38f), 180f), m);
             BuildUsedCarMarket(Site(env, "UsedCarMarket", new Vector3(-100f, 0f, -38f), 180f), m, carDisplayPrefab);
             BuildAuctionCenter(Site(env, "AuctionCenter", new Vector3(-110f, 0f, 112f), 0f), m);
