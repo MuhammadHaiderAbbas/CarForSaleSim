@@ -8,14 +8,16 @@ namespace CarSales
     public class VehicleDetailsUI : UIPanel
     {
         CarInstance car;
+        CarDisplay physical;   // set when viewing a car at the Used Car Market
         RawImage photo;
+        TextMeshProUGUI buyLabel, backLabel;
         TextMeshProUGUI nameText, priceText, description, year, mileage, condition, clean, fuel, gearbox, value, inspectLabel;
         Image conditionChip;
         TextMeshProUGUI conditionChipText;
 
         public override void Build()
         {
-            var body = UIFactory.Window(Root, "Vehicle Details", new Vector2(1240f, 700f), () => CarSalesServices.UI.marketplace.Show());
+            var body = UIFactory.Window(Root, "Vehicle Details", new Vector2(1240f, 700f), Back);
             UIFactory.Horizontal(body, 0, 28f, TextAnchor.UpperLeft).childForceExpandHeight = true;
 
             var left = UIFactory.VCol(body, 14f, "Left", 640f);
@@ -42,13 +44,45 @@ namespace CarSales
             UIFactory.Spacer(right);
             var row = UIFactory.HRow(right, 56, 12);
             UIFactory.Btn(row, "Inspect", UIFactory.Warn, Inspect, out inspectLabel, 54f, 18f);
-            UIFactory.Btn(row, "Buy Now", UIFactory.Good, () => CarSalesServices.UI.marketplace.Buy(car), 54f, 20f);
-            UIFactory.Btn(right, "Back to Marketplace", UIFactory.Neutral, () => CarSalesServices.UI.marketplace.Show(), 46f, 17f);
+            UIFactory.Btn(row, "Buy Now", UIFactory.Good, Buy, out buyLabel, 54f, 19f);
+            UIFactory.Btn(right, "Back to Marketplace", UIFactory.Neutral, Back, out backLabel, 46f, 17f);
+        }
+
+        /// <summary>A car standing at the Used Car Market (free inspection, drive it away).</summary>
+        public void ShowPhysical(CarDisplay display)
+        {
+            physical = display;
+            ShowInternal(display.Data);
         }
 
         public void Show(CarInstance listing)
         {
+            physical = null;
+            ShowInternal(listing);
+        }
+
+        /// <summary>Returns to the same car (online or physical) after the inspection screen.</summary>
+        public void Reopen() { if (physical) ShowPhysical(physical); else Show(car); }
+
+        void Back()
+        {
+            if (physical) CloseAll();
+            else CarSalesServices.UI.marketplace.Show();
+        }
+
+        void Buy()
+        {
+            if (!physical) { CarSalesServices.UI.marketplace.Buy(car); return; }
+            int price = car.purchasePrice;
+            if (CarSalesServices.Marketplace.TryBuyFromLot(physical, out string msg))
+                CarSalesServices.UI.purchaseConfirm.Show(car, price, -1, msg);
+            else CarSalesServices.UI.Error(msg);
+        }
+
+        void ShowInternal(CarInstance listing)
+        {
             car = listing;
+            if (physical) car.inspected = true;   // you can look the car over yourself on the lot
             OpenSelf();
             var def = CarSalesServices.Database.Get(car.carId);
             UIFactory.SetCarPicture(photo, car);
@@ -77,6 +111,9 @@ namespace CarSales
 
             int fee = CarValueCalculator.InspectionCost();
             inspectLabel.text = car.inspected ? "Inspection Report" : fee > 0 ? $"Inspect ({UIFactory.Money(fee)})" : "Inspect (free)";
+            int delivery = CarSalesServices.Marketplace.DeliveryFee;
+            buyLabel.text = physical ? $"Buy Now - drive it away" : $"Buy Now\n+{UIFactory.Money(delivery)} delivery";
+            backLabel.text = physical ? "Close" : "Back to Marketplace";
         }
 
         void Inspect()

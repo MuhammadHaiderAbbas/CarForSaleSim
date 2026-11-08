@@ -130,7 +130,7 @@ namespace CarSales
             finished = true;
             var s = session;
             session = null;
-            if (sold) CarSalesServices.Dealership.CompleteSale(s.Car, s.FinalPrice);
+            if (sold) CarSalesServices.Vehicles.CompleteSale(s.Car, s.FinalPrice);
             if (s.Customer) s.Customer.EndNegotiation(sold);
             CarSalesServices.UI.Close();
         }

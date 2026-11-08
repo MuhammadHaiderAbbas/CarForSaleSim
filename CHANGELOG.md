@@ -1,5 +1,34 @@
 # Changelog
 
+## v4.0 "Open Town"
+**World**
+- A whole town: main road, north road and two avenues, street trees and lamps, skyline.
+- New locations: **Fuel Station**, **Mechanic Workshop** (2 bays + mechanic desk), **Car Wash** (tunnel + attendant),
+  **Used Car Market** (walk-around lot), **Auction Center**, 3 homes, 3 investment buildings, 3 dealerships.
+
+**Driving & cars**
+- Drive **any car you own** (F). Cars stay where you park them; drive up to a free dealership spot and press E to park.
+- **Fuel** (100% = 25 km), refuel at the pumps; mileage increases while driving; crashes damage parts; night headlights.
+- **Personal car** (your own beat-up hatchback) — can't be sold.
+- **Tow trucks** (phone, P): move any car to a dealership, the workshop, car wash, fuel station or home. Price by distance.
+- **Taxis** (phone or map): instant travel for money + time.
+
+**Buying**
+- **Used Car Market**: physical cars with price tags, free on-site inspection, buy and drive away.
+- **Auction Center** (10:00–17:00): live bidding against AI bidders with a hammer timer; condition is only the seller's claim.
+- Online purchases now cost a $300 delivery fee.
+
+**Life & business**
+- **24-hour day**: time always runs; dealerships open 08:00–20:00 automatically (close early with O or the sign).
+- **Energy** drains while awake; **sleep at home** (from 18:00) to end the day; pass out at 02:00 (fine, groggy).
+- **Properties** (computer → Real Estate, or FOR SALE signs): Suburban House & Hillside Villa (wake earlier, +reputation),
+  **Downtown Motors** & **Luxury Lane** dealerships (own spots & customers; Luxury customers have 60% bigger budgets),
+  Rental Apartments / Parking Garage / Office Tower (income every night).
+- Morning report with rent, interest and property income.
+- **Town map** (M) with GPS arrow on the HUD and minimap; **phone** (P).
+- HUD: energy bar, GPS, fuel; new key hints. Goals updated for the town (15 goals).
+
+
 ## v3.0 "AUTO WORLD"
 **UI redesign (everything builds itself from code - no prefabs, no Inspector wiring)**
 - Dark-blue theme with procedurally generated rounded panels, icons, check marks and arrows (`UIFactory`).

@@ -12,6 +12,7 @@
 9. [Roadmap ideas](#9-roadmap-ideas)
 10. [v2 systems: upgrades, bank, goals, test drive, menus, audio](#10-v2-systems)
 11. [v3: code-built UI, car photos, minimap, parts, messages](#11-v3-systems)
+12. [v4: town, driving, day & sleep, properties, auctions](#12-v4-systems)
 
 ---
 
@@ -287,3 +288,51 @@ A Full Service repairs everything for 10% less.
 ### Messages (`MessageManager`)
 Every morning: 1-2 private-seller offers (honest condition, 60-80% of value, expire that day), sometimes a tip,
 and a bank reminder if you have a loan. Goal completions are posted too. Messages are saved.
+
+
+## 12. v4 systems
+
+### Town layout (world metres, +Z = north)
+| Place | Position | Built by |
+|---|---|---|
+| AUTO WORLD (main dealership, office computer) | (0, 0) | `BuildDealershipSite` |
+| Downtown Motors / Luxury Lane | (-140, 0) / (140, 0) | `BuildDealershipSite` |
+| Fuel Station / Mechanic Workshop / Car Wash / Used Car Market | (40,-38) / (-45,-38) / (100,-38) / (-100,-38) | south of the main road |
+| Auction Center, Apartments, Office Tower | (-110,112), (-40,106), (-175,106) | north road |
+| Starter Trailer, Suburban House, Hillside Villa, Parking Garage | (40,106), (95,106), (152,106), (200,106) | north road |
+
+Each site is built in local space (front = local -Z towards the road) by `Editor/CarSalesWorldBuilder.cs`.
+Move a whole site by moving its root object. Each dealership has its own `NavMeshSurface` (Volume) for customers.
+
+### Where cars are (`VehicleRegistry`)
+Every owned car has `location` = **Spot** (a dealership parking spot: `dealershipId` + `parkingSpotIndex`) or
+**World** (`worldPosition` / `worldRotationY`). `VehicleRegistry` spawns all of them on load and handles
+`PlaceAtSpot`, `PlaceInWorld`, `Refuel`, `CompleteSale`, `QuickSell`. Only cars **on a spot** and **listed** are seen by customers.
+Driving a listed car off its spot un-lists it.
+
+### Service zones (`ServiceZone`, `ServiceDesk`)
+A zone is a box (Workshop, CarWash, FuelStation, Home, Auction). Cars inside it can be serviced at the desk
+(or with E while driving inside it). Zone **bays** are where tow trucks drop cars.
+
+### Driving (`TestDriveManager` + `ArcadeCarController`)
+F enters the car you look at; F again parks it right there. Fuel: 4% per km (100% = 25 km), $0.90 per %.
+Empty tank = no power → tow it. Context actions with E: park in a nearby free spot (4.5 m), refuel, wash, repair.
+
+### Tow & taxi (`TowService`)
+Tow: $120 + $0.80/m to a dealership spot or a zone bay. Taxi: $25 + $0.25/m and travel time (8 m per game minute).
+
+### Day, energy & sleep (`DayCycleManager`)
+1 game hour = 50 real seconds. Dealerships: 08:00–20:00. Energy = 100% at wake-up, falls linearly to 0% at 02:00.
+Below 15% you walk slower. Sleep (front door of the home you live in) from 18:00, or earlier when energy < 25%.
+Passing out at 02:00: $300 fee, wake with 60% energy. Sleeping pays rent ($500 + $50 per non-personal car + dealership rents),
+loan interest, collects property income, generates new marketplace/lot/auction cars and messages, and autosaves.
+
+### Properties (`PropertyManager`)
+Edit the list in the Inspector (`CarSalesSystems → PropertyManager`). Types: Home (wake hour, daily reputation),
+Dealership (daily rent; links to a `DealershipManager` by `propertyId`), Investment (daily income).
+`PropertySign` objects in the world open the Real Estate page and disappear once bought.
+
+### Auctions (`AuctionManager`, `AuctionUI`)
+5 lots per day, 10:00–17:00. Starting bid = 35% of the claimed value. 2–4 AI bidders with secret maximums
+(50–102% of the TRUE value). The 12 s timer resets to 6 s after every bid; you win if you're highest when it hits zero.
+Won cars appear in the auction car park — drive or tow them home.

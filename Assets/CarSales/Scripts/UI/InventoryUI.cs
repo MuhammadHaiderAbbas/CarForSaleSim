@@ -46,7 +46,7 @@ namespace CarSales
                 UIFactory.LE(t, h: 80);
             }
             int total = owned.Sum(c => CarValueCalculator.MarketValue(c));
-            footer.text = $"Total vehicles: {owned.Count}   |   Lot capacity: {CarSalesServices.Dealership.UnlockedSpotCount}   |   Total value: {UIFactory.Money(total)}";
+            footer.text = $"Total vehicles: {owned.Count}   |   Dealership spots: {DealershipManager.TotalCapacity}   |   Total value: {UIFactory.Money(total)}";
         }
 
         void Row(CarInstance car)
@@ -65,11 +65,11 @@ namespace CarSales
             UIFactory.Text(col, $"{def.year} {def.brand} {def.displayName}", 21, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             UIFactory.Text(col,
                 $"Condition: <color={UIFactory.Hex(CarParts.LabelColor(car.condition))}>{CarParts.Label(car.condition)} ({car.condition:0}%)</color>   " +
-                $"Clean: {car.cleanliness:0}%   {car.mileage:N0} km   Spot #{car.parkingSpotIndex + 1}",
+                $"Clean: {car.cleanliness:0}%   Fuel: {car.fuel:0}%   {car.mileage:N0} km\n<color={UIFactory.Hex(UIFactory.Accent)}>{CarSalesServices.Vehicles.LocationText(car)}</color>",
                 15, UIFactory.TextDim, TextAlignmentOptions.Left);
 
-            Color chipColor = car.state == CarState.Listed ? UIFactory.Good : car.state == CarState.NeedsRepair ? UIFactory.Warn : UIFactory.Neutral;
-            string chipText = car.state == CarState.Listed ? $"For sale {UIFactory.Money(car.listedPrice)}" : car.state == CarState.NeedsRepair ? "Needs repair" : "Ready";
+            Color chipColor = car.personal ? new Color(0.1f, 0.6f, 0.65f) : car.state == CarState.Listed ? UIFactory.Good : car.state == CarState.NeedsRepair ? UIFactory.Warn : UIFactory.Neutral;
+            string chipText = car.personal ? "Personal car" : car.state == CarState.Listed ? $"For sale {UIFactory.Money(car.listedPrice)}" : car.state == CarState.NeedsRepair ? "Needs repair" : "Ready";
             var chipRow = UIFactory.HRow(col, 26, 6, "Chips", false);
             UIFactory.Chip(chipRow, chipText, chipColor, out _);
             UIFactory.Spacer(chipRow, 0f, 1f);
@@ -84,11 +84,12 @@ namespace CarSales
             var sell = UIFactory.Btn(row.transform, confirming ? $"Confirm\n{UIFactory.Money(CarValueCalculator.QuickSellPrice(car))}" : "Quick Sell",
                                      confirming ? UIFactory.Bad : UIFactory.Warn, () => QuickSell(car), 44f, 15f);
             UIFactory.LE(sell, h: 44, w: 130, flexW: 0);
+            sell.interactable = !car.personal;
         }
 
         void Manage(CarInstance car)
         {
-            var display = CarSalesServices.Dealership.GetDisplay(car.instanceId);
+            var display = CarSalesServices.Vehicles.GetDisplay(car.instanceId);
             if (display) CarSalesServices.UI.carMenu.Show(display);
             else CarSalesServices.UI.Error("That car isn't on the lot right now.");
         }
@@ -103,8 +104,8 @@ namespace CarSales
                 return;
             }
             confirmSellId = null;
-            var display = CarSalesServices.Dealership.GetDisplay(car.instanceId);
-            if (display) CarSalesServices.Dealership.QuickSell(display);
+            var display = CarSalesServices.Vehicles.GetDisplay(car.instanceId);
+            if (display) CarSalesServices.Vehicles.QuickSell(display);
             Refresh();
         }
 

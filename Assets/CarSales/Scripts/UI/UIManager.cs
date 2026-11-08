@@ -13,7 +13,7 @@ namespace CarSales
     /// </summary>
     public class UIManager : MonoBehaviour
     {
-        [SerializeField] InputActionReference closeAction, inventoryAction;
+        [SerializeField] InputActionReference closeAction, inventoryAction, mapAction, phoneAction;
 
         [Header("Created at runtime")]
         public HUDController hud;
@@ -25,6 +25,10 @@ namespace CarSales
         public UpgradesUI upgrades;
         public BankUI bank;
         public StatsUI stats;
+        public RealEstateUI realEstate;
+        public MapUI map;
+        public PhoneUI phone;
+        public AuctionUI auction;
         public VehicleDetailsUI vehicleDetails;
         public InspectionUI inspection;
         public PurchaseConfirmUI purchaseConfirm;
@@ -44,7 +48,7 @@ namespace CarSales
 
         GameObject openPanel;
         RectTransform toastArea;
-        InputAction close, inventoryKey;
+        InputAction close, inventoryKey, mapKey, phoneKey;
 
         void Awake()
         {
@@ -63,6 +67,7 @@ namespace CarSales
             upgrades = computerHub.Upgrades;
             bank = computerHub.Bank;
             stats = computerHub.Stats;
+            realEstate = computerHub.RealEstate;
             vehicleDetails = Create<VehicleDetailsUI>("VehicleDetails");
             inspection = Create<InspectionUI>("Inspection");
             purchaseConfirm = Create<PurchaseConfirmUI>("PurchaseConfirm");
@@ -75,6 +80,9 @@ namespace CarSales
             pause = Create<PauseMenuUI>("Pause");
             settings = Create<SettingsUI>("Settings");
             endScreen = Create<EndScreenUI>("EndScreen");
+            map = Create<MapUI>("Map");
+            phone = Create<PhoneUI>("Phone");
+            auction = Create<AuctionUI>("Auction");
 
             toastArea = UIFactory.Rect("Notifications", transform);
             UIFactory.Place(toastArea, Vector2.one, Vector2.one, new Vector2(-24f, -150f), new Vector2(440f, 640f));
@@ -112,14 +120,32 @@ namespace CarSales
         {
             close = CarSalesInput.Resolve(closeAction, "CloseMenu");
             inventoryKey = CarSalesInput.Resolve(inventoryAction, "Inventory");
+            mapKey = CarSalesInput.Resolve(mapAction, "Map");
+            phoneKey = CarSalesInput.Resolve(phoneAction, "Phone");
             if (close != null) close.performed += OnCloseInput;
             if (inventoryKey != null) inventoryKey.performed += OnInventoryInput;
+            if (mapKey != null) mapKey.performed += OnMapInput;
+            if (phoneKey != null) phoneKey.performed += OnPhoneInput;
+        }
+
+        void OnMapInput(InputAction.CallbackContext _)
+        {
+            if (openPanel && map && openPanel == map.gameObject) { Close(); return; }
+            if (!openPanel) map.Show();
+        }
+
+        void OnPhoneInput(InputAction.CallbackContext _)
+        {
+            if (openPanel && phone && openPanel == phone.gameObject) { Close(); return; }
+            if (!openPanel) phone.Show();
         }
 
         void OnDisable()
         {
             if (close != null) close.performed -= OnCloseInput;
             if (inventoryKey != null) inventoryKey.performed -= OnInventoryInput;
+            if (mapKey != null) mapKey.performed -= OnMapInput;
+            if (phoneKey != null) phoneKey.performed -= OnPhoneInput;
             Time.timeScale = 1f;
         }
 

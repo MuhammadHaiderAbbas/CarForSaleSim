@@ -116,7 +116,7 @@ namespace CarSales
             State = CustomerState.Leaving;
             if (marker) marker.SetColor(new Color(1f, 1f, 1f, 0.35f));
             TargetCar = null;
-            var exit = CarSalesServices.Dealership ? CarSalesServices.Dealership.exitPoint : null;
+            var exit = spawner ? spawner.Dealer.exitPoint : null;
             if (exit)
             {
                 agent.SetDestination(exit.position);
@@ -149,7 +149,7 @@ namespace CarSales
         // ---------------- DECISIONS ----------------
         CarDisplay PickCar()
         {
-            var options = CarSalesServices.Dealership.GetListedCars().Where(c => !seen.Contains(c)).ToList();
+            var options = spawner.Dealer.GetListedCars().Where(c => !seen.Contains(c)).ToList();
             if (options.Count == 0) return null;
             var preferred = options.Where(c => c.Definition.category == Profile.preferredCategory).ToList();
             if (preferred.Count > 0 && Random.value < 0.7f) options = preferred;

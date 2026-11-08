@@ -52,6 +52,7 @@ namespace CarSales
             // Move
             Vector2 input = move.ReadValue<Vector2>();
             float speed = sprint != null && sprint.IsPressed() ? sprintSpeed : walkSpeed;
+            if (CarSalesServices.DayCycle && CarSalesServices.DayCycle.Energy < 15f) speed *= 0.6f;   // exhausted
             Vector3 motion = (transform.right * input.x + transform.forward * input.y) * speed;
 
             if (controller.isGrounded && verticalVelocity < 0f) verticalVelocity = -2f;

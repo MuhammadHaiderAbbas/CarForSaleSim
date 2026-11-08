@@ -21,5 +21,13 @@ namespace CarSales
         public int parkingSpotIndex = -1;
         public float[] parts;           // per-part condition (see CarParts)
         public bool inspected;          // a paid/free inspection revealed the true condition
+
+        // v4: physical location, fuel, personal car
+        public CarLocation location = CarLocation.Spot;
+        public string dealershipId;     // dealership whose spot it occupies (location == Spot)
+        public Vector3 worldPosition;   // location == World
+        public float worldRotationY;
+        public float fuel = 100f;       // 0-100 %
+        public bool personal;           // the player's own car - never sold to customers
     }
 }

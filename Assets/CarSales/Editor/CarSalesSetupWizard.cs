@@ -84,7 +84,7 @@ namespace CarSales.EditorTools
                 EditorUtility.DisplayDialog("Car Sales Simulator",
                     "Done!\n\nGame scene: " + ScenePath + "\nMain menu: " + MenuScenePath +
                     "\n\nPress PLAY here to jump straight in, or open the MainMenu scene for the full flow.\n\n" +
-                    "E interact | Tab inventory | O open/close shop | Esc menu\nF1 +$10,000 (debug) | F5/F9 save/load | F12 delete save",
+                    "E interact | F drive | Tab inventory | M map | P phone | Esc menu\nSleep at home to end the day.\nF1 +$10,000 (debug) | F5/F9 save/load | F12 delete save",
                     "Let's go");
             }
             catch (System.Exception e)
@@ -118,6 +118,7 @@ namespace CarSales.EditorTools
             { "moveAction", "Move" }, { "lookAction", "Look" }, { "jumpAction", "Jump" }, { "sprintAction", "Sprint" },
             { "interactAction", "Interact" }, { "toggleShopAction", "ToggleShop" }, { "closeAction", "CloseMenu" },
             { "brakeAction", "Jump" }, { "exitAction", "Interact" }, { "inventoryAction", "Inventory" },
+            { "vehicleAction", "Vehicle" }, { "mapAction", "Map" }, { "phoneAction", "Phone" },
         };
 
         /// <summary>Re-links every empty/broken InputActionReference in open scenes and Car Sales prefabs.</summary>
@@ -215,7 +216,7 @@ namespace CarSales.EditorTools
             return true;
         }
 
-        class ActionRefs { public InputActionReference move, look, jump, sprint, interact, toggleShop, closeMenu, inventory; }
+        class ActionRefs { public InputActionReference move, look, jump, sprint, interact, toggleShop, closeMenu, inventory, vehicle, map, phone; }
 
         static ActionRefs LoadActions()
         {
@@ -225,7 +226,8 @@ namespace CarSales.EditorTools
             var refs = new ActionRefs
             {
                 move = Find("Move"), look = Find("Look"), jump = Find("Jump"), sprint = Find("Sprint"),
-                interact = Find("Interact"), toggleShop = Find("ToggleShop"), closeMenu = Find("CloseMenu"), inventory = Find("Inventory")
+                interact = Find("Interact"), toggleShop = Find("ToggleShop"), closeMenu = Find("CloseMenu"), inventory = Find("Inventory"),
+                vehicle = Find("Vehicle"), map = Find("Map"), phone = Find("Phone")
             };
             if (refs.move && refs.look && refs.interact) return refs;   // the rest fall back to defaults at runtime
             EditorUtility.DisplayDialog("Car Sales Simulator",
@@ -525,40 +527,36 @@ namespace CarSales.EditorTools
             var scene = SceneManager.GetActiveScene();
             RenderSettings.sun = CreateSun(new Vector3(50f, -30f, 0f), 1.3f);
 
-            var env = new GameObject("Environment");
-            var surface = env.AddComponent<NavMeshSurface>();
-            surface.collectObjects = CollectObjects.All;
-            surface.layerMask = ~((1 << StudioLayer) | (1 << MinimapLayer) | (1 << 5));
-            env.AddComponent<RuntimeNavMeshBaker>();
-            BuildWorld(env.transform, m, db);
-
-            Progress("Dealership", 0.7f);
-            var dealer = BuildDealership(m, carDisplayPrefab, customerPrefab);
+            var env = new GameObject("Town");
+            var town = BuildTown(env.transform, m, db, carDisplayPrefab, customerPrefab);
 
             Progress("Systems", 0.8f);
-            var systems = BuildSystems(db, a);
-            BuildPlayer(a);
+            var systems = BuildSystems(db, a, carDisplayPrefab);
+            BuildPlayer(a, town.playerStart);
 
             var es = new GameObject("EventSystem", typeof(EventSystem));
             es.AddComponent<InputSystemUIInputModule>().AssignDefaultActions();
 
-            PrefabUtility.SaveAsPrefabAssetAndConnect(dealer, $"{Gen}/Prefabs/Dealership.prefab", InteractionMode.AutomatedAction);
             PrefabUtility.SaveAsPrefabAssetAndConnect(systems, $"{Gen}/Prefabs/CarSalesSystems.prefab", InteractionMode.AutomatedAction);
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Progress("Baking NavMesh", 0.9f);
-            try
+            int n = 0;
+            foreach (var surface in town.surfaces)
             {
-                surface.BuildNavMesh();
-                if (surface.navMeshData != null)
+                try
                 {
-                    AssetDatabase.CreateAsset(surface.navMeshData, $"{Gen}/Scenes/DealershipTest_NavMesh.asset");
-                    EditorUtility.SetDirty(surface);
+                    surface.BuildNavMesh();
+                    if (surface.navMeshData != null)
+                    {
+                        AssetDatabase.CreateAsset(surface.navMeshData, $"{Gen}/Scenes/NavMesh_{n++}.asset");
+                        EditorUtility.SetDirty(surface);
+                    }
                 }
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning("[CarSales] Editor NavMesh bake failed - it will be baked at runtime instead. " + e.Message);
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning("[CarSales] Editor NavMesh bake failed - it will be baked at runtime instead. " + e.Message);
+                }
             }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -582,74 +580,6 @@ namespace CarSales.EditorTools
             return light;
         }
 
-        static GameObject BuildDealership(Mats m, CarDisplay carDisplayPrefab, CustomerAI customerPrefab)
-        {
-            var dealer = new GameObject("Dealership");
-            var manager = dealer.AddComponent<DealershipManager>();
-            var spawner = dealer.AddComponent<CustomerSpawner>();
-
-            var spotsParent = Child("ParkingSpots", dealer.transform, Vector3.zero);
-            var spots = new List<Object>();
-            int index = 0;
-            for (int i = 0; i < 6; i++) spots.Add(CreateSpot(spotsParent, index++, new Vector3(-10f + i * 4f, 0.02f, -4f), 180f, m));
-            for (int i = 0; i < 6; i++)
-            {
-                var spot = CreateSpot(spotsParent, index++, new Vector3(-10f + i * 4f, 0.02f, -14f), 0f, m);
-                spot.requiredLotLevel = i < 3 ? 1 : 2;     // unlocked by the Lot Expansion upgrade
-                spots.Add(spot);
-            }
-            // Showroom display spots sit on round platforms (see BuildWorld)
-            spots.Add(CreateSpot(spotsParent, index++, new Vector3(-6f, 0.12f, 17f), 180f, m, lines: false));
-            spots.Add(CreateSpot(spotsParent, index++, new Vector3(6f, 0.12f, 17f), 180f, m, lines: false));
-
-            // Office computer (desk + monitor + chair)
-            var computer = new GameObject("Computer") { layer = InteractLayer };
-            computer.transform.SetParent(dealer.transform, false);
-            computer.transform.localPosition = new Vector3(0f, 0.04f, 21.5f);
-            computer.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-            var cBox = computer.AddComponent<BoxCollider>();
-            cBox.center = new Vector3(0f, 0.65f, 0f);
-            cBox.size = new Vector3(1.8f, 1.3f, 0.9f);
-            Prim(PrimitiveType.Cube, "Desk", computer.transform, new Vector3(0f, 0.375f, 0f), new Vector3(1.6f, 0.75f, 0.8f), m.desk);
-            Prim(PrimitiveType.Cube, "Monitor", computer.transform, new Vector3(0f, 1.02f, -0.2f), new Vector3(0.75f, 0.45f, 0.04f), m.screen);
-            Prim(PrimitiveType.Cube, "MonitorBack", computer.transform, new Vector3(0f, 1.02f, -0.23f), new Vector3(0.78f, 0.48f, 0.03f), m.signBoard);
-            Prim(PrimitiveType.Cube, "Stand", computer.transform, new Vector3(0f, 0.8f, -0.24f), new Vector3(0.06f, 0.1f, 0.06f), m.signBoard);
-            Prim(PrimitiveType.Cube, "Keyboard", computer.transform, new Vector3(0f, 0.77f, 0.15f), new Vector3(0.5f, 0.03f, 0.18f), m.signBoard);
-            Prim(PrimitiveType.Cube, "Chair", computer.transform, new Vector3(0f, 0.45f, 0.75f), new Vector3(0.55f, 0.1f, 0.55f), m.sofa);
-            Prim(PrimitiveType.Cube, "ChairBack", computer.transform, new Vector3(0f, 0.8f, 1.0f), new Vector3(0.55f, 0.6f, 0.08f), m.sofa);
-            computer.AddComponent<DealerComputer>();
-
-            // Open/close sign
-            var sign = new GameObject("ShopSign") { layer = InteractLayer };
-            sign.transform.SetParent(dealer.transform, false);
-            sign.transform.localPosition = new Vector3(3f, 0.04f, 20.5f);
-            sign.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-            var sBox = sign.AddComponent<BoxCollider>();
-            sBox.center = new Vector3(0f, 1.1f, 0f);
-            sBox.size = new Vector3(1.3f, 1.6f, 0.3f);
-            Prim(PrimitiveType.Cube, "Post", sign.transform, new Vector3(0f, 0.7f, 0f), new Vector3(0.1f, 1.4f, 0.1f), m.metal);
-            Prim(PrimitiveType.Cube, "Board", sign.transform, new Vector3(0f, 1.5f, 0f), new Vector3(1.2f, 0.5f, 0.06f), m.signBoard);
-            var label = Text3D("Label", sign.transform, new Vector3(0f, 1.5f, 0.05f), "CLOSED", 3f, Color.red);
-            label.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-            label.rectTransform.sizeDelta = new Vector2(1.1f, 0.45f);
-            label.enableAutoSizing = true;
-            label.fontSizeMin = 0.5f;
-            label.fontSizeMax = 3f;
-            var toggle = sign.AddComponent<ShopToggleSign>();
-            Set(toggle, "label", label);
-
-            var spawnA = Child("CustomerSpawn_West", dealer.transform, new Vector3(-26f, 0f, -9f));
-            var spawnB = Child("CustomerSpawn_East", dealer.transform, new Vector3(26f, 0f, -9f));
-            var exit = Child("CustomerExit", dealer.transform, new Vector3(0f, 0f, -36f));
-
-            Set(manager, "carDisplayPrefab", carDisplayPrefab);
-            SetArray(manager, "spots", spots.ToArray());
-            SetArray(manager, "customerSpawnPoints", new Object[] { spawnA, spawnB });
-            Set(manager, "exitPoint", exit);
-            Set(spawner, "customerPrefab", customerPrefab);
-            return dealer;
-        }
-
         static ParkingSpot CreateSpot(Transform parent, int index, Vector3 pos, float yRot, Mats m, bool lines = true)
         {
             var go = new GameObject($"Spot_{index:00}");
@@ -667,10 +597,11 @@ namespace CarSales.EditorTools
             return spot;
         }
 
-        static void BuildPlayer(ActionRefs a)
+        static void BuildPlayer(ActionRefs a, Transform start)
         {
             var player = new GameObject("Player");
-            player.transform.position = new Vector3(0f, 0.1f, 14.5f);
+            player.transform.position = start ? start.position + Vector3.up * 0.1f : new Vector3(0f, 0.1f, 14.5f);
+            if (start) player.transform.rotation = start.rotation;
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f;
             cc.radius = 0.35f;
@@ -701,9 +632,13 @@ namespace CarSales.EditorTools
             SetArray(blocker, "disableWhileMenuOpen", new Object[] { fpc });
         }
 
-        static GameObject BuildSystems(CarDatabase db, ActionRefs a)
+        static GameObject BuildSystems(CarDatabase db, ActionRefs a, CarDisplay carDisplayPrefab)
         {
             var systems = new GameObject("CarSalesSystems");
+            Set(systems.AddComponent<VehicleRegistry>(), "carDisplayPrefab", carDisplayPrefab);
+            systems.AddComponent<PropertyManager>();
+            systems.AddComponent<TowService>();
+            systems.AddComponent<AuctionManager>();
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();
@@ -721,6 +656,7 @@ namespace CarSales.EditorTools
             Set(drive, "moveAction", a.move);
             Set(drive, "brakeAction", a.jump);
             Set(drive, "exitAction", a.interact);
+            Set(drive, "vehicleAction", a.vehicle);
             systems.AddComponent<DebugCheats>();
 
             // The UI builds itself at runtime (UIManager.Awake).
@@ -737,6 +673,8 @@ namespace CarSales.EditorTools
             var ui = canvasGo.AddComponent<UIManager>();
             Set(ui, "closeAction", a.closeMenu);
             Set(ui, "inventoryAction", a.inventory);
+            Set(ui, "mapAction", a.map);
+            Set(ui, "phoneAction", a.phone);
             return systems;
         }
 

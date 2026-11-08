@@ -15,6 +15,7 @@ namespace CarSales
         public UpgradesUI Upgrades { get; private set; }
         public BankUI Bank { get; private set; }
         public StatsUI Stats { get; private set; }
+        public RealEstateUI RealEstate { get; private set; }
 
         TextMeshProUGUI moneyText, titleText, messagesNavLabel;
         RectTransform content;
@@ -49,9 +50,10 @@ namespace CarSales
             Messages = AddPage<MessagesUI>("Messages");
             Upgrades = AddPage<UpgradesUI>("Upgrades");
             Bank = AddPage<BankUI>("Bank & Loans");
+            RealEstate = AddPage<RealEstateUI>("Real Estate");
             Stats = AddPage<StatsUI>("Statistics");
 
-            foreach (var page in new ComputerPage[] { Home, Marketplace, Inventory, Messages, Upgrades, Bank, Stats })
+            foreach (var page in new ComputerPage[] { Home, Marketplace, Inventory, Messages, Upgrades, Bank, RealEstate, Stats })
             {
                 var p = page;
                 var btn = UIFactory.Btn(side.transform, "   " + p.pageTitle, UIFactory.Clear, () => ShowPage(p), out var label, 48f, 19f);

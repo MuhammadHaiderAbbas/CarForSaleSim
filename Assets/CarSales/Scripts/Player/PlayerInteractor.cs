@@ -12,6 +12,8 @@ namespace CarSales
         [SerializeField] InputActionReference interactAction;
 
         public string CurrentPrompt { get; private set; } = "";
+        /// <summary>The interactable the player is looking at (null if none).</summary>
+        public IInteractable CurrentTarget => current;
         IInteractable current;
         InputAction interact;
 

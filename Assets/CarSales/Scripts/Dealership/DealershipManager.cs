@@ -4,123 +4,123 @@ using UnityEngine;
 
 namespace CarSales
 {
-    /// <summary>The dealership "brain": parking spots, spawned cars, sales. Root of Dealership.prefab.</summary>
+    /// <summary>
+    /// One dealership (there can be several - extra ones are bought as properties).
+    /// Holds the parking spots, customer spawn/exit points and the open/closed state.
+    /// </summary>
     public class DealershipManager : MonoBehaviour
     {
-        [SerializeField] CarDisplay carDisplayPrefab;
+        public static readonly List<DealershipManager> All = new List<DealershipManager>();
+        public static DealershipManager Main { get; private set; }
+
+        public string dealershipId = "autoworld";
+        public string displayName = "AUTO WORLD";
+        [Tooltip("Property id that must be owned (empty = always owned).")]
+        public string propertyId;
+        [Tooltip("Customers' budgets are multiplied by this (luxury dealerships attract richer buyers).")]
+        public float budgetMultiplier = 1f;
+        public bool isMain;
         public List<ParkingSpot> spots = new List<ParkingSpot>();
         public Transform[] customerSpawnPoints;
         public Transform exitPoint;
 
-        readonly Dictionary<string, CarDisplay> spawned = new Dictionary<string, CarDisplay>();
+        public bool ClosedByPlayer { get; set; }
+        public bool IsOwned => string.IsNullOrEmpty(propertyId) || (CarSalesServices.Properties && CarSalesServices.Properties.Owns(propertyId));
+        public bool IsOpenNow => IsOwned && !ClosedByPlayer && CarSalesServices.DayCycle && CarSalesServices.DayCycle.IsBusinessHours;
 
         void Awake()
         {
-            CarSalesServices.Dealership = this;
+            if (!All.Contains(this)) All.Add(this);
+            if (isMain || Main == null) { Main = this; CarSalesServices.Dealership = this; }
             spots.RemoveAll(s => s == null);
             if (spots.Count == 0) spots = GetComponentsInChildren<ParkingSpot>().ToList();
             spots.Sort((a, b) => a.index.CompareTo(b.index));
         }
 
+        void OnDestroy()
+        {
+            All.Remove(this);
+            if (Main == this) Main = All.FirstOrDefault();
+            if (CarSalesServices.Upgrades) CarSalesServices.Upgrades.OnUpgradesChanged -= RefreshSpotVisuals;
+            if (CarSalesServices.Properties) CarSalesServices.Properties.OnPropertiesChanged -= RefreshSpotVisuals;
+        }
+
         void Start()
         {
             if (CarSalesServices.Upgrades) CarSalesServices.Upgrades.OnUpgradesChanged += RefreshSpotVisuals;
+            if (CarSalesServices.Properties) CarSalesServices.Properties.OnPropertiesChanged += RefreshSpotVisuals;
             RefreshSpotVisuals();
         }
 
-        void OnDestroy()
+        public static DealershipManager Find(string id)
         {
-            if (CarSalesServices.Upgrades) CarSalesServices.Upgrades.OnUpgradesChanged -= RefreshSpotVisuals;
+            if (string.IsNullOrEmpty(id)) return Main;
+            return All.FirstOrDefault(d => d.dealershipId == id);
         }
 
-        /// <summary>Shows/hides parking lines of spots that need a Lot Expansion upgrade.</summary>
+        public static IEnumerable<DealershipManager> Owned => All.Where(d => d.IsOwned);
+
+        public static ParkingSpot FindFreeSpotAnywhere(out DealershipManager dealer)
+        {
+            foreach (var d in All.OrderByDescending(x => x.isMain))
+            {
+                if (!d.IsOwned) continue;
+                var s = d.GetFreeSpot();
+                if (s != null) { dealer = d; return s; }
+            }
+            dealer = null;
+            return null;
+        }
+
+        public static int TotalFreeSpots => Owned.Sum(d => d.spots.Count(s => s.IsFree && s.IsUnlocked));
+        public static int TotalCapacity => Owned.Sum(d => d.UnlockedSpotCount);
+
+        /// <summary>Shows/hides parking lines of spots that are locked (upgrade or not owned).</summary>
         public void RefreshSpotVisuals()
         {
             foreach (var s in spots)
-                foreach (Transform child in s.transform) child.gameObject.SetActive(s.IsUnlocked);
+                foreach (Transform child in s.transform) child.gameObject.SetActive(s.IsUnlocked && IsOwned);
         }
 
-        public int UnlockedSpotCount => spots.Count(s => s.IsUnlocked);
+        public int UnlockedSpotCount => IsOwned ? spots.Count(s => s.IsUnlocked) : 0;
+        public ParkingSpot GetFreeSpot() => IsOwned ? spots.Find(s => s.IsFree && s.IsUnlocked) : null;
+        public ParkingSpot GetSpot(int index) => spots.Find(s => s.index == index);
 
-        public ParkingSpot GetFreeSpot() => spots.Find(s => s.IsFree && s.IsUnlocked);
-
-        public CarDisplay SpawnCar(CarInstance car, ParkingSpot spot)
+        public ParkingSpot NearestFreeSpot(Vector3 pos, float maxDistance)
         {
-            var display = Instantiate(carDisplayPrefab, spot.transform.position, spot.transform.rotation);
-            display.Initialize(car);
-            spot.Occupant = display;
-            car.parkingSpotIndex = spot.index;
-            spawned[car.instanceId] = display;
-            return display;
-        }
-
-        public void DespawnCar(string instanceId)
-        {
-            if (!spawned.TryGetValue(instanceId, out var display)) return;
-            var spot = spots.Find(s => s.Occupant == display);
-            if (spot) spot.Occupant = null;
-            if (display) Destroy(display.gameObject);
-            spawned.Remove(instanceId);
-        }
-
-        public void ClearLot()
-        {
-            foreach (var d in spawned.Values) if (d) Destroy(d.gameObject);
-            spawned.Clear();
-            foreach (var s in spots) s.Occupant = null;
-        }
-
-        /// <summary>Re-creates all car GameObjects from the inventory data (after load / new game).</summary>
-        public void RebuildLot()
-        {
-            ClearLot();
-            foreach (var car in CarSalesServices.Inventory.OwnedCars)
+            if (!IsOwned) return null;
+            ParkingSpot best = null;
+            float bestD = maxDistance;
+            var driven = CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving ? CarSalesServices.TestDrive.CurrentCar : null;
+            foreach (var s in spots)
             {
-                var spot = spots.Find(s => s.index == car.parkingSpotIndex && s.IsFree) ?? GetFreeSpot();
-                if (spot) SpawnCar(car, spot);
-                else Debug.LogWarning($"[CarSales] No parking spot for car {car.carId}");
+                bool free = s.IsFree || (driven && s.Occupant == driven);   // the spot you just drove out of
+                if (!free || !s.IsUnlocked) continue;
+                float d = Vector3.Distance(new Vector3(pos.x, 0f, pos.z), new Vector3(s.transform.position.x, 0f, s.transform.position.z));
+                if (d < bestD) { bestD = d; best = s; }
             }
+            return best;
         }
 
-        public List<CarDisplay> GetListedCars() =>
-            spawned.Values.Where(c => c && c.gameObject.activeInHierarchy && c.Data.state == CarState.Listed).ToList();
-
-        public void CompleteSale(CarDisplay car, int price)
+        public void ReleaseSpot(CarDisplay car)
         {
-            var d = car.Data;
-            int value = CarValueCalculator.MarketValue(d);
-            int profit = price - d.purchasePrice - d.repairSpent;
-
-            CarSalesServices.Economy.AddMoney(price);
-            CarSalesServices.Economy.ChangeReputation(price <= value ? 2f : 0.5f);
-            d.state = CarState.Sold;
-            CarSalesServices.Inventory.Remove(d.instanceId);
-            DespawnCar(d.instanceId);
-            CarSalesServices.DayCycle.RegisterSale(price, profit);
-            if (CarSalesServices.Progress) CarSalesServices.Progress.RegisterSale(price, profit);
-            CarSalesServices.PlaySfx(Sfx.Success);
-            CarSalesServices.UI.Success("Car sold!", $"{car.Definition.displayName} sold for ${price:N0}. Profit: {UIFactory.Money(profit)}");
+            foreach (var s in spots) if (s.Occupant == car) s.Occupant = null;
         }
 
-        /// <summary>Instant wholesale sale (75% of market value). Doesn't change reputation.</summary>
-        public void QuickSell(CarDisplay car)
+        public void ReleaseAllSpots() { foreach (var s in spots) s.Occupant = null; }
+
+        public List<CarDisplay> GetListedCars()
         {
-            if (!car) return;
-            var d = car.Data;
-            int price = CarValueCalculator.QuickSellPrice(d);
-            int profit = price - d.purchasePrice - d.repairSpent;
-            if (CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving) CarSalesServices.TestDrive.EndDrive();
-            CarSalesServices.Economy.AddMoney(price);
-            d.state = CarState.Sold;
-            CarSalesServices.Inventory.Remove(d.instanceId);
-            DespawnCar(d.instanceId);
-            CarSalesServices.DayCycle.RegisterSale(price, profit);
-            if (CarSalesServices.Progress) CarSalesServices.Progress.RegisterSale(price, profit);
-            CarSalesServices.PlaySfx(Sfx.Coin);
-            CarSalesServices.UI.Success("Wholesale complete", $"{car.Definition.displayName} sold to the wholesaler for ${price:N0}.");
+            var list = new List<CarDisplay>();
+            if (!CarSalesServices.Vehicles) return list;
+            foreach (var d in CarSalesServices.Vehicles.All)
+                if (d.gameObject.activeInHierarchy && d.Data.state == CarState.Listed &&
+                    d.Data.location == CarLocation.Spot && Find(d.Data.dealershipId) == this)
+                    list.Add(d);
+            return list;
         }
 
-        public CarDisplay GetDisplay(string instanceId) =>
-            spawned.TryGetValue(instanceId, out var d) ? d : null;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { All.Clear(); Main = null; }
     }
 }

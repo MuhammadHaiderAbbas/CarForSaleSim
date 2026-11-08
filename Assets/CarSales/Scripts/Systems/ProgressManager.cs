@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace CarSales
@@ -34,20 +35,30 @@ namespace CarSales
             var eco = (Func<EconomyManager>)(() => CarSalesServices.Economy);
             objectives = new List<Objective>
             {
-                new Objective("Repair or clean one of your cars (walk up to it, press E)", () => Stats.carsServiced >= 1, 0),
+                new Objective("Drive to AUTO WORLD (F next to your car to drive, M for the map)", () => NearMainDealership(), 0),
+                new Objective("Repair or clean a car (car menu > Repair/Wash, or drive it to the Workshop / Car Wash)", () => Stats.carsServiced >= 1, 0),
                 new Objective("List a car for sale (car menu > Set Price)", () => Stats.carsListed >= 1, 0),
-                new Objective("Open the shop (press O or use the sign)", () => Stats.shopOpened >= 1, 0),
                 new Objective("Sell your first car", () => Stats.carsSold >= 1, 1000),
                 new Objective("Buy a car from the computer marketplace", () => Stats.carsBought >= 1, 0),
-                new Objective("Take a car for a test drive (car menu)", () => Stats.testDrives >= 1, 500),
+                new Objective("Buy 3 cars (online, at the Used Car Market or the Auction Center)", () => Stats.carsBought >= 3, 1500),
                 new Objective("Make $15,000 total profit", () => Stats.totalProfit >= 15000, 2000),
                 new Objective("Buy your first upgrade (computer > Upgrades)", () => Stats.upgradesBought >= 1, 1000),
                 new Objective("Sell 10 cars", () => Stats.carsSold >= 10, 5000),
                 new Objective("Reach 75 reputation", () => eco().Reputation >= 75f, 5000),
+                new Objective("Buy a property: a better home, an investment or a dealership (computer > Real Estate)",
+                              () => CarSalesServices.Properties && CarSalesServices.Properties.GetOwned().Count > 2, 3000),
                 new Objective("Reach $250,000 net worth", () => NetWorth >= 250000, 10000),
+                new Objective("Own a second dealership", () => DealershipManager.Owned.Count() >= 2, 15000),
                 new Objective("Sell 50 cars", () => Stats.carsSold >= 50, 20000),
                 new Objective($"Reach ${winNetWorth:N0} net worth - WIN THE GAME", () => NetWorth >= winNetWorth, 0),
             };
+        }
+
+        static bool NearMainDealership()
+        {
+            var main = DealershipManager.Main;
+            var cam = Camera.main;
+            return main && cam && Vector3.Distance(cam.transform.position, main.transform.position) < 45f;
         }
 
         public int ObjectiveCount => objectives.Count;
@@ -65,6 +76,7 @@ namespace CarSales
                 long worth = CarSalesServices.Economy.Money;
                 foreach (var car in CarSalesServices.Inventory.OwnedCars) worth += CarValueCalculator.MarketValue(car);
                 if (CarSalesServices.Bank) worth -= CarSalesServices.Bank.Loan;
+                if (CarSalesServices.Properties) worth += CarSalesServices.Properties.PortfolioValue;
                 return (int)Mathf.Clamp(worth, int.MinValue, int.MaxValue);
             }
         }

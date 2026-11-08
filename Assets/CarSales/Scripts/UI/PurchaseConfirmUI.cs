@@ -48,7 +48,7 @@ namespace CarSales
             var def = CarSalesServices.Database.Get(car.carId);
             UIFactory.SetCarPicture(photo, car);
             message.text = $"You bought the <b>{def.year} {def.brand} {def.displayName}</b>\nfor <color={UIFactory.Hex(UIFactory.Gold)}><b>{UIFactory.Money(price)}</b></color>.";
-            detail.text = $"It's waiting on parking spot #{spotIndex + 1}.\n{extra}";
+            detail.text = (spotIndex >= 0 ? $"It's waiting at {CarSalesServices.Vehicles.LocationText(car)}.\n" : "") + extra;
             CarSalesServices.PlaySfx(Sfx.Success);
         }
     }

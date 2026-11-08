@@ -22,6 +22,8 @@ namespace CarSales
         public InputAction MoveAction { get; set; }
         public InputAction BrakeAction { get; set; }
         public float Speed { get; private set; }
+        /// <summary>When true the engine gives no power (empty tank).</summary>
+        public bool OutOfFuel { get; set; }
 
         /// <summary>Raised when hitting something hard. Parameter = impact speed (m/s).</summary>
         public event Action<float> OnCrash;
@@ -36,6 +38,7 @@ namespace CarSales
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
             Vector2 input = MoveAction != null ? MoveAction.ReadValue<Vector2>() : Vector2.zero;
+            if (OutOfFuel) input.y = 0f;
             bool brake = BrakeAction != null && BrakeAction.IsPressed();
 
             float speed = Speed;

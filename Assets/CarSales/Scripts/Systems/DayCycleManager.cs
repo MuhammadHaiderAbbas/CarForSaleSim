@@ -1,33 +1,48 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace CarSales
 {
-    /// <summary>Shop hours, clock, rent and the end-of-day report.</summary>
+    /// <summary>
+    /// The 24-hour day. Time always runs. Dealerships open 08:00-20:00. Energy drains while awake.
+    /// The day only ends when you SLEEP at home (from 18:00) - or pass out at 02:00 (penalty).
+    /// Sleeping pays rent/interest, collects property income, shows the report and saves.
+    /// </summary>
     public class DayCycleManager : MonoBehaviour
     {
-        [SerializeField] float realSecondsPerDay = 480f;   // 8 real minutes per working day
-        [SerializeField] float openHour = 8f, closeHour = 18f;
-        [SerializeField] int baseRent = 500, rentPerCar = 50;
+        public const float EarliestSleepHour = 18f;
+
+        [SerializeField] float realSecondsPerGameHour = 50f;   // ~15 real minutes per working day
+        [SerializeField] float openHour = 8f, closeHour = 20f;
+        [SerializeField] float passOutHour = 26f;              // 02:00 next morning
+        [SerializeField] int baseRent = 500, rentPerCar = 50, passOutFee = 300;
         [SerializeField] InputActionReference toggleShopAction;
 
         public int CurrentDay { get; private set; } = 1;
-        public float Hour { get; private set; }
-        public bool IsOpen { get; private set; }
-        public bool IsDayOver { get; private set; }
-        public DailyReport Today { get; private set; }
+        /// <summary>Hours since midnight of the current day (can go past 24 after midnight).</summary>
+        public float Hour { get; private set; } = 8f;
+        public float HourOfDay => Hour % 24f;
+        public float Energy => energyAtWake * Mathf.Clamp01((passOutHour - Hour) / Mathf.Max(0.1f, passOutHour - wakeHour));
+        public bool ClosedByPlayer { get; private set; }
+        public bool IsBusinessHours => Hour >= openHour && Hour < closeHour;
+        public bool IsOpen => IsBusinessHours && !ClosedByPlayer;
+        public bool IsDayOver => Hour >= closeHour;
+        public bool CanSleep => Hour >= EarliestSleepHour || Energy < 25f;
+        public float OpenHour => openHour;
+        public float CloseHour => closeHour;
+        public DailyReport Today { get; private set; } = new DailyReport { day = 1 };
 
         public event Action<float> OnTimeChanged;
         public event Action<bool> OnShopStateChanged;
+        public event Action<int> OnDayStarted;
+
+        float wakeHour = 8f, energyAtWake = 100f;
+        bool lastOpen, warnedTired, warnedVeryTired, sleeping;
         InputAction toggleShop;
 
-        void Awake()
-        {
-            CarSalesServices.DayCycle = this;
-            Hour = openHour;
-            Today = new DailyReport { day = CurrentDay };
-        }
+        void Awake() => CarSalesServices.DayCycle = this;
 
         void OnEnable()
         {
@@ -40,81 +55,154 @@ namespace CarSales
         void OnToggleShopInput(InputAction.CallbackContext _)
         {
             if (CarSalesServices.UI && CarSalesServices.UI.IsMenuOpen) return;
-            if (CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving) return;
             ToggleShop();
         }
 
+        /// <summary>Close (or reopen) all your dealerships for the rest of the day.</summary>
         public void ToggleShop()
         {
-            if (IsOpen) EndDay(); else OpenShop();
-        }
-
-        public void OpenShop()
-        {
-            if (IsOpen || IsDayOver) return;
-            if (CarSalesServices.Progress && CarSalesServices.Progress.IsGameOver) return;
-            IsOpen = true;
-            if (CarSalesServices.Progress) CarSalesServices.Progress.Stats.shopOpened++;
-            CarSalesServices.PlaySfx(Sfx.DoorChime);
-            CarSalesServices.Spawner.StartSpawning();
-            OnShopStateChanged?.Invoke(true);
-            CarSalesServices.UI.Notify("Dealership is OPEN! Customers are on their way.");
+            ClosedByPlayer = !ClosedByPlayer;
+            foreach (var d in DealershipManager.All) d.ClosedByPlayer = ClosedByPlayer;
+            if (!IsBusinessHours)
+                CarSalesServices.UI.Notify($"Dealerships are only open {openHour:00}:00-{closeHour:00}:00.");
+            else CarSalesServices.UI.Notify(ClosedByPlayer ? "All dealerships closed for now." : "Dealerships are OPEN again!");
+            CheckOpenState(true);
         }
 
         void Update()
         {
-            if (!IsOpen) return;
-            Hour += (closeHour - openHour) / realSecondsPerDay * Time.deltaTime;
+            if (sleeping || Time.deltaTime <= 0f) return;
+            Hour += Time.deltaTime / realSecondsPerGameHour;
             OnTimeChanged?.Invoke(Hour);
-            if (Hour >= closeHour) EndDay();
-        }
+            CheckOpenState(false);
 
-        public void EndDay()
-        {
-            if (IsDayOver) return;
-            if (CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving) CarSalesServices.TestDrive.EndDrive();
-            IsOpen = false;
-            IsDayOver = true;
-            CarSalesServices.Spawner.StopSpawning(true);
-            OnShopStateChanged?.Invoke(false);
-
-            int rent = baseRent + rentPerCar * CarSalesServices.Inventory.OwnedCars.Count;
-            CarSalesServices.Economy.ForceSpend(rent);
-            int interest = CarSalesServices.Bank ? CarSalesServices.Bank.ChargeInterest() : 0;
-            Today.expenses += rent + interest;
-
-            float repBonus = CarSalesServices.Upgrades ? CarSalesServices.Upgrades.DailyReputationBonus : 0f;
-            if (repBonus > 0f) CarSalesServices.Economy.ChangeReputation(repBonus);
-
-            bool bankrupt = CarSalesServices.Progress && CarSalesServices.Progress.OnDayEnded();
-            if (bankrupt)
+            if (!warnedTired && Hour >= 23f)
             {
-                CarSalesServices.Save.DeleteSaveFile();   // "Continue" must not load a bankrupt game
-                return;
+                warnedTired = true;
+                CarSalesServices.UI.Toast(ToastType.Warning, "Getting tired", "It's late. Go home and sleep (your bed is at your home - see the map, M).");
             }
-            CarSalesServices.UI.dailyReport.Show(Today, rent, interest);
-            CarSalesServices.Save.SaveGame();
+            if (!warnedVeryTired && Hour >= 25f)
+            {
+                warnedVeryTired = true;
+                CarSalesServices.UI.Toast(ToastType.Warning, "Exhausted!", "You'll pass out at 02:00 and wake up at home with a fine. Go to bed!");
+            }
+            if (Hour >= passOutHour) Sleep(true);
         }
 
-        public void StartNextDay()
+        void CheckOpenState(bool force)
         {
-            SetDay(CurrentDay + 1);
-            CarSalesServices.Marketplace.RefreshListings();
-            if (CarSalesServices.Messages) CarSalesServices.Messages.GenerateDaily(CurrentDay);
-            CarSalesServices.UI.Close();
-            CarSalesServices.Save.SaveGame();
-            CarSalesServices.UI.Notify($"Day {CurrentDay}. New cars are on the marketplace. Press O to open.");
+            bool open = IsOpen;
+            if (open == lastOpen && !force) return;
+            bool changed = open != lastOpen;
+            lastOpen = open;
+            OnShopStateChanged?.Invoke(open);
+            if (!changed) return;
+            if (open && IsBusinessHours && Hour < openHour + 0.1f)
+            {
+                CarSalesServices.PlaySfx(Sfx.DoorChime);
+                CarSalesServices.UI.Toast(ToastType.Info, "Dealerships open", $"It's {openHour:00}:00 - customers are on their way to your listed cars.");
+                if (CarSalesServices.Progress) CarSalesServices.Progress.Stats.shopOpened++;
+            }
+            else if (!open && Hour >= closeHour && Hour < closeHour + 0.1f)
+                CarSalesServices.UI.Toast(ToastType.Info, "Closing time", "Dealerships are closed. Finish your work, then go home to sleep.");
+            if (open && CarSalesServices.Progress) CarSalesServices.Progress.Stats.shopOpened = Mathf.Max(1, CarSalesServices.Progress.Stats.shopOpened);
         }
 
-        public void SetDay(int day)
+        /// <summary>Skips time (taxi rides etc.).</summary>
+        public void AdvanceTime(float hours) { Hour += Mathf.Max(0f, hours); OnTimeChanged?.Invoke(Hour); }
+
+        /// <summary>Ends the day: accounting, report, new morning at home, autosave.</summary>
+        public void Sleep(bool passedOut)
+        {
+            if (sleeping) return;
+            sleeping = true;
+            try
+            {
+                var drive = CarSalesServices.TestDrive;
+                if (drive && drive.IsDriving) drive.EndDrive();
+                CustomerSpawner.StopAll(true);
+                CarSalesServices.UI.Close();
+
+                var props = CarSalesServices.Properties;
+                int carsForRent = CarSalesServices.Inventory.OwnedCars.Count(c => !c.personal);
+                int rent = baseRent + rentPerCar * carsForRent + (props ? props.DailyCosts : 0);
+                CarSalesServices.Economy.ForceSpend(rent);
+                int interest = CarSalesServices.Bank ? CarSalesServices.Bank.ChargeInterest() : 0;
+                int income = props ? props.DailyIncome : 0;
+                if (income > 0) CarSalesServices.Economy.AddMoney(income);
+                int fee = passedOut ? passOutFee : 0;
+                if (fee > 0) CarSalesServices.Economy.ForceSpend(fee);
+
+                Today.rent = rent;
+                Today.interest = interest;
+                Today.propertyIncome = income;
+                Today.passOutFee = fee;
+                Today.passedOut = passedOut;
+                Today.expenses += rent + interest + fee;
+
+                float rep = (CarSalesServices.Upgrades ? CarSalesServices.Upgrades.DailyReputationBonus : 0f) +
+                            (props && props.ActiveHomeInfo != null ? props.ActiveHomeInfo.dailyReputation : 0f);
+                if (rep > 0f) CarSalesServices.Economy.ChangeReputation(rep);
+
+                if (CarSalesServices.Progress && CarSalesServices.Progress.OnDayEnded())
+                {
+                    CarSalesServices.Save.DeleteSaveFile();   // "Continue" must not load a bankrupt game
+                    return;
+                }
+
+                var report = Today;
+                StartDay(CurrentDay + 1, passedOut ? 60f : 100f);
+                CarSalesServices.Marketplace.RefreshListings();
+                if (CarSalesServices.Auction) CarSalesServices.Auction.GenerateLots();
+                if (CarSalesServices.Messages) CarSalesServices.Messages.GenerateDaily(CurrentDay);
+                TeleportPlayerHome();
+                CarSalesServices.UI.dailyReport.Show(report);
+                CarSalesServices.Save.SaveGame();
+            }
+            finally { sleeping = false; }
+        }
+
+        public void StartDay(int day, float energy)
         {
             CurrentDay = Mathf.Max(1, day);
-            Hour = openHour;
-            IsOpen = false;
-            IsDayOver = false;
+            wakeHour = CarSalesServices.Properties ? CarSalesServices.Properties.WakeHour : 8f;
+            Hour = wakeHour;
+            energyAtWake = Mathf.Clamp(energy, 10f, 100f);
+            warnedTired = warnedVeryTired = false;
+            ClosedByPlayer = false;
+            foreach (var d in DealershipManager.All) d.ClosedByPlayer = false;
             Today = new DailyReport { day = CurrentDay };
+            lastOpen = !IsOpen;
+            CheckOpenState(true);
             OnTimeChanged?.Invoke(Hour);
-            OnShopStateChanged?.Invoke(false);
+            OnDayStarted?.Invoke(CurrentDay);
+        }
+
+        /// <summary>Compatibility: start a fresh day.</summary>
+        public void SetDay(int day) => StartDay(day, 100f);
+
+        /// <summary>Restores a saved game's clock.</summary>
+        public void SetState(int day, float hour, float energy, bool closedByPlayer)
+        {
+            StartDay(day, 100f);
+            if (hour > 0f)
+            {
+                Hour = Mathf.Clamp(hour, 0f, passOutHour - 0.5f);
+                float ratio = Mathf.Clamp01((passOutHour - Hour) / Mathf.Max(0.1f, passOutHour - wakeHour));
+                energyAtWake = ratio > 0.01f ? Mathf.Clamp(energy / ratio, 10f, 100f) : 100f;
+            }
+            if (closedByPlayer) { ClosedByPlayer = true; foreach (var d in DealershipManager.All) d.ClosedByPlayer = true; }
+            lastOpen = !IsOpen;
+            CheckOpenState(true);
+        }
+
+        public static void TeleportPlayerHome()
+        {
+            var props = CarSalesServices.Properties;
+            var bed = props ? HomeBed.Find(props.ActiveHome) : null;
+            if (!bed) return;
+            var p = bed.wakePoint ? bed.wakePoint : bed.transform;
+            TowService.TeleportPlayer(p.position, p.eulerAngles.y);
         }
 
         public void RegisterSale(int price, int profit) { Today.carsSold++; Today.revenue += price; Today.profit += profit; }

@@ -96,15 +96,13 @@ namespace CarSales
         {
             message = "";
             if (m == null || m.type != MessageType.SellerOffer || m.resolved) { message = "This offer is no longer available."; return false; }
-            var spot = CarSalesServices.Dealership.GetFreeSpot();
-            if (spot == null) { message = "No free parking spot! Sell a car or buy Lot Expansion."; return false; }
+            if (DealershipManager.FindFreeSpotAnywhere(out _) == null) { message = "No free parking spot at your dealerships! Sell a car, expand, or buy another dealership."; return false; }
             if (!CarSalesServices.Economy.TrySpend(m.offerPrice)) { message = "Not enough money!"; return false; }
 
             var car = m.offerCar;
             car.purchasePrice = m.offerPrice;
             car.state = CarValueCalculator.DefaultState(car);
-            CarSalesServices.Inventory.Add(car);
-            CarSalesServices.Dealership.SpawnCar(car, spot);
+            CarSalesServices.Vehicles.AddOwnedCar(car);
             CarSalesServices.DayCycle.RegisterPurchase(m.offerPrice);
             if (CarSalesServices.Progress) CarSalesServices.Progress.RegisterPurchase();
             CarSalesServices.PlaySfx(Sfx.Purchase);

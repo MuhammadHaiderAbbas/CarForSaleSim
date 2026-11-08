@@ -7,7 +7,7 @@ namespace CarSales
     [Serializable]
     public class SaveData
     {
-        public int version = 3;
+        public int version = 4;
         public int money;
         public float reputation;
         public int day;
@@ -24,5 +24,13 @@ namespace CarSales
 
         // v3
         public List<GameMessage> messages = new List<GameMessage>();
+
+        // v4
+        public float hour = -1f;
+        public float energy = 100f;
+        public List<string> ownedProperties = new List<string>();
+        public string activeHome;
+        public List<CarInstance> lotListings = new List<CarInstance>();
+        public bool shopClosedByPlayer;
     }
 }

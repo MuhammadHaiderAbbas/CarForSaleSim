@@ -63,7 +63,7 @@ namespace CarSales
             worth.text = p ? UIFactory.Money(p.NetWorth) : "-";
             worth.color = UIFactory.Gold;
             rep.text = $"{eco.Reputation:0}<size=60%>/100</size>";
-            cars.text = $"{CarSalesServices.Inventory.OwnedCars.Count}<size=60%>/{CarSalesServices.Dealership.UnlockedSpotCount}</size>";
+            cars.text = $"{CarSalesServices.Inventory.OwnedCars.Count}<size=60%>/{DealershipManager.TotalCapacity} spots</size>";
             int l = CarSalesServices.Bank ? CarSalesServices.Bank.Loan : 0;
             loan.text = l > 0 ? UIFactory.Money(l) : "None";
             loan.color = l > 0 ? UIFactory.Warn : UIFactory.TextMain;
@@ -72,8 +72,9 @@ namespace CarSales
             today.text = $"Sold <b>{t.carsSold}</b>   |   Bought <b>{t.carsBought}</b>   |   Revenue <b>{UIFactory.Money(t.revenue)}</b>   |   " +
                          $"Expenses <b>{UIFactory.Money(t.expenses)}</b>   |   Profit on sales <b>{UIFactory.Money(t.profit)}</b>";
             int unread = CarSalesServices.Messages ? CarSalesServices.Messages.UnreadCount : 0;
-            tip.text = unread > 0 ? $"You have {unread} unread message(s) - private sellers may be offering great deals!"
-                                  : "Tip: press TAB anywhere to open your inventory.";
+            int income = CarSalesServices.Properties ? CarSalesServices.Properties.DailyIncome : 0;
+            tip.text = (unread > 0 ? $"You have {unread} unread message(s) - private sellers may be offering great deals!  " : "Tip: TAB = inventory, M = map, P = phone (tow / taxi).  ") +
+                       (income > 0 ? $"Your properties earn {UIFactory.Money(income)} every night." : "");
         }
     }
 }

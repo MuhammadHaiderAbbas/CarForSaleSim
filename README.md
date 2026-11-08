@@ -1,19 +1,18 @@
-# Car For Sale Simulator — Unity Project (v3.0 "AUTO WORLD")
+# Car For Sale Simulator — Unity Project (v4.0 "Open Town")
 
-A complete car-dealership simulator for **Unity 6 (URP)**:
-buy used cars → inspect → repair in the garage & wash → test drive → set a price → customers browse → negotiate →
-profit → upgrade your dealership → reach a **$1,000,000** net worth to win (or go bankrupt trying).
+A car-dealership life simulator for **Unity 6 (URP)**. You live in a small trailer, drive your own beat-up car to work,
+buy cars online, at the **Used Car Market** or at the **Auction Center**, fix them at the **Mechanic Workshop**,
+wash them at the **Car Wash**, fuel up at the **Fuel Station**, sell them at your dealerships, buy **more showrooms,
+houses and investment properties** — and go home to **sleep** to end each day.
+Reach a **$1,000,000** net worth to win (or go bankrupt trying).
 
-**v3.0 adds** a full dark-blue UI redesign (built from code, no Inspector wiring), live-rendered car photos,
-a dealer computer with sidebar (Home, Marketplace with search/filters, Inventory, Messages, Upgrades, Bank, Stats),
-vehicle details, per-part inspections, a Garage with repair options, a Car Wash, purchase confirmation,
-private-seller offers in your inbox, Quick Sell, a HUD with **minimap + speedometer + key hints**, notification cards,
-and a much bigger world: glass-front showroom with interior, service garage, car wash bay, props and city backdrop.
-See [CHANGELOG.md](CHANGELOG.md).
+**v4.0 adds** a whole town (roads, 10+ locations), driving any car you own (fuel, mileage, crashes), tow trucks & taxis,
+live auctions vs. AI bidders, a walk-around used car lot, 3 dealerships, homes & properties, a real 24-hour day with
+energy and sleeping, night lighting, a town map with GPS, and a phone. See [CHANGELOG.md](CHANGELOG.md).
 
-> **Updating from v1/v2?** Close Unity. Copy this zip's `Assets` folder over your project's `Assets` folder and
-> let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
-> Reopen Unity, then run **Tools → Car Sales → 2. Build Everything**. Old saves keep working.
+> **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
+> folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
+> Reopen Unity, then run **Tools → Car Sales → 2. Build Everything**. Older saves still load (you'll wake up at home).
 
 ## 1. Quick start (about 5 minutes)
 
@@ -42,38 +41,36 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 | Key | Action |
 |---|---|
-| WASD / Left stick | Move |
-| Mouse / Right stick | Look |
-| Shift | Sprint |
-| Space | Jump |
-| **E** / Gamepad West | Interact (computer, car, customer, sign) |
-| **O** / Gamepad Select | Open shop / close shop (ends the day) |
-| Esc / Gamepad East | Close menu, or **pause** when no menu is open |
-| *Test drive:* W/S, A/D, Space, E | Throttle/reverse, steer, brake, return the car |
-| **Tab** / Gamepad North | Inventory (opens the computer anywhere) |
-| F1 | +$10,000 (debug) |
-| F5 / F9 | Save / Load (debug) |
-| F12 | Delete save (debug) |
+| WASD / Mouse | Move / look |
+| Shift / Space | Sprint / jump |
+| **E** | Interact (cars, computer, desks, doors, signs) — while driving: park / refuel / wash / repair when prompted |
+| **F** | Get into the car you're looking at / get out (the car stays where you leave it) |
+| *Driving:* W/S, A/D, Space | Throttle/reverse, steer, brake |
+| **Tab** | Inventory (dealer computer, anywhere) |
+| **M** | Town map + GPS + taxi |
+| **P** | Phone: tow truck (move any car) and taxi (move yourself) |
+| **O** | Close / reopen your dealerships early |
+| Esc | Close menu / pause |
+| F1 / F5 / F9 / F12 | Debug: +$10,000 / save / load / delete save |
 
 ## 3. How to play
 
-Follow the **GOAL** shown at the top-left. It teaches the game step by step and pays cash rewards.
+Follow the **GOAL** at the top-left — it teaches the game step by step and pays cash rewards.
 
-1. You start inside the showroom with **$50,000** and **2 starter cars** on the lot.
-2. **Computer (E):** *Marketplace*, *Upgrades*, *Bank & Loans*, *Statistics*.
-   - Marketplace cars cost less than they're worth, but **sellers can lie about condition**. With the
-     **Mechanic Workshop** upgrade you see the true condition.
-3. **Walk to a car (E):** repair it, clean it, **Test Drive** it (crashes cost condition!), then **Set Price / List for Sale**.
-4. **Press O** (or use the OPEN/CLOSED sign) to open. The clock runs from 08:00 to 18:00.
-5. Customers walk in and look at **listed** cars. A **"!"** over a customer means they're interested:
-   go and press **E** to negotiate.
-6. Accept their offer, counter-offer, or refuse. Haggle too hard and they walk away (−reputation).
-7. At 18:00 (or when you press O again) you pay rent and loan interest, and see the **daily report**.
-   **Start Next Day** refreshes the marketplace. The game auto-saves.
-8. **Upgrades:** Lot Expansion (+3 spots/level), Marketing (more and richer customers), Mechanic (cheaper repairs
-   plus true inspections), Detailing (cheaper cleaning), Showroom (customers buy more often, +reputation daily).
-9. **Win:** reach **$1,000,000 net worth** (cash + car values − loan).
-   **Lose:** end **3 days in a row** with negative cash → bankrupt.
+1. **Morning:** you wake up at home (Starter Trailer). Your own car is on the driveway — stand next to it, press **F**.
+   Press **M** and set the GPS to **AUTO WORLD**.
+2. **Dealerships open 08:00–20:00** automatically. Customers only come during opening hours, only to dealerships you own,
+   and only look at cars **listed for sale on a dealership spot**.
+3. **Buy cars** — online at the office computer (+$300 delivery), at the **Used Car Market** (cheaper, free inspection,
+   drive it away yourself) or at the **Auction Center** (10:00–17:00, cheapest but condition unknown!).
+4. **Fix them** — drive (or tow, **P**) a car into the **Mechanic Workshop** bays and talk to the mechanic, or use the
+   car menu → *Repair* (it offers a tow). Same for the **Car Wash**. Fuel up at the **Fuel Station** (E at the pumps).
+5. **Sell** — park the car on a dealership spot (drive up to a free spot, press **E**), set a price, haggle with customers.
+6. **Evening:** after 18:00 go home and **sleep at your front door**. Rent, loan interest and property income are settled,
+   you get the daily report, the game saves. Stay up past **02:00** and you pass out (fine + less energy).
+7. **Grow:** upgrades, a second and third dealership (Downtown Motors, Luxury Lane), better homes (wake earlier,
+   +reputation), and investment properties that pay every night (computer → **Real Estate**, or the FOR SALE signs).
+8. **Win** at $1,000,000 net worth (cash + cars + 80% of properties − loan). **Lose** after 3 nights in debt.
 
 ---
 

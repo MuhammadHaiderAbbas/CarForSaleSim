@@ -7,19 +7,38 @@ using Random = UnityEngine.Random;
 
 namespace CarSales
 {
-    /// <summary>Spawns customers while the shop is open. Lives on Dealership.prefab.</summary>
+    /// <summary>Spawns customers at its dealership automatically while that dealership is open.</summary>
+    [RequireComponent(typeof(DealershipManager))]
     public class CustomerSpawner : MonoBehaviour
     {
+        public static readonly List<CustomerSpawner> All = new List<CustomerSpawner>();
+
         [SerializeField] CustomerAI customerPrefab;
         [SerializeField] Vector2 spawnInterval = new Vector2(15f, 30f);
         [SerializeField] int maxCustomers = 4;
         [SerializeField] string[] customerNames =
             { "Alex", "Sam", "Jordan", "Taylor", "Chris", "Morgan", "Riley", "Jamie", "Casey", "Avery", "Drew", "Robin" };
 
+        public DealershipManager Dealer { get; private set; }
         readonly List<CustomerAI> active = new List<CustomerAI>();
         Coroutine loop;
+        bool warnedNoCars;
 
-        void Awake() => CarSalesServices.Spawner = this;
+        void Awake()
+        {
+            Dealer = GetComponent<DealershipManager>();
+            if (!All.Contains(this)) All.Add(this);
+            if (Dealer.isMain || !CarSalesServices.Spawner) CarSalesServices.Spawner = this;
+        }
+
+        void OnDestroy() => All.Remove(this);
+
+        void Update()
+        {
+            bool open = Dealer.IsOpenNow;
+            if (open && loop == null) loop = StartCoroutine(SpawnLoop());
+            else if (!open && loop != null) StopSpawning(true);
+        }
 
         public void StartSpawning() { if (loop == null) loop = StartCoroutine(SpawnLoop()); }
 
@@ -28,6 +47,8 @@ namespace CarSales
             if (loop != null) { StopCoroutine(loop); loop = null; }
             if (sendEveryoneHome) foreach (var c in active.ToArray()) if (c) c.Leave();
         }
+
+        public static void StopAll(bool sendHome) { foreach (var s in All) s.StopSpawning(sendHome); }
 
         public void Unregister(CustomerAI c) => active.Remove(c);
 
@@ -44,30 +65,38 @@ namespace CarSales
 
         void TrySpawn()
         {
-            var dealer = CarSalesServices.Dealership;
             active.RemoveAll(c => c == null);
             int max = maxCustomers + (CarSalesServices.Upgrades ? CarSalesServices.Upgrades.ExtraCustomers : 0);
             if (active.Count >= max) return;
-            if (dealer.GetListedCars().Count == 0) { CarSalesServices.UI.Notify("No cars listed for sale - customers won't come!"); return; }
-            if (dealer.customerSpawnPoints == null || dealer.customerSpawnPoints.Length == 0) return;
-
-            var point = dealer.customerSpawnPoints[Random.Range(0, dealer.customerSpawnPoints.Length)];
-            if (!NavMesh.SamplePosition(point.position, out var hit, 3f, NavMesh.AllAreas))
+            if (Dealer.GetListedCars().Count == 0)
             {
-                Debug.LogWarning("[CarSales] Customer spawn point is not on the NavMesh.");
+                if (!warnedNoCars && Dealer.isMain)
+                {
+                    warnedNoCars = true;
+                    CarSalesServices.UI.Notify($"No cars listed at {Dealer.displayName} - customers won't come!");
+                }
                 return;
             }
+            warnedNoCars = false;
+            var points = Dealer.customerSpawnPoints;
+            if (points == null || points.Length == 0) return;
 
+            var point = points[Random.Range(0, points.Length)];
+            if (!NavMesh.SamplePosition(point.position, out var hit, 3f, NavMesh.AllAreas))
+            {
+                Debug.LogWarning($"[CarSales] Customer spawn point at {Dealer.displayName} is not on the NavMesh.");
+                return;
+            }
             var customer = Instantiate(customerPrefab, hit.position, point.rotation);
             customer.Init(GenerateProfile(), this);
             active.Add(customer);
-            CarSalesServices.PlaySfx(Sfx.DoorChime, 0.7f);
+            CarSalesServices.PlaySfx(Sfx.DoorChime, 0.5f);
         }
 
         CustomerProfile GenerateProfile()
         {
             float rep = CarSalesServices.Economy.Reputation / 100f;
-            float budgetMult = CarSalesServices.Upgrades ? CarSalesServices.Upgrades.BudgetMultiplier : 1f;
+            float budgetMult = (CarSalesServices.Upgrades ? CarSalesServices.Upgrades.BudgetMultiplier : 1f) * Dealer.budgetMultiplier;
             return new CustomerProfile
             {
                 customerName = customerNames[Random.Range(0, customerNames.Length)],
@@ -78,5 +107,8 @@ namespace CarSales
                 minCondition = Random.Range(30f, 80f)
             };
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => All.Clear();
     }
 }

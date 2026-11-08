@@ -23,6 +23,18 @@
 | `Data/CarParts.cs` | static class + enum | Per-part condition, labels, repair names, crash damage |
 | `Data/GameMessage.cs` | serializable | Inbox message (offers, tips, bank, goals) |
 | `Systems/MessageManager.cs` | MonoBehaviour | Inbox, daily private-seller offers |
+| `Systems/VehicleRegistry.cs` | MonoBehaviour | All owned car objects: spawning, parking, refuelling, selling |
+| `Systems/PropertyManager.cs` | MonoBehaviour | Homes, extra dealerships, investment properties |
+| `Systems/TowService.cs` | MonoBehaviour | Tow trucks and taxis (distance-based prices), player teleport |
+| `Systems/AuctionManager.cs` | MonoBehaviour | Daily auction lots and opening hours |
+| `Core/MapPlace.cs`, `Core/GpsSystem.cs` | MonoBehaviour / static | Map places and the GPS target |
+| `Core/ServiceZone.cs` | MonoBehaviour | Service areas with tow bays |
+| `World/HomeBed.cs` | MonoBehaviour + IInteractable | Front door: sleep / move in |
+| `World/PropertySign.cs` | MonoBehaviour + IInteractable | FOR SALE sign |
+| `World/ServiceDesk.cs` | MonoBehaviour + IInteractable | Mechanic / car wash / fuel kiosk / auction desk |
+| `World/UsedCarMarket.cs` | MonoBehaviour | Shows the lot's for-sale cars |
+| `Data/PropertyInfo.cs` | serializable | Property definition |
+| `UI/MapUI.cs`, `UI/PhoneUI.cs`, `UI/AuctionUI.cs`, `UI/RealEstateUI.cs` | UIPanel / ComputerPage | Map & GPS, phone, live auction, real estate |
 | `UI/Framework/UIFactory.cs` | static class | Theme colours, generated sprites and all UI building helpers |
 | `UI/Framework/UIPanel.cs` | base classes | `UIPanel` (full-screen window) and `ComputerPage` |
 | `UI/Framework/NotificationToast.cs` | MonoBehaviour | Notification card |
@@ -84,7 +96,7 @@
 
 | File | What it does |
 |---|---|
-| `CarSalesWorldBuilder.cs` | Builds the dealership world (showroom, garage, car wash, props, skyline) |
+| `CarSalesWorldBuilder.cs` | Builds the whole town (roads, 3 dealerships, services, auction, homes, properties, skyline) |
 | `CarSalesSetupWizard.cs` | Menu **Tools → Car Sales**: *Build Everything*, *Open Test Scene*, *Open Main Menu Scene*, *Delete Save File*, *Show Save Folder* |
 | `Installer/CarSalesDependencyInstaller.cs` | *1. Check & Install Packages*. Has no dependencies, so it always compiles |
 | `CarSales.Editor.asmdef`, `Installer/CarSales.Installer.asmdef` | Editor-only assemblies |

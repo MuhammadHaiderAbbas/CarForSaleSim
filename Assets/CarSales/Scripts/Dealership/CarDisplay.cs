@@ -11,9 +11,24 @@ namespace CarSales
         [SerializeField] TMP_Text priceTag;       // world-space TextMeshPro above the roof
 
         public CarInstance Data { get; private set; }
+        /// <summary>True for cars standing at the Used Car Market that you don't own yet.</summary>
+        public bool IsForSaleListing { get; private set; }
         public CarDefinition Definition { get; private set; }
         public Transform BrowsePoint => browsePoint ? browsePoint : transform;
         CarVisual visual;
+
+        public void InitializeForSale(CarInstance listing)
+        {
+            IsForSaleListing = true;
+            var obstacle = GetComponent<UnityEngine.AI.NavMeshObstacle>();
+            if (obstacle) obstacle.enabled = false;
+            Initialize(listing);
+            if (priceTag)
+            {
+                priceTag.gameObject.SetActive(true);
+                priceTag.text = $"${listing.purchasePrice:N0}";
+            }
+        }
 
         public void Initialize(CarInstance data)
         {
@@ -33,7 +48,12 @@ namespace CarSales
 
         public void Refresh()
         {
-            var marker = MinimapMarker.Attach(gameObject, MarkerColor(), 3.2f);
+            MinimapMarker.Attach(gameObject, MarkerColor(), 3.2f);
+            if (IsForSaleListing)
+            {
+                if (visual) visual.Apply(Data.paintColor, 1f - Data.cleanliness / 100f);
+                return;
+            }
             if (visual) visual.Apply(Data.paintColor, 1f - Data.cleanliness / 100f);
             bool listed = Data.state == CarState.Listed;
             if (priceTag)
@@ -45,6 +65,8 @@ namespace CarSales
 
         Color MarkerColor()
         {
+            if (IsForSaleListing) return new Color(0.75f, 0.5f, 1f);
+            if (Data.personal) return new Color(0.2f, 0.95f, 0.95f);
             switch (Data.state)
             {
                 case CarState.Listed: return UIFactory.Good;
@@ -55,10 +77,19 @@ namespace CarSales
 
         public bool CanInteract() => Data != null && Definition != null;
 
-        public string GetInteractionText() =>
-            $"[E] {Definition.year} {Definition.brand} {Definition.displayName}  |  Condition {Data.condition:0}%  |  " +
-            $"Value ${CarValueCalculator.MarketValue(Data):N0}  |  {Data.state}";
+        public string GetInteractionText()
+        {
+            if (IsForSaleListing)
+                return $"[E] For sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  ${Data.purchasePrice:N0}  |  free inspection on site";
+            string name = $"{Definition.year} {Definition.brand} {Definition.displayName}";
+            if (Data.personal) return $"[E] Your car: {name}  |  Fuel {Data.fuel:0}%   [F] Drive";
+            return $"[E] {name}  |  Condition {Data.condition:0}%  |  Fuel {Data.fuel:0}%  |  {Data.state}   [F] Drive";
+        }
 
-        public void Interact(GameObject interactor) => CarSalesServices.UI.carMenu.Show(this);
+        public void Interact(GameObject interactor)
+        {
+            if (IsForSaleListing) CarSalesServices.UI.vehicleDetails.ShowPhysical(this);
+            else CarSalesServices.UI.carMenu.Show(this);
+        }
     }
 }

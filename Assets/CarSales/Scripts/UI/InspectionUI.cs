@@ -92,7 +92,7 @@ namespace CarSales
         void Back()
         {
             if (owned) CarSalesServices.UI.carMenu.Show(owned);
-            else CarSalesServices.UI.vehicleDetails.Show(car);
+            else CarSalesServices.UI.vehicleDetails.Reopen();
         }
     }
 }
