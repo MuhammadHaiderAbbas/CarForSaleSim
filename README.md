@@ -10,6 +10,9 @@ Reach a **$1,000,000** net worth to win (or go bankrupt trying).
 live auctions vs. AI bidders, a walk-around used car lot, 3 dealerships, homes & properties, a real 24-hour day with
 energy and sleeping, night lighting, a town map with GPS, and a phone. See [CHANGELOG.md](CHANGELOG.md).
 
+**Next: V5.0.** The full development blueprint (architecture, script-by-script plan, phases, tests) is in
+[docs/V5_MASTER_SPEC.md](docs/V5_MASTER_SPEC.md).
+
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
 > Reopen Unity, then run **Tools → Car Sales → 2. Build Everything**. Older saves still load (you'll wake up at home).
