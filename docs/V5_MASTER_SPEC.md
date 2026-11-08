@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phase 1 is merged; Phase 2a code is written (see [Phase 2 status](#phase-2-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1 and 2a are merged; Phase 2b code is written (see [Phase 2 status](#phase-2-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -827,8 +827,24 @@ driving test. Phase 2b (below) is not started.
 | Step 6 | **Vehicle Studio** window (Tools → Car Sales → Vehicle Studio): every car's class, mass, 0-100, top speed, braking; "Make editable" creates a profile asset in `Assets/CarSales/Data/Physics/` (survives Build Everything) | Test-track scene: Phase 2b. In-game **F3 telemetry** overlay (speed, rpm, gear, slip per wheel, active assists, condition effects). |
 | Step 7 | Tests for torque curve, shifting, anti-hunting, reverse, EV, assists, steering limit, fuel, class performance, component weights, conversion, damage zones, wear, driving effects | |
 
-**Phase 2b (next):** test-track scene; tuning pass from your driving feedback; optional mesh deformation;
-component detail view in the car menu; manual gearbox option.
+**Phase 2b: code complete** (104 EditMode tests passing, compile-checked, waiting for the in-Editor test):
+
+| Item | What was built |
+|---|---|
+| Test-track scene | `Generated/Scenes/TestTrack.unity` (built by Build Everything; *Tools → Car Sales → 5. Open Test Track*): 940 m straight with distance boards, braking zone, slalom lane, bump lane, skid-pad circle, ramp, knock-over cones. `TestTrackController` runs without the economy/UI and measures 0-100, braking distance from 95+ km/h, top speed and cornering g next to the simulated figures. N/B car, 1-4 condition, G realistic/arcade, M manual/auto, R reset. Vehicle Studio has a **Drive** button per car. |
+| Manual gearbox | Settings → Gearbox: MANUAL. Left Shift / Left Ctrl (gamepad bumpers) shift up / down; Ctrl in 1st at a standstill = R. Automatic clutch; over-revving downshifts are refused. New input actions `GearUp`, `GearDown`. |
+| Mesh deformation | `DentModel` (Sim, tested) turns body-panel health into dents per zone; `CarDamageVisual` applies them to copies of the meshes on parked, listed and driven cars, and removes them after repair. No extra save data. Imported models need *Read/Write* enabled on the mesh (Asset Studio will do this in Phase 3). |
+| Component detail view | Inspection → **All parts**: every component per group with bars, plus how the condition affects driving (power, brakes, grip, shocks, won't start). |
+| Tuning pass | **Waiting for your driving feedback** - the presets are tuned to real-world numbers but the feel can only be judged in the Editor. |
+
+**Phase 2b play-test checklist:**
+1. Build Everything; open *5. Open Test Track*; Play. The panel at the top right shows the car and measurements.
+2. Full throttle from the start line: the 0-100 time appears; compare with "Simulated".
+3. At 100+ km/h brake fully (hold S): the braking distance appears (about 35-45 m with good brakes); try 4 (25% condition).
+4. Slalom and skid pad: watch "Cornering g" (about 0.8-1.0 g is realistic for road tyres).
+5. Press M for manual, drive with Left Shift / Left Ctrl.
+6. Hit a cone barrier / the ramp edge hard: dents appear at that end of the car; N/B to switch cars.
+7. In the town: inspect a damaged car → All parts; repair the body at the workshop → the dents disappear.
 
 **Phase 2 play-test checklist (in Unity):**
 1. Build Everything, Play. Get into your own car (F): it drives on wheels, the HUD shows the gear next to KM/H.

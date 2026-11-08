@@ -16,6 +16,8 @@ account statement of every transaction, and automated tests (*Window → General
 Phase 2 adds **realistic driving** (wheel physics, engine and automatic gearbox, ABS/traction/stability control, a
 different feel per car class) and **~45 individual car parts** behind the 6 condition bars. *Settings → Physics*
 switches back to the old arcade handling; *Tools → Car Sales → Vehicle Studio* shows and tunes each car's performance.
+Phase 2b adds a **test track** (*Tools → Car Sales → 5. Open Test Track*, or **Drive** in Vehicle Studio) that measures
+0-100 km/h, braking distance and cornering g, a **manual gearbox** option, **visible dents**, and an **All parts** view.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).
@@ -56,6 +58,7 @@ switches back to the old arcade handling; *Tools → Car Sales → Vehicle Studi
 | *Driving:* A/D, Space | Steer, handbrake |
 | *Driving:* **C** | Camera: chase / far chase / bonnet |
 | *Driving:* **F3** | Telemetry overlay (speed, rpm, gear, wheel slip, assists) |
+| *Driving (manual gearbox):* Left Shift / Left Ctrl | Shift up / down (Ctrl in 1st when stopped = reverse) |
 | **Tab** | Inventory (dealer computer, anywhere) |
 | **M** | Town map + GPS + taxi |
 | **P** | Phone: tow truck (move any car) and taxi (move yourself) |

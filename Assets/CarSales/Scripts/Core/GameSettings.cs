@@ -12,6 +12,7 @@ namespace CarSales
         public const string NewGameFlagKey = "CarSales.StartNewGame";
         const string ActiveSlotKey = "CarSales.ActiveSlot";
         const string DrivingKey = "CarSales.DrivingModel", AbsKey = "CarSales.ABS", TcsKey = "CarSales.TCS", EscKey = "CarSales.ESC";
+        const string ManualKey = "CarSales.ManualGearbox";
 
         static bool loaded;
         static float sensitivity, volume;
@@ -53,6 +54,13 @@ namespace CarSales
         public static bool Abs { get => Flag(AbsKey); set => SetFlag(AbsKey, value); }
         public static bool TractionControl { get => Flag(TcsKey); set => SetFlag(TcsKey, value); }
         public static bool StabilityControl { get => Flag(EscKey); set => SetFlag(EscKey, value); }
+
+        /// <summary>Manual gearbox (Left Shift = up, Left Ctrl = down, R from 1st at a standstill). Default off.</summary>
+        public static bool ManualGearbox
+        {
+            get => PlayerPrefs.GetInt(ManualKey, 0) == 1;
+            set => SetFlag(ManualKey, value);
+        }
 
         static bool Flag(string key) => PlayerPrefs.GetInt(key, 1) == 1;
         static void SetFlag(string key, bool on) { PlayerPrefs.SetInt(key, on ? 1 : 0); PlayerPrefs.Save(); }

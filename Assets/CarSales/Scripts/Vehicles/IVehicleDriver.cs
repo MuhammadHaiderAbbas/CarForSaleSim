@@ -19,6 +19,9 @@ namespace CarSales
         InputAction MoveAction { set; }
         /// <summary>Space: handbrake (realistic) / brake (arcade).</summary>
         InputAction BrakeAction { set; }
+        /// <summary>Manual gearbox shift buttons (ignored by automatic and arcade cars).</summary>
+        InputAction GearUpAction { set; }
+        InputAction GearDownAction { set; }
         /// <summary>Signed forward speed in m/s (negative while reversing).</summary>
         float Speed { get; }
         float Rpm { get; }

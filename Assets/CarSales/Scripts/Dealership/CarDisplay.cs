@@ -51,10 +51,10 @@ namespace CarSales
             MinimapMarker.Attach(gameObject, MarkerColor(), 3.2f);
             if (IsForSaleListing)
             {
-                if (visual) visual.Apply(Data.paintColor, 1f - Data.cleanliness / 100f);
+                if (visual) { visual.Apply(Data.paintColor, 1f - Data.cleanliness / 100f); CarDamageVisual.Apply(visual.gameObject, Data); }
                 return;
             }
-            if (visual) visual.Apply(Data.paintColor, 1f - Data.cleanliness / 100f);
+            if (visual) { visual.Apply(Data.paintColor, 1f - Data.cleanliness / 100f); CarDamageVisual.Apply(visual.gameObject, Data); }
             bool listed = Data.state == CarState.Listed;
             if (priceTag)
             {

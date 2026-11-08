@@ -87,9 +87,25 @@ namespace CarSales.EditorTools
                         }
                     }
                     else if (GUILayout.Button("Make editable", GUILayout.Width(110))) MakeEditable(c);
+                    if (GUILayout.Button("Drive", GUILayout.Width(60))) DriveOnTestTrack(c);
                 }
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        static void DriveOnTestTrack(CarDefinition car)
+        {
+            if (!File.Exists(CarSalesSetupWizard.TestTrackScenePath))
+            {
+                EditorUtility.DisplayDialog("Car Sales", "Run Tools > Car Sales > 2. Build Everything first (it creates the test track).", "OK");
+                return;
+            }
+            if (EditorApplication.isPlaying) EditorApplication.isPlaying = false;
+            if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            PlayerPrefs.SetString(TestTrackController.CarPrefKey, car.carId);
+            PlayerPrefs.Save();
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(CarSalesSetupWizard.TestTrackScenePath);
+            EditorApplication.isPlaying = true;
         }
 
         void MakeEditable(CarDefinition car)

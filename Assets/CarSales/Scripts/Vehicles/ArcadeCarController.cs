@@ -21,6 +21,8 @@ namespace CarSales
 
         public InputAction MoveAction { get; set; }
         public InputAction BrakeAction { get; set; }
+        public InputAction GearUpAction { get; set; }     // arcade cars have no gears
+        public InputAction GearDownAction { get; set; }
         public float Speed { get; private set; }
         /// <summary>When true the engine gives no power (empty tank).</summary>
         public bool OutOfFuel { get; set; }

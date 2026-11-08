@@ -22,8 +22,10 @@ namespace CarSales.Sim
         public float PowerFactor { get; set; } = 1f;
         /// <summary>False when the tank/battery is empty or the engine is broken.</summary>
         public bool EngineOn { get; set; } = true;
+        /// <summary>Manual gearbox: the driver shifts with <see cref="ShiftUp"/> / <see cref="ShiftDown"/> (the clutch is automatic).</summary>
+        public bool Manual { get; set; }
 
-        float shiftTimer;
+        float shiftTimer, lastWheelRpm;
         int pendingGear;
 
         public Powertrain(VehicleProfile profile)
@@ -53,8 +55,8 @@ namespace CarSales.Sim
             throttle = throttle < 0f ? 0f : throttle > 1f ? 1f : throttle;
             float speed = Math.Abs(forwardSpeed);
 
-            // Direction changes only happen (almost) at a standstill.
-            if (speed < 1.5f)
+            // Automatic: direction changes only happen (almost) at a standstill. Manual: the driver selects R.
+            if (!Manual && speed < 1.5f)
             {
                 if (wantReverse && Gear >= 0) { Gear = -1; shiftTimer = 0f; }
                 else if (!wantReverse && Gear < 0) { Gear = 1; shiftTimer = 0f; }
@@ -125,10 +127,48 @@ namespace CarSales.Sim
             if (EngineOn && throttle < 0.05f && Gear > 0 && !IsShifting && forwardSpeed > 2f)
                 wheelTorque -= eng.engineBrakeNm * (rpm / eng.redlineRpm) * ratio * box.finalDrive * box.efficiency;
 
-            if (Gear > 0 && !IsShifting) DecideShift(throttle, wheelBasedRpm, Math.Abs(wheelRpm));
+            if (!Manual && Gear > 0 && !IsShifting) DecideShift(throttle, wheelBasedRpm, Math.Abs(wheelRpm));
+            lastWheelRpm = Math.Abs(wheelRpm);
             return wheelTorque;
         }
 
+        // ------------------------------------------------------------------ MANUAL
+        /// <summary>Manual gearbox: one gear up (from R only at a standstill, into 1st). Returns false if not possible.</summary>
+        public bool ShiftUp(float forwardSpeed)
+        {
+            if (IsShifting) return false;
+            if (Gear < 0)
+            {
+                if (Math.Abs(forwardSpeed) > 1.5f) return false;
+                Gear = 1;
+                return true;
+            }
+            if (Profile.IsElectric || Gear >= Profile.gearbox.GearCount) return false;
+            StartShift(Gear + 1);
+            return true;
+        }
+
+        /// <summary>
+        /// Manual gearbox: one gear down; from 1st into R at a standstill. Refuses a downshift that would over-rev
+        /// the engine (money-shift protection). Returns false if not possible.
+        /// </summary>
+        public bool ShiftDown(float forwardSpeed)
+        {
+            if (IsShifting) return false;
+            if (Gear <= 1 || Profile.IsElectric)
+            {
+                if (Gear < 0 || Math.Abs(forwardSpeed) > 1.5f) return false;
+                Gear = -1;
+                return true;
+            }
+            var box = Profile.gearbox;
+            float rpmAfter = lastWheelRpm * box.ratios[Gear - 2] * box.finalDrive;
+            if (rpmAfter > Profile.engine.redlineRpm * 0.98f) return false;
+            StartShift(Gear - 1);
+            return true;
+        }
+
+        // ------------------------------------------------------------------ AUTOMATIC
         void DecideShift(float throttle, float rpmNow, float absWheelRpm)
         {
             var eng = Profile.engine;

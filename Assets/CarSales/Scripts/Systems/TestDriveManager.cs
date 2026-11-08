@@ -15,7 +15,7 @@ namespace CarSales
     /// </summary>
     public class TestDriveManager : MonoBehaviour
     {
-        [SerializeField] InputActionReference moveAction, brakeAction, exitAction, vehicleAction, cameraAction;
+        [SerializeField] InputActionReference moveAction, brakeAction, exitAction, vehicleAction, cameraAction, gearUpAction, gearDownAction;
         [Tooltip("Arcade mode only (realistic cars use their physics profile).")]
         [SerializeField] float fuelPercentPerKm = 4f;      // 100% tank = 25 km
 
@@ -40,12 +40,13 @@ namespace CarSales
         IVehicleDriver driver;
         VehicleProfile profile;
         Bounds carBounds;
+        GameObject vehicleModel;
         Transform cam, camParent;
         VehicleCamera vehicleCamera;
         Vector3 camLocalPos, lastPos;
         Quaternion camLocalRot;
         MenuInputBlocker blocker;
-        InputAction move, brake, contextKey, vehicleKey, cameraKey;
+        InputAction move, brake, contextKey, vehicleKey, cameraKey, gearUpKey, gearDownKey;
         int endFrame = -1;
         float distanceAccum, wearAccum, contextTimer;
         bool warnedEmpty;
@@ -59,6 +60,8 @@ namespace CarSales
             contextKey = CarSalesInput.Resolve(exitAction, "Interact");
             vehicleKey = CarSalesInput.Resolve(vehicleAction, "Vehicle");
             cameraKey = CarSalesInput.Resolve(cameraAction, "CameraView");
+            gearUpKey = CarSalesInput.Resolve(gearUpAction, "GearUp");
+            gearDownKey = CarSalesInput.Resolve(gearDownAction, "GearDown");
             if (contextKey != null) contextKey.performed += OnContextKey;
             if (vehicleKey != null) vehicleKey.performed += OnVehicleKey;
         }
@@ -157,6 +160,8 @@ namespace CarSales
             }
             driver.MoveAction = move;
             driver.BrakeAction = brake;
+            driver.GearUpAction = gearUpKey;
+            driver.GearDownAction = gearDownKey;
             driver.OnImpact += HandleImpact;
             vehicle.AddComponent<EngineAudio>().Init(driver, driver is WheelVehicleController ? profile : null);
             vehicle.AddComponent<VehicleTelemetry>().Init(driver, car);
@@ -182,7 +187,9 @@ namespace CarSales
             distanceAccum = wearAccum = 0f;
             if (CarSalesServices.Progress) CarSalesServices.Progress.Stats.testDrives++;
             CarSalesServices.UI.Notify(driver is WheelVehicleController
-                ? "W accelerate, S brake (reverses when stopped), A/D steer, Space handbrake, C camera, F get out. E = park / refuel / wash / repair."
+                ? (GameSettings.ManualGearbox
+                    ? "MANUAL: Left Shift / Left Ctrl shift up / down (Ctrl in 1st when stopped = R). W gas, S brake, Space handbrake, C camera, F get out."
+                    : "W accelerate, S brake (reverses when stopped), A/D steer, Space handbrake, C camera, F get out. E = park / refuel / wash / repair.")
                 : "W/S drive, A/D steer, Space brake, C camera. F = get out. E = park / refuel / wash / repair when prompted.");
         }
 
@@ -198,6 +205,8 @@ namespace CarSales
             UIFactory.SetLayer(model, 2);
             var visual = model.GetComponent<CarVisual>();
             if (visual) visual.Apply(car.Data.paintColor, 1f - car.Data.cleanliness / 100f);
+            CarDamageVisual.Apply(model, car.Data);
+            vehicleModel = model;
             MinimapMarker.Attach(vehicle, new Color(0.2f, 0.95f, 0.95f), 3.5f);
             var lightGo = new GameObject("Headlights");
             lightGo.transform.SetParent(vehicle.transform, false);
@@ -293,6 +302,7 @@ namespace CarSales
             if (car.Data.state == CarState.Ready && car.Data.condition < CarValueCalculator.RepairThreshold)
                 car.Data.state = CarState.NeedsRepair;
             if (driver is WheelVehicleController physics) physics.SetEffects(CarParts.Effects(car.Data));
+            CarDamageVisual.Apply(vehicleModel, car.Data);
             CarSalesServices.PlaySfx(Sfx.Crash);
             CarSalesServices.UI.Error($"CRASH! {char.ToUpper(ComponentCatalog.ZoneName(zone)[0])}{ComponentCatalog.ZoneName(zone).Substring(1)} damaged. " +
                                       $"Condition {before:0}% -> {car.Data.condition:0}%");
