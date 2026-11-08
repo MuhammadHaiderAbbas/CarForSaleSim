@@ -42,7 +42,8 @@ namespace CarSales.Tests
             string ui = UiFolder();
             if (ui == null) Assert.Ignore("UI source folder not found (set CARSALES_ROOT).");
             var offenders = new List<string>();
-            var re = new Regex(@"new\s+Color(32)?\s*\(");
+            // Literal colours: new Color(...), new Color32(...), and hex colours in rich text (<color=#...>).
+            var re = new Regex(@"new\s+Color(32)?\s*\(|<color=#[0-9a-fA-F]{3,8}>");
             foreach (var file in Directory.GetFiles(ui, "*.cs", SearchOption.AllDirectories))
             {
                 if (Allowed.Contains(Path.GetFileName(file))) continue;

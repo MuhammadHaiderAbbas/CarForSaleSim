@@ -106,7 +106,7 @@ namespace CarSales
             h.childForceExpandHeight = false;
             UIFactory.Icon(row.transform, color, glyph, 38f);
             var col = UIFactory.VCol(row.transform, 0f);
-            UIFactory.Text(col, (isSelected ? "<color=#8cf>[x]</color> " : "[  ] ") + title, 19, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            UIFactory.Text(col, (isSelected ? $"<color={UIFactory.Hex(UIFactory.Info)}>[x]</color> " : "[  ] ") + title, 19, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             UIFactory.Text(col, subtitle, 14, UIFactory.TextDim, TextAlignmentOptions.Left);
             var price = UIFactory.Text(row.transform, UIFactory.Money(cost), 20, UIFactory.Gold, TextAlignmentOptions.Right, true);
             UIFactory.LE(price, w: 120, flexW: 0);

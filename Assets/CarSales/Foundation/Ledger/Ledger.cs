@@ -122,6 +122,36 @@ namespace CarSales.Foundation
             return s;
         }
 
+        /// <summary>Operating net (income - expenses, loans excluded) for each day from fromDay to toDay.</summary>
+        public int[] DailyNet(int fromDay, int toDay)
+        {
+            if (toDay < fromDay) return new int[0];
+            var result = new int[toDay - fromDay + 1];
+            foreach (var e in state.entries)
+            {
+                if (e.day < fromDay || e.day > toDay || TxCategories.IsFinancing(e.category)) continue;
+                result[e.day - fromDay] += e.amount;
+            }
+            return result;
+        }
+
+        /// <summary>Every kept entry that refers to <paramref name="refId"/> (e.g. one car), oldest first.</summary>
+        public List<Transaction> ForRef(string refId)
+        {
+            var list = new List<Transaction>();
+            if (string.IsNullOrEmpty(refId)) return list;
+            foreach (var e in state.entries) if (e.refId == refId) list.Add(e);
+            return list;
+        }
+
+        /// <summary>Signed sum of the entries for <paramref name="refId"/> (negative = it cost money overall).</summary>
+        public int NetForRef(string refId)
+        {
+            int sum = 0;
+            foreach (var e in ForRef(refId)) sum += e.amount;
+            return sum;
+        }
+
         /// <summary>Newest first.</summary>
         public List<Transaction> Recent(int count)
         {

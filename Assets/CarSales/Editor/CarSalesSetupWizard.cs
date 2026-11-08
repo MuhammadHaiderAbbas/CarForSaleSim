@@ -28,6 +28,7 @@ namespace CarSales.EditorTools
         const string Gen = Root + "/Generated";
         const string InputPath = Root + "/Input/CarSalesControls.inputactions";
         const string ScenePath = Gen + "/Scenes/DealershipTest.unity";
+        public const string GameScenePath = ScenePath;
         const string MenuScenePath = Gen + "/Scenes/MainMenu.unity";
         const int InteractLayer = 20;
         const int StudioLayer = 21;
@@ -561,6 +562,8 @@ namespace CarSales.EditorTools
             es.AddComponent<InputSystemUIInputModule>().AssignDefaultActions();
 
             PrefabUtility.SaveAsPrefabAssetAndConnect(systems, $"{Gen}/Prefabs/CarSalesSystems.prefab", InteractionMode.AutomatedAction);
+            int swapped = PlaceholderReplacer.ApplyToOpenScene(false);   // your imported buildings/props (Asset Studio > Town)
+            if (swapped > 0) Debug.Log($"[CarSales] {swapped} placeholders replaced with your imported models.");
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Progress("Baking NavMesh", 0.9f);
@@ -736,6 +739,17 @@ namespace CarSales.EditorTools
             model.transform.SetParent(showcase.transform, false);
             showcase.AddComponent<MenuShowcase>();
 
+            // A few more cars on the stage for the cinematic shots.
+            var others = db.cars.Where(c => c && c != sports && c.displayPrefab).Take(2).ToList();
+            var slots = new[] { (new Vector3(-6.5f, 0.02f, 4.5f), 35f), (new Vector3(10f, 0.02f, 5f), -40f) };
+            for (int i = 0; i < others.Count; i++)
+            {
+                var extra = (GameObject)PrefabUtility.InstantiatePrefab(others[i].displayPrefab);
+                extra.name = "StageCar_" + others[i].displayName;
+                extra.transform.SetPositionAndRotation(slots[i].Item1, Quaternion.Euler(0f, slots[i].Item2, 0f));
+            }
+            AddReflectionProbe(null, "StageReflections", new Vector3(1.8f, 3f, 0f), new Vector3(30f, 8f, 20f));
+
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             camGo.transform.position = new Vector3(-0.6f, 1.9f, -8.5f);
             camGo.transform.LookAt(new Vector3(0.4f, 0.7f, 0f));
@@ -743,6 +757,7 @@ namespace CarSales.EditorTools
             cam.fieldOfView = 50f;
             cam.cullingMask = ~((1 << StudioLayer) | (1 << MinimapLayer));
             camGo.AddComponent<AudioListener>();
+            camGo.AddComponent<MenuCinematic>().target = showcase.transform;
             SetUpLooks(cam);
 
             new GameObject("Audio").AddComponent<AudioManager>();

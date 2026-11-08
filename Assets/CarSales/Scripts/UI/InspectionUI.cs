@@ -102,6 +102,7 @@ namespace CarSales
 
         void Back()
         {
+            if (CarSalesServices.UI.CanGoBack) { GoBack(); return; }
             if (owned) CarSalesServices.UI.carMenu.Show(owned);
             else CarSalesServices.UI.vehicleDetails.Reopen();
         }

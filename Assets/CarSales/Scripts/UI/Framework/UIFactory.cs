@@ -10,7 +10,7 @@ namespace CarSales
     /// buttons, windows, lists...). No prefabs or Inspector wiring needed.
     /// Colours come from <see cref="UITheme"/>.
     /// </summary>
-    public static class UIFactory
+    public static partial class UIFactory
     {
         // ------------------------------------------------------------------ THEME
         // Colours come from the active UITheme (Settings → Theme). Screens must use these tokens, never literal colours.

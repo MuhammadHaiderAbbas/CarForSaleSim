@@ -78,6 +78,8 @@ namespace CarSales
                                        22, UIFactory.Gold, TextAlignmentOptions.Right, true);
             UIFactory.LE(value, w: 150, flexW: 0);
 
+            var file = UIFactory.Btn(row.transform, "File", UIFactory.Neutral, () => CarSalesServices.UI.vehicleDetails.ShowOwned(car), 44f, 17f);
+            UIFactory.LE(file, h: 44, w: 80, flexW: 0);
             var manage = UIFactory.Btn(row.transform, "Manage", UIFactory.Accent, () => Manage(car), 44f, 17f);
             UIFactory.LE(manage, h: 44, w: 120, flexW: 0);
             bool confirming = confirmSellId == car.instanceId;

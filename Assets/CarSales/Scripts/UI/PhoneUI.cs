@@ -10,7 +10,7 @@ namespace CarSales
     /// The phone (P): a home screen with the time, money, notifications and apps. Tow, Taxi, Bank and Messages run on
     /// the phone; Map, Stock, Market and Settings open their full screens. (Spec §6.14.3, first version.)
     /// </summary>
-    public class PhoneUI : UIPanel
+    public class PhoneUI : UIPanel, IBackHandler
     {
         enum App { Home, Tow, Taxi, Bank, Messages }
 
@@ -79,6 +79,14 @@ namespace CarSales
             float h = day.HourOfDay;
             clockText.text = $"{Mathf.FloorToInt(h):00}:{Mathf.FloorToInt((h % 1f) * 60f):00}";
             statusText.text = $"{UIFactory.Money(CarSalesServices.Economy.Money)}   Energy {day.Energy:0}%";
+        }
+
+        /// <summary>Esc / B inside an app returns to the phone's home screen.</summary>
+        public bool HandleBack()
+        {
+            if (app == App.Home) return false;
+            Open(App.Home);
+            return true;
         }
 
         void Open(App target)

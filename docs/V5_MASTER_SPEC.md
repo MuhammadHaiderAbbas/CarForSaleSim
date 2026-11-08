@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-3 are merged; Phase 4a code is written (see [Phase 4 status](#phase-4-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-3 are merged; Phase 4 (4a + 4b) code is written (see [Phase 4 status](#phase-4-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -926,9 +926,31 @@ shapes, but the first real download is the test. Report any "Unexpected answer" 
 | Phone | New phone: status bar (time, cash, energy), home screen with clock, date, notifications and 9 apps. Tow, Taxi, Bank (balance, loan, today, recent transactions) and Messages run on the phone; Map, My cars, Market, Real estate, Settings open their screens. `ShowTow(car)` kept. |
 | Lighting | Build Everything adds URP post-processing to the game, menu and test-track cameras (ACES tonemapping, bloom, colour adjustments, vignette, SMAA; profile `Generated/Settings/PostProcessing.asset`) and uses the newest Poly Haven sky from the Asset Studio. `DayNightLighting` dims the sky at night (on a runtime copy of the material) and refreshes ambient light/reflections from it. |
 
-**Phase 4b (next):** redesigns of the HUD (minimal), dealer computer (desktop with apps), vehicle file (tabs),
-marketplace and map; cinematic main menu; more components (tables, tabs, modals); reflection probes for the
-showroom; replacing placeholders with your imported assets (step 5).
+**Phase 4b: code complete** (193 EditMode tests, compile-checked with URP; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Components | `UIComponents.cs` (partial `UIFactory`): `Tabs` (tabs / segmented), sortable `MakeTable` (click a header; capped at 250 rows), `Modal` / `Confirm` dialogs (Esc closes), `StatTile`, `Chart` (bar chart, negatives below the axis), `Badge`, `EmptyState`, `SectionTitle`. |
+| Screen stack | `UIManager.Back()` (Esc / gamepad B): a screen can handle it (`IBackHandler`: phone → home screen, computer app → desktop), else it returns to the screen it came from (e.g. vehicle file → marketplace), else closes. `Close()` still closes everything. |
+| HUD | Minimal: clock + shop status dot + thin energy bar (top-left), cash with +/- change and reputation/loan (top-right), slim GPS strip, smaller minimap, speed/gear/fuel cluster **only while driving**, prompts with a key cap (`[E] ...`), controls list on **H** (shown for the first 25 s). Fades out while a menu is open. |
+| Dealer computer | Desktop with 16 app icons (Dashboard, My Cars, Marketplace, Auctions, Messages + unread badge, Bank, **Accounts**, Real Estate, Upgrades, Statistics, Settings; Workshop/Customers/Staff/Marketing/Competitors marked *Soon*), widgets (clock, today, goal, messages) and a taskbar (cash, clock, log off). Apps open in a window; `ui.inventory.Show()` etc. unchanged. |
+| Accounts app | Today / 7 / 30 days / all kept: income, expenses, profit, cash tiles; profit-per-day chart (14 days); totals by category; sortable transaction table. New `Ledger.DailyNet`, `ForRef`, `NetForRef`. |
+| Vehicle file | `VehicleDetailsUI` with tabs **Overview, Condition** (per area, after inspection), **Documents** (placeholder until phase 5), **History** (ledger entries for the car), **Costs** (buy-in maths for listings; break-even and profit for your cars), **Listing**. Opens for listings, cars at the Used Car Market and your own cars (`ShowOwned`; *File* in My Cars, *Vehicle file* in the car menu). Deal badge via `PriceRating`. |
+| Marketplace | Filter sidebar (search, body type, max price, min condition, verified only, good deals only, reset), sort incl. *Best deal*, grid or list (sortable table) view; cards show *Great deal / Good price / Overpriced* and *Verified* badges. |
+| Map | Full screen; filters by kind (dealers, services, markets, homes, property) with counts; zoom x1-x4 and *Me*; click an icon to set the GPS; route drawn along the NavMesh with its length. Map size adapts to the interface size. |
+| Main menu | `MenuCinematic` camera: four slow dolly shots blended together, the car framed right of the menu; two more cars on the stage. Save slots show a **thumbnail** (`thumb.png` in the slot folder, written on every save). |
+| Reflections | Box-projected realtime reflection probes (rendered once on start) in every showroom and on the menu stage. |
+| Placeholders → your models | Backdrop buildings, trees, street lamps and benches are now `PlaceholderSlot` groups. **Asset Studio → Town**: tick approved Building / Prop models per kind (several = variety), *Apply to the town scene* (fits size, stands it on the ground, faces the street, re-bakes the NavMesh). Choices live in `Data/PlaceholderReplacements.asset`; Build Everything re-applies them. Shops/showrooms/homes stay (they carry interactions). |
+| Lint | Also rejects hex colours in rich text (`<color=#...>`); the 7 that existed now use tokens. |
+
+**Phase 4b play-test checklist:**
+1. Build Everything, Play from the main menu: the camera moves between shots; slots show a picture after your first save.
+2. HUD: walking shows no speedometer; get in a car: speed, gear, fuel appear. H toggles the controls. Earn money: +$ pops under the cash.
+3. Dealer computer: desktop, open apps, Esc goes back to the desktop, then closes. Accounts: switch periods, sort the transactions.
+4. Marketplace: filters, *Best deal*, List view; open a car: tabs; Esc returns to the marketplace. My Cars → *File* → Costs.
+5. M: filters, zoom, click a place: dotted route along the roads.
+6. Import one building and one tree (Prop) in the Asset Studio, tick them in **Town**, *Apply*, Play: they stand in the town.
+7. A showroom at noon: the floor and car paint reflect the room.
 
 **Phase 4a play-test checklist:**
 1. Build Everything (adds post-processing; uses your Poly Haven sky if you imported one), Play.

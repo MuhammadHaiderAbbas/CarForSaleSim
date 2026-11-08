@@ -75,6 +75,26 @@ namespace CarSales.EditorTools
             return g;
         }
 
+        /// <summary>Group for placeholder primitives that the Asset Studio can replace with an imported model.</summary>
+        static Transform Slot(Transform parent, string name, Vector3 pos, PlaceholderKind kind, Vector3 footprint, float yaw = 0f)
+        {
+            var g = new GameObject(name).transform;
+            g.SetParent(parent, false);
+            g.localPosition = pos;
+            var slot = g.gameObject.AddComponent<PlaceholderSlot>();
+            slot.kind = kind;
+            slot.footprint = footprint;
+            slot.yaw = yaw;
+            return g;
+        }
+
+        static void StreetLamp(Transform g, Vector3 basePos, float headOffsetZ, float headLength, Mats m, float pole = 0.16f)
+        {
+            var t = Slot(g, "StreetLamp", basePos, PlaceholderKind.StreetLamp, new Vector3(0.6f, 6f, 0.6f), headOffsetZ < 0f ? 180f : 0f);
+            Solid(t, "LampPole", new Vector3(0f, 3f, 0f), new Vector3(pole, 6f, pole), m.metal);
+            Deco(t, "LampHead", PrimitiveType.Cube, new Vector3(0f, 5.9f, headOffsetZ), new Vector3(pole * 2.6f, 0.12f, headLength), m.lampGlow);
+        }
+
         static GameObject Solid(Transform parent, string name, Vector3 pos, Vector3 size, Material mat)
         {
             var go = Prim(PrimitiveType.Cube, name, parent, pos, size, mat, keepCollider: true);
@@ -214,16 +234,16 @@ namespace CarSales.EditorTools
             for (float x = -220f; x <= 220f; x += 40f)
                 foreach (float z in new[] { -32f, 100f })
                 {
-                    Solid(g, "LampPole", new Vector3(x, 3f, z), new Vector3(0.16f, 6f, 0.16f), m.metal);
-                    Deco(g, "LampHead", PrimitiveType.Cube, new Vector3(x, 5.9f, z + (z < 0 ? 0.8f : -0.8f)), new Vector3(0.4f, 0.12f, 1.4f), m.lampGlow);
+                    StreetLamp(g, new Vector3(x, 0f, z), z < 0 ? 0.8f : -0.8f, 1.4f, m);
                 }
         }
 
         static void Tree(Transform g, Vector3 pos, Mats m, float s)
         {
-            Solid(g, "TreeTrunk", pos + new Vector3(0f, 1.5f * s, 0f), new Vector3(0.35f, 3f, 0.35f) * s, m.trunk);
-            Deco(g, "TreeCanopy", PrimitiveType.Sphere, pos + new Vector3(0f, 3.9f * s, 0f), new Vector3(3.2f, 2.8f, 3.2f) * s, m.leaves);
-            Deco(g, "TreeCanopy2", PrimitiveType.Sphere, pos + new Vector3(0.5f, 5f * s, 0.3f), new Vector3(2.2f, 2f, 2.2f) * s, m.leaves);
+            var t = Slot(g, "Tree", pos, PlaceholderKind.Tree, new Vector3(3.2f, 6f, 3.2f) * s, Mathf.Abs(pos.x * 37f + pos.z * 11f) % 360f);
+            Solid(t, "TreeTrunk", new Vector3(0f, 1.5f * s, 0f), new Vector3(0.35f, 3f, 0.35f) * s, m.trunk);
+            Deco(t, "TreeCanopy", PrimitiveType.Sphere, new Vector3(0f, 3.9f * s, 0f), new Vector3(3.2f, 2.8f, 3.2f) * s, m.leaves);
+            Deco(t, "TreeCanopy2", PrimitiveType.Sphere, new Vector3(0.5f, 5f * s, 0.3f), new Vector3(2.2f, 2f, 2.2f) * s, m.leaves);
         }
 
         static void Plant(Transform g, Vector3 pos, Mats m, float scale)
@@ -328,6 +348,7 @@ namespace CarSales.EditorTools
                     Deco(g, "CeilingLight", PrimitiveType.Cube, new Vector3(ix * 7.5f, 4.97f, 12.5f + iz * 4.5f), new Vector3(3f, 0.04f, 0.8f), m.ceilingLight);
             PointLight(g, new Vector3(-6f, 4.4f, 15f), 14f, 1.6f, new Color(1f, 0.96f, 0.9f));
             PointLight(g, new Vector3(6f, 4.4f, 19f), 14f, 1.6f, new Color(1f, 0.96f, 0.9f));
+            AddReflectionProbe(g, "ShowroomReflections", new Vector3(0f, 2.5f, 17f), new Vector3(24f, 5.2f, 14.2f));
 
             foreach (float x in new[] { -6f, 6f })
             {
@@ -350,8 +371,7 @@ namespace CarSales.EditorTools
                 Tree(g, p, m, 1f);
             foreach (var p in new[] { new Vector3(-19f, 0f, -20.5f), new Vector3(19f, 0f, -20.5f), new Vector3(-19f, 0f, 2.5f), new Vector3(19f, 0f, 2.5f) })
             {
-                Solid(g, "LampPole", p + new Vector3(0f, 3f, 0f), new Vector3(0.18f, 6f, 0.18f), m.metal);
-                Deco(g, "LampHead", PrimitiveType.Cube, p + new Vector3(0f, 5.9f, p.z < -9f ? 1f : -1f), new Vector3(0.45f, 0.12f, 0.6f), m.lampGlow);
+                StreetLamp(g, p, p.z < -9f ? 1f : -1f, 0.6f, m, 0.18f);
             }
             PointLight(g, new Vector3(0f, 6f, -9f), 26f, 1.4f, new Color(1f, 0.9f, 0.7f));
             var bannerMats = premium ? new[] { m.signBoard, m.flagWhite, m.signBoard } : new[] { m.flagRed, m.flagBlue, m.flagWhite };
@@ -366,10 +386,11 @@ namespace CarSales.EditorTools
             }
             foreach (float x in new[] { -8f, 8f })
             {
-                Solid(g, "BenchSeat", new Vector3(x, 0.45f, 7.6f), new Vector3(1.8f, 0.08f, 0.5f), m.desk);
-                Deco(g, "BenchBack", PrimitiveType.Cube, new Vector3(x, 0.78f, 7.85f), new Vector3(1.8f, 0.45f, 0.06f), m.desk);
-                Deco(g, "BenchLeg", PrimitiveType.Cube, new Vector3(x - 0.75f, 0.22f, 7.6f), new Vector3(0.08f, 0.44f, 0.45f), m.metal);
-                Deco(g, "BenchLeg", PrimitiveType.Cube, new Vector3(x + 0.75f, 0.22f, 7.6f), new Vector3(0.08f, 0.44f, 0.45f), m.metal);
+                var bench = Slot(g, "Bench", new Vector3(x, 0f, 7.6f), PlaceholderKind.Bench, new Vector3(1.8f, 1.0f, 0.6f), 180f);
+                Solid(bench, "BenchSeat", new Vector3(0f, 0.45f, 0f), new Vector3(1.8f, 0.08f, 0.5f), m.desk);
+                Deco(bench, "BenchBack", PrimitiveType.Cube, new Vector3(0f, 0.78f, 0.25f), new Vector3(1.8f, 0.45f, 0.06f), m.desk);
+                Deco(bench, "BenchLeg", PrimitiveType.Cube, new Vector3(-0.75f, 0.22f, 0f), new Vector3(0.08f, 0.44f, 0.45f), m.metal);
+                Deco(bench, "BenchLeg", PrimitiveType.Cube, new Vector3(0.75f, 0.22f, 0f), new Vector3(0.08f, 0.44f, 0.45f), m.metal);
             }
             foreach (float x in new[] { -4.5f, 4.5f })
             {
@@ -690,11 +711,13 @@ namespace CarSales.EditorTools
 
         static void Building(Transform g, Vector3 pos, Vector3 size, Material mat, Mats m, bool facesSouth)
         {
-            Solid(g, "Building", pos + new Vector3(0f, size.y / 2f, 0f), size, mat);
-            float faceZ = facesSouth ? pos.z - size.z / 2f - 0.06f : pos.z + size.z / 2f + 0.06f;
+            // Front of a replacement model (+Z) faces the street: south-facing buildings turn 180°.
+            var t = Slot(g, "Building", pos, PlaceholderKind.Building, size, facesSouth ? 180f : 0f);
+            Solid(t, "Building", new Vector3(0f, size.y / 2f, 0f), size, mat);
+            float faceZ = facesSouth ? -size.z / 2f - 0.06f : size.z / 2f + 0.06f;
             int floors = Mathf.FloorToInt(size.y / 3.2f);
             for (int f = 1; f < floors; f++)
-                Deco(g, "Windows", PrimitiveType.Cube, new Vector3(pos.x, f * 3.2f + 0.6f, faceZ), new Vector3(size.x * 0.86f, 1.3f, 0.06f), m.windowsGlow);
+                Deco(t, "Windows", PrimitiveType.Cube, new Vector3(0f, f * 3.2f + 0.6f, faceZ), new Vector3(size.x * 0.86f, 1.3f, 0.06f), m.windowsGlow);
         }
     }
 }

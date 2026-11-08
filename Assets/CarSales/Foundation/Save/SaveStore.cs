@@ -53,6 +53,9 @@ namespace CarSales.Foundation
         public string SlotDir(int slot) => Path.Combine(Root, $"slot_{slot}");
         public string MainFile(int slot) => Path.Combine(SlotDir(slot), FileName);
         public string BackupFile(int slot, int n) => MainFile(slot) + ".bak" + n;
+        /// <summary>Small screenshot shown in the load menu (written by the game when it saves).</summary>
+        public string ThumbnailFile(int slot) => Path.Combine(SlotDir(slot), ThumbnailName);
+        public const string ThumbnailName = "thumb.png";
         string FileAt(int slot, int index) => index == 0 ? MainFile(slot) : BackupFile(slot, index);
 
         public bool Exists(int slot)

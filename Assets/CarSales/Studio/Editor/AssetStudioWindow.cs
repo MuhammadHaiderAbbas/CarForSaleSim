@@ -16,8 +16,8 @@ namespace CarSales.Studio.EditorTools
     /// </summary>
     public class AssetStudioWindow : EditorWindow
     {
-        enum Tab { Import, Online, Library, Licences }
-        static readonly string[] TabNames = { "Import", "Online", "Library", "Licences" };
+        enum Tab { Import, Online, Library, Licences, Town }
+        static readonly string[] TabNames = { "Import", "Online", "Library", "Licences", "Town" };
         static readonly int[] Yaws = { 0, 90, 180, 270 };
         static readonly string[] YawNames = { "0°", "90°", "180°", "270°" };
         static readonly string[] Corners = { "Front left", "Front right", "Rear left", "Rear right" };
@@ -70,9 +70,70 @@ namespace CarSales.Studio.EditorTools
                 case Tab.Import: DrawImport(); break;
                 case Tab.Online: online.Draw(); break;
                 case Tab.Library: DrawLibrary(); break;
+                case Tab.Town: DrawTown(); break;
                 default: DrawLicences(); break;
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        // ------------------------------------------------------------------ TOWN (replace placeholders)
+        static readonly string[] KindHelp =
+        {
+            "Backdrop buildings around the town (fitted to the block's footprint, front facing the street).",
+            "Street and lot trees (fitted to 6 m height; Prop or Environment assets).",
+            "Street lamps (fitted to 6 m height).",
+            "Benches in front of the showrooms (fitted to 1 m height).",
+        };
+
+        void DrawTown()
+        {
+            EditorGUILayout.HelpBox("Swap the town's placeholder boxes for models you approved here. Pick one or more models per kind " +
+                "(several = variety), then Apply. Your choice is kept in Data/PlaceholderReplacements.asset and re-applied by Build Everything. " +
+                "Shops, showrooms and homes stay as they are (they hold the game's interactions).", UnityEditor.MessageType.Info);
+            var reg = AssetRegistry.Load();
+            var settings = CarSales.EditorTools.PlaceholderReplacer.LoadSettings(true);
+            if (!reg) { EditorGUILayout.HelpBox("No assets imported yet.", UnityEditor.MessageType.Warning); return; }
+
+            foreach (PlaceholderKind kind in System.Enum.GetValues(typeof(PlaceholderKind)))
+            {
+                EditorGUILayout.Space(6);
+                EditorGUILayout.LabelField(ObjectNames.NicifyVariableName(kind.ToString()), EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(KindHelp[(int)kind], EditorStyles.wordWrappedMiniLabel);
+                var entry = settings.For(kind);
+                var candidates = reg.records.Where(r => r != null && r.prefab && CarSales.EditorTools.PlaceholderReplacer.Accepts(kind, r.category)).ToList();
+                if (candidates.Count == 0)
+                {
+                    EditorGUILayout.LabelField(kind == PlaceholderKind.Building ? "  Import a model as Building to use it here." : "  Import a model as Prop to use it here.", EditorStyles.miniLabel);
+                    continue;
+                }
+                foreach (var r in candidates)
+                {
+                    bool on = entry.assetIds.Contains(r.id);
+                    bool now = EditorGUILayout.ToggleLeft($"  {r.displayName}   ({r.category}, {r.licence.licence})", on);
+                    if (now == on) continue;
+                    Undo.RecordObject(settings, "Placeholder replacements");
+                    if (now) entry.assetIds.Add(r.id); else entry.assetIds.Remove(r.id);
+                    EditorUtility.SetDirty(settings);
+                }
+            }
+            EditorGUILayout.Space(10);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Apply to the town scene", GUILayout.Height(30)))
+                {
+                    AssetDatabase.SaveAssets();
+                    status = CarSales.EditorTools.PlaceholderReplacer.ApplyToTownScene();
+                }
+                if (GUILayout.Button("Restore all placeholders", GUILayout.Height(30)) &&
+                    EditorUtility.DisplayDialog("Asset Studio", "Clear every choice and show the original placeholder boxes again?", "Restore", "Cancel"))
+                {
+                    Undo.RecordObject(settings, "Placeholder replacements");
+                    foreach (var e in settings.entries) e.assetIds.Clear();
+                    EditorUtility.SetDirty(settings);
+                    AssetDatabase.SaveAssets();
+                    status = CarSales.EditorTools.PlaceholderReplacer.ApplyToTownScene();
+                }
+            }
         }
 
         // ------------------------------------------------------------------ IMPORT

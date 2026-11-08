@@ -66,7 +66,7 @@ namespace CarSales
             refuelButton = UIFactory.Btn(gridRt, "Refuel", UIFactory.Gold, () => Service(ServiceType.FuelStation), out refuelLabel, 54f, 15f);
             UIFactory.Btn(gridRt, "Tow somewhere...", UIFactory.AccentDark, () => CarSalesServices.UI.phone.ShowTow(car), 54f, 16f);
             quickSellButton = UIFactory.Btn(gridRt, "Quick Sell", UIFactory.Bad, QuickSell, out quickSellLabel, 54f, 15f);
-            UIFactory.Btn(gridRt, "Close", UIFactory.Neutral, CloseAll, 54f, 17f);
+            UIFactory.Btn(gridRt, "Vehicle file", UIFactory.Neutral, () => CarSalesServices.UI.vehicleDetails.ShowOwned(car.Data), 54f, 17f);
         }
 
         public void Show(CarDisplay target)

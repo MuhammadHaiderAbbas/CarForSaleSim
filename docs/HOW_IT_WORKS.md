@@ -387,4 +387,13 @@ Won cars appear in the auction car park — drive or tow them home.
 - **Windows:** `UIManager.Open` plays `UITransition` (fade + scale, unscaled time) and focuses the first button for gamepads.
 - **Scale:** `GameSettings.UiScale` → CanvasScaler reference resolution (`GameSettings.UiReferenceResolution`).
 - **Post-processing:** `CarSalesLooks.cs` (editor, compiled when URP is installed: `CARSALES_URP`).
+- **Components:** `Scripts/UI/Framework/UIComponents.cs` — `UIFactory.Tabs`, `MakeTable` (rows = strings + sort keys),
+  `Modal`/`Confirm`, `StatTile`, `Chart`, `Badge`, `EmptyState`. Build new screens from these.
+- **Back:** `UIManager.Open` remembers the previous screen; `Back()` (Esc / B) asks the screen first (`IBackHandler`),
+  then returns to the previous one. `Close()` / `CloseAll()` clears the history.
+- **Computer:** `ComputerHubUI` = desktop + one app window; add an app with `AddPage<T>` and a `Tile(...)`.
+- **Vehicle file:** `VehicleDetailsUI.Show(listing)`, `ShowPhysical(display)`, `ShowOwned(car)`; tabs are rebuilt on change.
+- **Placeholders:** the wizard wraps replaceable primitives in `PlaceholderSlot` groups (`Slot(...)` in
+  `CarSalesWorldBuilder.cs`); `Editor/CarSalesPlaceholders.cs` fits the chosen prefabs (`Data/PlaceholderReplacements.asset`).
+- **Save thumbnails:** `SaveThumbnail.Capture(Camera.main, store.ThumbnailFile(slot))` after each save.
 

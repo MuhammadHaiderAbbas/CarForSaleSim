@@ -185,5 +185,17 @@ namespace CarSales.Tests
             Assert.Throws<ArgumentException>(() => e.Set("game", 1, ""));
             Assert.Throws<ArgumentException>(() => e.Set("", 1, "{}"));
         }
+    
+        [Test]
+        public void Thumbnail_LivesInTheSlotFolder_AndIsDeletedWithIt()
+        {
+            store.Write(2, Make(3, 100));
+            string thumb = store.ThumbnailFile(2);
+            Assert.AreEqual(store.SlotDir(2), Path.GetDirectoryName(thumb));
+            File.WriteAllBytes(thumb, new byte[] { 1, 2, 3 });
+            Assert.IsTrue(store.Peek(2).Readable, "a thumbnail must not break reading the slot");
+            store.Delete(2);
+            Assert.IsFalse(File.Exists(thumb));
+        }
     }
 }

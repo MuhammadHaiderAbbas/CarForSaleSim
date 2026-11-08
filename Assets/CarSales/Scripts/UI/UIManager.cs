@@ -48,6 +48,7 @@ namespace CarSales
         public GameObject OpenPanel => openPanel;
 
         GameObject openPanel;
+        readonly System.Collections.Generic.List<GameObject> history = new System.Collections.Generic.List<GameObject>();
         RectTransform toastArea;
         InputAction close, inventoryKey, mapKey, phoneKey;
 
@@ -167,14 +168,42 @@ namespace CarSales
 
         void OnCloseInput(InputAction.CallbackContext _)
         {
+            // An open dialog (UIFactory.Modal) eats Esc first.
+            var modal = transform.Find("Modal");
+            if (modal) { Destroy(modal.gameObject); return; }
             if (openPanel)
             {
                 if (IsModal(openPanel)) return;
-                if (settings && openPanel == settings.gameObject) { pause.Show(); return; }
-                Close();
+                Back();
             }
             else if (pause) pause.Show();
         }
+
+        /// <summary>
+        /// Esc / gamepad B: the open screen may handle it itself (phone -> home screen, computer -> desktop);
+        /// otherwise return to the screen it was opened from, or close the menus.
+        /// </summary>
+        public void Back()
+        {
+            if (!openPanel) return;
+            foreach (var h in openPanel.GetComponents<IBackHandler>())
+                if (h.HandleBack()) return;
+            while (history.Count > 0)
+            {
+                var prev = history[history.Count - 1];
+                history.RemoveAt(history.Count - 1);
+                if (!prev || prev == openPanel) continue;
+                openPanel.SetActive(false);
+                openPanel = null;
+                Open(prev, false);
+                return;
+            }
+            if (settings && openPanel == settings.gameObject && pause) { history.Clear(); pause.Show(); return; }
+            Close();
+        }
+
+        /// <summary>True when Back would return to another screen instead of closing.</summary>
+        public bool CanGoBack => history.Exists(p => p && p != openPanel);
 
         void OnInventoryInput(InputAction.CallbackContext _)
         {
@@ -184,8 +213,17 @@ namespace CarSales
             inventory.Show();
         }
 
-        public void Open(GameObject panel)
+        public void Open(GameObject panel) => Open(panel, true);
+
+        void Open(GameObject panel, bool remember)
         {
+            if (remember)
+            {
+                int existing = history.IndexOf(panel);
+                if (existing >= 0) history.RemoveRange(existing, history.Count - existing);   // no loops
+                else if (openPanel && openPanel != panel && !IsModal(openPanel)) history.Add(openPanel);
+                if (history.Count > 12) history.RemoveAt(0);
+            }
             if (openPanel && openPanel != panel) openPanel.SetActive(false);
             openPanel = panel;
             panel.SetActive(true);
@@ -200,6 +238,7 @@ namespace CarSales
 
         public void Close()
         {
+            history.Clear();
             if (!openPanel) return;
             var panel = openPanel;
             openPanel = null;

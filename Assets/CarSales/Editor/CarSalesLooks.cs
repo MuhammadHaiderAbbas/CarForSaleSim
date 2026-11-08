@@ -30,6 +30,28 @@ namespace CarSales.EditorTools
 #endif
         }
 
+        /// <summary>
+        /// Box-projected reflection probe rendered once when the scene starts (so glossy paint and floors reflect
+        /// the room they are in rather than the sky).
+        /// </summary>
+        static ReflectionProbe AddReflectionProbe(Transform parent, string name, Vector3 localCentre, Vector3 size, float intensity = 1f)
+        {
+            var go = new GameObject(name);
+            if (parent) go.transform.SetParent(parent, false);
+            go.transform.localPosition = localCentre;
+            var probe = go.AddComponent<ReflectionProbe>();
+            probe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            probe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.OnAwake;
+            probe.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.NoTimeSlicing;
+            probe.boxProjection = true;
+            probe.size = size;
+            probe.resolution = 128;
+            probe.intensity = intensity;
+            probe.blendDistance = 1f;
+            probe.cullingMask = ~((1 << StudioLayer) | (1 << MinimapLayer) | (1 << 5));
+            return probe;
+        }
+
         static void ApplyImportedSky()
         {
             var reg = AssetRegistry.Load();

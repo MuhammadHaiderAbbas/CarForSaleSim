@@ -23,6 +23,8 @@ namespace CarSales
         readonly Button[] slotButtons = new Button[SaveStore.SlotCount];
         readonly TextMeshProUGUI[] slotLabels = new TextMeshProUGUI[SaveStore.SlotCount];
         readonly Button[] deleteButtons = new Button[SaveStore.SlotCount];
+        readonly RawImage[] slotThumbs = new RawImage[SaveStore.SlotCount];
+        readonly Texture2D[] thumbTextures = new Texture2D[SaveStore.SlotCount];
         bool slotModeNew;
         int confirmOverwrite = -1, confirmDelete = -1;
 
@@ -104,7 +106,14 @@ namespace CarSales
                 slotButtons[i] = UIFactory.Btn(row, "Slot", UIFactory.CardLight, () => PickSlot(slot), out slotLabels[i], 132f, 20f);
                 UIFactory.LE(slotButtons[i], flexW: 1);
                 slotLabels[i].alignment = TextAlignmentOptions.MidlineLeft;
-                slotLabels[i].margin = new Vector4(22f, 0f, 10f, 0f);
+                slotLabels[i].margin = new Vector4(232f, 0f, 10f, 0f);
+                var frame = UIFactory.Panel(slotButtons[i].transform, "Thumb", UIFactory.PictureBg, 2f);
+                UIFactory.Place(frame.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10f, 0f), new Vector2(200f, 112f));
+                frame.raycastTarget = false;
+                frame.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+                slotThumbs[i] = UIFactory.Rect("Image", frame.transform).gameObject.AddComponent<RawImage>();
+                UIFactory.Stretch(slotThumbs[i].rectTransform);
+                slotThumbs[i].raycastTarget = false;
                 deleteButtons[i] = UIFactory.Btn(row, "Delete", UIFactory.Bad, () => DeleteSlot(slot), 132f, 18f);
                 UIFactory.LE(deleteButtons[i], w: 130);
             }
@@ -140,17 +149,21 @@ namespace CarSales
                 var info = store.Peek(slot);
                 string head = $"<size=110%><b>SLOT {slot}</b></size>";
                 string body;
-                if (!info.Exists) body = "<color=#9fb0cc>Empty</color>";
+                if (!info.Exists) body = $"<color={UIFactory.Hex(UIFactory.TextDim)}>Empty</color>";
                 else if (!info.Readable) body = $"<color={UIFactory.Hex(UIFactory.Bad)}>Damaged - cannot be loaded</color>";
                 else
                 {
                     string when = info.SavedAtUtc > DateTime.MinValue ? info.SavedAtUtc.ToLocalTime().ToString("dd MMM yyyy  HH:mm") : "unknown time";
                     body = $"{info.Label}   <color={UIFactory.Hex(UIFactory.Gold)}>{UIFactory.Money(info.Money)}</color>\n" +
-                           $"<size=85%><color=#9fb0cc>Saved {when}{(info.FromBackup ? "  (restored from backup)" : "")}</color></size>";
+                           $"<size=85%><color={UIFactory.Hex(UIFactory.TextDim)}>Saved {when}{(info.FromBackup ? "  (restored from backup)" : "")}</color></size>";
                 }
                 if (confirmOverwrite == slot) body = $"<color={UIFactory.Hex(UIFactory.Warn)}>Overwrite this save? Click again to confirm.</color>";
                 if (confirmDelete == slot) body = $"<color={UIFactory.Hex(UIFactory.Bad)}>Delete this save and its backups? Click Delete again.</color>";
                 slotLabels[i].text = head + "\n" + body;
+                if (thumbTextures[i]) Destroy(thumbTextures[i]);
+                thumbTextures[i] = info.Readable ? SaveThumbnail.Load(store.ThumbnailFile(slot)) : null;
+                slotThumbs[i].texture = thumbTextures[i];
+                slotThumbs[i].color = thumbTextures[i] ? Color.white : UIFactory.Clear;
                 slotButtons[i].interactable = slotModeNew || info.Readable;
                 deleteButtons[i].gameObject.SetActive(info.Exists);
             }
@@ -199,6 +212,7 @@ namespace CarSales
 
         void OnEnable() => GameSettings.OnUiScaleChanged += ApplyUiScale;
         void OnDisable() => GameSettings.OnUiScaleChanged -= ApplyUiScale;
+        void OnDestroy() { foreach (var t in thumbTextures) if (t) Destroy(t); }
         void ApplyUiScale(float _) { var s = GetComponent<CanvasScaler>(); if (s) s.referenceResolution = GameSettings.UiReferenceResolution; }
 
         void Start()

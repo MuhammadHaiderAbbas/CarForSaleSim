@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.0-dev — Phase 4b "Screens"
+- **HUD** is minimal: clock and shop status, cash (with +/- pops), slim GPS, smaller minimap; speed/gear/fuel only
+  while driving; prompts show their key; **H** shows the controls. The HUD hides while menus are open.
+- **Dealer computer** is a desktop: app icons, widgets (clock, today, goal, messages), taskbar. New **Accounts** app
+  (profit & loss by period, profit-per-day chart, sortable transactions).
+- **Vehicle file** with tabs: Overview, Condition, Documents (coming in phase 5), History, Costs (break-even), Listing.
+  Open it for your own cars too (My Cars → *File*, car menu → *Vehicle file*).
+- **Marketplace**: filter sidebar, *Best deal* sort, grid or list view, deal and verified badges.
+- **Map**: full screen with filters, zoom, click-to-GPS and the route drawn along the roads.
+- **Main menu**: cinematic camera; save slots show a screenshot.
+- **Esc goes back** (phone app → home, computer app → desktop, vehicle file → where you came from).
+- **Reflection probes** in showrooms.
+- **Your models in the town**: Asset Studio → *Town* swaps backdrop buildings, trees, lamps and benches for models you
+  imported; Build Everything keeps them.
+- New UI components (tabs, sortable table, dialogs, stat tiles, charts); the colour lint also catches `<color=#..>`.
+- 4 new tests (193 total).
+
 ## v5.0-dev — Phase 4a "Design system & lighting"
 - **Themes**: Dark (original), Light, High contrast and a Custom theme asset; every colour in the UI now comes from the
   theme (a test enforces it). Button text adapts automatically for contrast.

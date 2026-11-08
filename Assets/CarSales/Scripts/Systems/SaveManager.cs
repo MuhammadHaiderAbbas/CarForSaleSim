@@ -181,6 +181,7 @@ namespace CarSales
             try
             {
                 Store.Write(ActiveSlot, env);
+                SaveThumbnail.Capture(Camera.main, Store.ThumbnailFile(ActiveSlot));
                 Debug.Log($"[CarSales] Saved slot {ActiveSlot} to {FilePath}");
                 EventBus.Publish(new GameSaved(ActiveSlot));
             }

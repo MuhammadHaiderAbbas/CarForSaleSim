@@ -136,5 +136,43 @@ namespace CarSales.Tests
             foreach (TxCategory c in System.Enum.GetValues(typeof(TxCategory)))
                 Assert.IsFalse(string.IsNullOrEmpty(TxCategories.DisplayName(c)), c.ToString());
         }
+    
+        [Test]
+        public void DailyNet_SumsOperatingMovesPerDay_IgnoringLoans()
+        {
+            var l = new Ledger();
+            l.Reset(1000, 1);
+            l.Post(-300, TxCategory.VehiclePurchase, 1, 9f);
+            l.Post(500, TxCategory.VehicleSale, 2, 9f);
+            l.Post(10000, TxCategory.LoanDrawdown, 2, 10f);
+            l.Post(-50, TxCategory.Repair, 3, 10f);
+            CollectionAssert.AreEqual(new[] { -300, 500, -50, 0 }, l.DailyNet(1, 4));
+            Assert.AreEqual(0, l.DailyNet(5, 4).Length);
+        }
+
+        [Test]
+        public void ForRef_FindsOnlyThatCar_AndNetsIt()
+        {
+            var l = new Ledger();
+            l.Reset(1000, 1);
+            l.Post(-300, TxCategory.VehiclePurchase, 1, 9f, "Buy", "car-1");
+            l.Post(-40, TxCategory.Repair, 1, 10f, "Fix", "car-1");
+            l.Post(-99, TxCategory.Repair, 1, 10f, "Other", "car-2");
+            l.Post(450, TxCategory.VehicleSale, 2, 9f, "Sell", "car-1");
+            Assert.AreEqual(3, l.ForRef("car-1").Count);
+            Assert.AreEqual(110, l.NetForRef("car-1"));
+            Assert.AreEqual(0, l.ForRef(null).Count);
+        }
+    
+        [Test]
+        public void PriceRating_BandsAroundTheEstimate()
+        {
+            Assert.AreEqual(DealRating.GreatDeal, PriceRating.Rate(8000, 10000));
+            Assert.AreEqual(DealRating.GoodPrice, PriceRating.Rate(9500, 10000));
+            Assert.AreEqual(DealRating.Fair, PriceRating.Rate(10500, 10000));
+            Assert.AreEqual(DealRating.Overpriced, PriceRating.Rate(12000, 10000));
+            Assert.AreEqual(DealRating.Unknown, PriceRating.Rate(5000, 0));
+            Assert.AreEqual(1300, PriceRating.BreakEven(1000, 200, 100));
+        }
     }
 }
