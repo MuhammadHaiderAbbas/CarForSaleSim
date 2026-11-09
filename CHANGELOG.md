@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.0-dev — Phase 9 "Advanced business"
+- **Accounts**: cash flow with a live reconciliation check, profit per car, stock value and ageing, VAT.
+- **VAT** on the margin scheme with quarterly returns, refunds and late fines.
+- **Overdraft** from your credit rating, with interest.
+- **Insurance** (basic / comprehensive) with claims and excess; **CCTV & alarm**; vandalism events.
+- **Running costs**: utilities and business rates per site.
+- **Marketing campaigns** (paper, online, social, signs, radio) with diminishing returns; reviews move footfall.
+- **Dealership levels 1-6** that unlock staff slots and luxury buyers.
+- **Business app**: level, sites, marketing, insurance & costs, analytics, property development.
+- 7 new tests including a 30-day sandbox run that reconciles exactly (266 total).
+
 ## v5.0-dev — Phase 8b "Build your town"
 - **Draw roads** in the World Builder: click start and end, ends snap and make junctions; pavements, trees and
   lamps are added and traffic drives on them.

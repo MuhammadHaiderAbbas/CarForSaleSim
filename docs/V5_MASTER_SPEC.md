@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-7 and 8a are merged; Phase 8b code is written (see [Phase 8 status](#phase-8-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-8 are merged; Phase 9 code is written (see [Phase 9 status](#phase-9-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1136,6 +1136,34 @@ computer); traffic and pedestrians run at the performance budget.
 Accounts/P&L/cash flow, VAT returns (margin scheme), insurance & claims, business rates/utilities, marketing
 campaigns, dealership levels 1–6, multi-site management, analytics, property development.
 **Done when:** every transaction appears in the accounts; a 30-day sandbox run reconciles exactly (cash = opening + Σ ledger).
+
+#### Phase 9 status
+**Code complete** (266 EditMode tests, compile-checked; not run in Unity). Both "done when" points are covered:
+every money movement already goes through the ledger (each new cost has its own category), and
+`BusinessTests.Sandbox30Days_Reconciles` runs 30 days of buying, selling, fees, VAT, parts, warranties, wages,
+insurance, overdraft interest and a loan, checking cash = opening + Σ ledger every day, after the VAT return, and
+after compaction. In game, Accounts → *Cash flow* shows the same check live.
+
+| Item | Built |
+|---|---|
+| Accounts | New views: **Cash flow** (start, trading in/out, operating flow, loans, end, reconciliation, credit rating, overdraft), **Per car** (every sale: price, cost, profit, margin, days in stock, who sold it), **Stock** (days in stock with ageing colours, cost, value, unrealised profit, totals), **VAT**. |
+| VAT | Margin scheme (1/6 of each car's profit, never negative) + VAT inside warranty sales − input VAT on parts, labour and auction fees; quarterly return on `QuarterEnded` (refunds paid in automatically), 30 days to pay, then a $200 + 5% fine and -1 reputation. |
+| Bank | Credit rating (reputation, net worth, recent overdrawn days) → **overdraft** up to $10,000; spending can use it (`EconomyManager.CanAfford`), 0.06%/day interest; only going past it counts as debt for bankruptcy. |
+| Insurance & security | None / Basic (theft and break-ins, $400 excess) / Comprehensive (also forecourt vandalism, $150 excess); weekly premium by stock value, claims in the last year and security. **CCTV & alarm** ($90/week): 60% fewer thefts and vandals, 15% off premiums. New vandalism event; claims pay out automatically. |
+| Running costs | Utilities per day and business rates per week for every owned dealership (by size). |
+| Marketing | Local paper, online ads (+50% enquiries), social media, signs & flags, local radio: cost per day, footfall boost with diminishing returns (1 - Π(1 - b)), each attracting a buyer type; review stars move footfall (-30% to +20%). |
+| Levels 1-6 | Small forecourt → small showroom → medium dealership → large with workshop → premium dealer → dealer group, from cars sold, reputation, staff, workshop jobs, net worth and dealerships owned. Unlocks staff slots (2 to 20) and luxury buyers (level 5, or a premium site). Level-up toast + message. |
+| Multi-site | Business → *Sites*: every dealership, ownership, spots used, cars for sale, running costs, GPS. |
+| Analytics | Revenue, profit, average margin, days to sell, enquiry conversion, sales by buyer type and body type. |
+| Property development | Develop owned investment properties up to level 3 (40% of the price × level; +30% income per level). |
+
+**Phase 9 play-test checklist:**
+1. Accounts → Cash flow: "Reconciled". Sell a car: it appears in Per car with its days in stock.
+2. Play to the end of a quarter (day 91): a VAT return message; Accounts → VAT: pay it (or let it go late once).
+3. Spend below zero: the overdraft works; interest appears next morning.
+4. Business → Insurance: take Basic, install CCTV; wait for a break-in/vandal event.
+5. Business → Marketing: run online ads for 7 days: more enquiries; radio: luxury buyers.
+6. Business → Level: check the next requirement; hire beyond the staff slots (refused).
 
 ### Phase 10 — Production readiness (L)
 Profiling and optimisation (§11), PlayMode test suite, save-migration test matrix, audio pass, animation polish,

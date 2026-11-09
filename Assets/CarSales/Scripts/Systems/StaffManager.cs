@@ -85,6 +85,9 @@ namespace CarSales
         public bool Hire(Employee candidate)
         {
             if (!state.candidates.Contains(candidate)) return false;
+            var biz = CarSalesServices.Business;
+            if (biz && state.employees.Count >= biz.MaxStaff)
+            { CarSalesServices.UI.Error($"A {CarSales.Sim.BusinessRules.LevelNames[biz.Level].ToLower()} has room for {biz.MaxStaff} staff. Grow the business (Business app) for more."); return false; }
             state.candidates.Remove(candidate);
             candidate.id = "e" + state.nextId++;
             candidate.hiredDay = CarRecords.Today;

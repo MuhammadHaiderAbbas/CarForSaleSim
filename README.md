@@ -43,7 +43,9 @@ receptionist and manager staff. Phase 8a brings the town to life: **weather**, S
 fuel prices, random events, **traffic with lights**, **pedestrians**, and the **World Builder** for adding your own
 dealerships (also inside imported buildings). Phase 8b lets you **draw roads** (with junctions, trees and lamps), place
 **workshops, car washes, fuel stations, houses and apartments**, put imported interiors in showrooms, and keeps the
-frame rate up (traffic setting, overlay, automatic thinning).
+frame rate up (traffic setting, overlay, automatic thinning). Phase 9 adds **proper books**: cash flow, profit per car, stock ageing, **VAT returns**
+(margin scheme), an **overdraft**, **insurance**, running costs, **marketing campaigns**, **dealership levels 1-6**,
+analytics and property development.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

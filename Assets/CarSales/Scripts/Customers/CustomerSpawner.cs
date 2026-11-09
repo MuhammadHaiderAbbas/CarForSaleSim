@@ -65,6 +65,7 @@ namespace CarSales
                 float mult = CarSalesServices.Upgrades ? CarSalesServices.Upgrades.SpawnIntervalMultiplier : 1f;
                 if (CarSalesServices.Staff && CarSalesServices.Staff.Working(CarSales.Sim.StaffRole.Receptionist).Any()) mult *= 0.8f;
                 if (CarSalesServices.World) mult /= Mathf.Max(0.2f, CarSalesServices.World.Footfall);   // phase 8: weather, weekends, holidays, events
+                if (CarSalesServices.Business) mult /= Mathf.Max(0.2f, CarSalesServices.Business.FootfallFactor);   // phase 9: marketing, reviews
                 yield return new WaitForSeconds(Random.Range(spawnInterval.x, spawnInterval.y) * mult);
             }
         }
@@ -120,6 +121,15 @@ namespace CarSales
             float rep = CarSalesServices.Economy.Reputation / 100f;
             float budgetMult = (CarSalesServices.Upgrades ? CarSalesServices.Upgrades.BudgetMultiplier : 1f) * Dealer.budgetMultiplier;
             var persona = CarSales.Sim.Buyers.Pick(personaRng, Dealer.budgetMultiplier);
+            var biz = CarSalesServices.Business;
+            if (biz)
+            {
+                var pick = biz.CampaignPersona(personaRng);   // phase 9: campaigns bring their kind of buyer
+                if (pick.HasValue) persona = CarSales.Sim.Buyers.Get(pick.Value);
+                // Luxury buyers only visit premium dealers (level 5+) or a premium site.
+                for (int tries = 0; tries < 5 && persona.Id == CarSales.Sim.PersonaId.LuxuryBuyer && !CarSales.Sim.BusinessRules.LuxuryBuyers(biz.Level, Dealer.budgetMultiplier > 1.2f); tries++)
+                    persona = CarSales.Sim.Buyers.Pick(personaRng, Dealer.budgetMultiplier);
+            }
             int best = 0;
             for (int i = 1; i < persona.CategoryLike.Length; i++) if (persona.CategoryLike[i] > persona.CategoryLike[best]) best = i;
             var p = new CustomerProfile

@@ -190,7 +190,9 @@ namespace CarSales
                 state.roadWorksUntil = e.Day + 1;
                 Log("Road works on the main road today and tomorrow: fewer customers get through (-20%).", toast: true);
             }
-            if (rng.NextDouble() < WorldSim.EventChance(WorldEventType.TheftAttempt)) Theft();
+            float theft = CarSalesServices.Business ? CarSalesServices.Business.TheftFactor : 1f;   // phase 9: CCTV & alarm
+            if (rng.NextDouble() < WorldSim.EventChance(WorldEventType.TheftAttempt) * theft) Theft();
+            if (rng.NextDouble() < 0.03f * theft) Vandalism();
             if (state.openDay == e.Day) Log("It's your open day: balloons up, expect lots of visitors!", toast: true);
             OnChanged?.Invoke();
         }
@@ -227,10 +229,26 @@ namespace CarSales
             var car = inv ? inv.OwnedCars.Where(c => c.location == CarLocation.Spot).OrderBy(_ => rng.Next()).FirstOrDefault() : null;
             if (car == null) return;
             if (staff && rng.NextDouble() < 0.6) { Log($"Your staff scared off someone trying to break into the {car.Name}.", toast: true); return; }
+            int before = CarValueCalculator.RepairCost(car);
             CarParts.Damage(car, ImpactZone.Left, 18f);
             var d = CarSalesServices.Vehicles ? CarSalesServices.Vehicles.GetDisplay(car.instanceId) : null;
             if (d) d.Refresh();
             Log($"Someone tried to break into the {car.Name} overnight: a damaged door.", toast: true);
+            if (CarSalesServices.Business) CarSalesServices.Business.Claim(Mathf.Max(0, CarValueCalculator.RepairCost(car) - before), false, $"break-in damage to the {car.Name}");
+        }
+
+        /// <summary>Phase 9: forecourt vandalism (scratched paint) - comprehensive insurance covers it.</summary>
+        void Vandalism()
+        {
+            var inv = CarSalesServices.Inventory;
+            var car = inv ? inv.OwnedCars.Where(c => c.location == CarLocation.Spot && !c.personal).OrderBy(_ => rng.Next()).FirstOrDefault() : null;
+            if (car == null) return;
+            int before = CarValueCalculator.RepairCost(car);
+            CarParts.Damage(car, ImpactZone.Right, 12f);
+            var d = CarSalesServices.Vehicles ? CarSalesServices.Vehicles.GetDisplay(car.instanceId) : null;
+            if (d) d.Refresh();
+            Log($"Vandals scratched the {car.Name} on your forecourt overnight.", toast: true);
+            if (CarSalesServices.Business) CarSalesServices.Business.Claim(Mathf.Max(0, CarValueCalculator.RepairCost(car) - before), true, $"vandalism on the {car.Name}");
         }
 
         /// <summary>Police check while you're driving: no valid MOT costs a fine.</summary>

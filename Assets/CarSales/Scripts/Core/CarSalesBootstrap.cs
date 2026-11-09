@@ -19,6 +19,7 @@ namespace CarSales
             if (!GetComponent<CrmManager>()) gameObject.AddComponent<CrmManager>();
             if (!GetComponent<SourcingManager>()) gameObject.AddComponent<SourcingManager>();
             if (!GetComponent<WorldManager>()) gameObject.AddComponent<WorldManager>();
+            if (!GetComponent<BusinessManager>()) gameObject.AddComponent<BusinessManager>();
             if (!FindFirstObjectByType<TrafficSystem>()) new GameObject("Traffic").AddComponent<TrafficSystem>();
             if (!FindFirstObjectByType<PedestrianSystem>()) new GameObject("Pedestrians").AddComponent<PedestrianSystem>();
         }

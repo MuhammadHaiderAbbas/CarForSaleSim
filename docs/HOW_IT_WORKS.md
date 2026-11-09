@@ -447,3 +447,14 @@ Won cars appear in the auction car park — drive or tow them home.
   `ApplyRoadsToTown` and the Scene-view drawing in `WorldBuilderWindow`, `SiteTemplate` builders in `BuildUserSite`,
   `PerformanceGovernor` (density scale + overlay), `GameSettings.TrafficLevel/ShowPerformance`.
 
+## 20. Business (Phase 9)
+- **Rules** (tested): `Sim/Business/Business.cs` (`BusinessRules`: margin VAT, returns, fines, credit rating, overdraft,
+  insurance premiums/excess/payouts, security, utilities, rates, campaigns, diminishing returns, levels, development,
+  analytics; `SaleRecord`, `VatReturn`).
+- **BusinessManager** (module `business`): records every sale (`VehicleRegistry.RemoveSoldCar`; who bought via
+  `SetSaleContext`), VAT returns on `QuarterEnded`, daily overdraft interest/utilities/marketing/VAT fines, weekly
+  rates/insurance/security, claims (from `WorldManager` thefts and vandalism), levels, developments.
+- **Hooks:** `EconomyManager.CanAfford` includes the overdraft; `ProgressManager` counts debt past the overdraft;
+  `CustomerSpawner` (footfall, campaign personas, luxury gating), `SourcingManager` (leads), `StaffManager` (staff slots),
+  `PropertyManager.IncomeOf` (developments).
+

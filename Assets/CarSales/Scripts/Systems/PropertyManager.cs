@@ -60,7 +60,9 @@ namespace CarSales
         public PropertyInfo ActiveHomeInfo => Get(ActiveHome) ?? Get(StarterHome);
         public float WakeHour => ActiveHomeInfo != null ? ActiveHomeInfo.wakeHour : 8f;
 
-        public int DailyIncome => properties.Where(p => Owns(p.id)).Sum(p => p.dailyIncome);
+        /// <summary>Phase 9: developed properties earn more (BusinessManager.IncomeFactor).</summary>
+        public int DailyIncome => properties.Where(p => Owns(p.id)).Sum(p => IncomeOf(p));
+        public int IncomeOf(PropertyInfo p) => Mathf.RoundToInt(p.dailyIncome * (CarSalesServices.Business ? CarSalesServices.Business.IncomeFactor(p.id) : 1f));
         public int DailyCosts => properties.Where(p => Owns(p.id)).Sum(p => p.dailyCost);
         /// <summary>Counts toward net worth (80% of purchase price).</summary>
         public int PortfolioValue => Mathf.RoundToInt(properties.Where(p => Owns(p.id)).Sum(p => p.price) * 0.8f);

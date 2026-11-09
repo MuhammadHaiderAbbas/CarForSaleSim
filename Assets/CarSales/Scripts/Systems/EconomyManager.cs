@@ -35,7 +35,8 @@ namespace CarSales
 
         void OnDayStarted(DayStarted e) => Ledger.Compact(e.Day, ledgerDaysKept);
 
-        public bool CanAfford(int amount) => Money >= amount;
+        /// <summary>Phase 9: you can spend into your agreed overdraft.</summary>
+        public bool CanAfford(int amount) => Money + (CarSalesServices.Business ? CarSalesServices.Business.OverdraftLimit : 0) >= amount;
 
         public void AddMoney(int amount, TxCategory category = TxCategory.Other, string memo = null, string refId = null)
         {
@@ -45,7 +46,7 @@ namespace CarSales
 
         public bool TrySpend(int amount, TxCategory category = TxCategory.Other, string memo = null, string refId = null)
         {
-            if (amount < 0 || Money < amount) return false;
+            if (amount < 0 || !CanAfford(amount)) return false;
             Apply(-amount, category, memo, refId);
             return true;
         }

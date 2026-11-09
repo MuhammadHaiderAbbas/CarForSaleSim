@@ -27,6 +27,7 @@ namespace CarSales
         public MarketPageUI MarketApp { get; private set; }
         public CrmPageUI Customers { get; private set; }
         public StaffPageUI Staff { get; private set; }
+        public BusinessPageUI Business { get; private set; }
 
         TextMeshProUGUI moneyText, titleText, clockText, taskClock, taskApp, todayText, goalText, mailText, unreadBadge;
         RectTransform content, appWindow, desktop;
@@ -65,6 +66,7 @@ namespace CarSales
             MarketApp = AddPage<MarketPageUI>("Market & competitors");
             Customers = AddPage<CrmPageUI>("Customers");
             Staff = AddPage<StaffPageUI>("Staff");
+            Business = AddPage<BusinessPageUI>("Business");
 
             BuildIcons();
         }
@@ -80,12 +82,12 @@ namespace CarSales
             desktop.offsetMax = new Vector2(-48f, -48f);
 
             iconGrid = UIFactory.Rect("Icons", desktop);
-            UIFactory.Place(iconGrid, new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(760f, 760f));
+            UIFactory.Place(iconGrid, new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(950f, 760f));
             var grid = iconGrid.gameObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(170f, 150f);
             grid.spacing = new Vector2(16f, 16f);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 4;
+            grid.constraintCount = 5;   // 17 apps
 
             // Widgets (right)
             var widgets = UIFactory.Rect("Widgets", desktop);
@@ -141,6 +143,7 @@ namespace CarSales
             Tile("Customers", "C", UIFactory.Personal, () => ShowPage(Customers));
             Tile("Staff", "T", UIFactory.Good, () => ShowPage(Staff));
             Tile("Market", "V", UIFactory.Info, () => ShowPage(MarketApp));
+            Tile("Business", "L", UIFactory.Gold, () => ShowPage(Business));
             Tile("Classifieds", "K", UIFactory.Gold, () => { ShowPage(MarketApp); MarketApp.ShowTab(3); });
         }
 

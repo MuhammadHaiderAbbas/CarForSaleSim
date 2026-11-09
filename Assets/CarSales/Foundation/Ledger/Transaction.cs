@@ -39,6 +39,12 @@ namespace CarSales.Foundation
         Deposits = 27,      // refundable auction deposits
         FinanceCommission = 28,
         Warranty = 29,      // warranties sold (+) and claims paid (-)
+        Utilities = 30,
+        BusinessRates = 31,
+        Insurance = 32,     // premiums (-) and claims paid out to you (+)
+        Marketing = 33,
+        Security = 34,
+        PropertyDevelopment = 35,
     }
 
     public static class TxCategories
@@ -78,6 +84,12 @@ namespace CarSales.Foundation
                 case TxCategory.Deposits: return "Deposits";
                 case TxCategory.FinanceCommission: return "Finance commission";
                 case TxCategory.Warranty: return "Warranties";
+                case TxCategory.Utilities: return "Utilities";
+                case TxCategory.BusinessRates: return "Business rates";
+                case TxCategory.Insurance: return "Insurance";
+                case TxCategory.Marketing: return "Marketing";
+                case TxCategory.Security: return "Security";
+                case TxCategory.PropertyDevelopment: return "Property development";
                 default: return "Other";
             }
         }

@@ -238,7 +238,8 @@ namespace CarSales
                                     c.listedPrice / (float)value, CarSalesServices.Crm ? CarSalesServices.Crm.AverageStars : 0f);
         }
 
-        public float ExpectedLeads(CarInstance c) => c.listing != null && c.listing.online ? Listings.LeadsPerDay(ListingQuality(c), HasStaff(StaffRole.Receptionist)) : 0f;
+        public float ExpectedLeads(CarInstance c) => c.listing != null && c.listing.online
+            ? Listings.LeadsPerDay(ListingQuality(c), HasStaff(StaffRole.Receptionist)) * (CarSalesServices.Business ? CarSalesServices.Business.LeadsFactor : 1f) : 0f;
 
         /// <summary>A booked viewing for a car at this dealership that's due now, or null.</summary>
         public PendingLead TakeLead(DealershipManager dealer, float hour)

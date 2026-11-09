@@ -34,6 +34,7 @@ namespace CarSales
         public static CrmManager Crm;
         public static SourcingManager Sourcing;
         public static WorldManager World;
+        public static BusinessManager Business;
 
         /// <summary>Plays a sound if an AudioManager exists in the scene.</summary>
         public static void PlaySfx(Sfx sfx, float volume = 1f)

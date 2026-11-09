@@ -133,7 +133,9 @@ namespace CarSales
         public bool OnDayEnded()
         {
             Stats.daysPlayed++;
-            DaysInDebt = CarSalesServices.Economy.Money < 0 ? DaysInDebt + 1 : 0;
+            // Phase 9: being inside your overdraft isn't "in debt"; going past it is.
+            int floor = CarSalesServices.Business ? -CarSalesServices.Business.OverdraftLimit : 0;
+            DaysInDebt = CarSalesServices.Economy.Money < floor ? DaysInDebt + 1 : 0;
             if (DaysInDebt >= bankruptcyDays)
             {
                 IsGameOver = true;

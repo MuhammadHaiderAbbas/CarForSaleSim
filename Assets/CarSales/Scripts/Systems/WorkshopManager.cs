@@ -19,6 +19,7 @@ namespace CarSales
         // Phase 5b
         public List<BoardCard> board = new List<BoardCard>();
         public bool mechanicHired;
+        public int jobsDone;   // phase 9: dealership levels
     }
 
     /// <summary>
@@ -381,8 +382,11 @@ namespace CarSales
             return BoardLogic.ColumnOf(card, state.inventory, running != null);
         }
 
+        public int JobsDone => state.jobsDone;
+
         void MarkCardDone(string carId, string jobId)
         {
+            state.jobsDone++;
             var card = state.board.Find(b => !b.done && b.carId == carId && b.job == jobId);
             if (card == null) return;
             card.done = true;

@@ -206,6 +206,7 @@ namespace CarSales
         {
             var d = car.Data;
             d.state = CarState.Sold;
+            if (CarSalesServices.Business) CarSalesServices.Business.RecordSale(d, price);   // phase 9: accounts, VAT, analytics
             CarSalesServices.Inventory.Remove(d.instanceId);
             Despawn(d.instanceId);
             CarSalesServices.DayCycle.RegisterSale(price, profit);

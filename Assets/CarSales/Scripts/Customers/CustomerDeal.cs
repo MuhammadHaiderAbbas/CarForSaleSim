@@ -60,6 +60,7 @@ namespace CarSales
             var display = customer.TargetCar;
             var car = display.Data;
             var def = display.Definition;
+            if (CarSalesServices.Business) CarSalesServices.Business.SetSaleContext(customer.Profile.persona, customer.Profile.targetCarId == car.instanceId, soldBy);
             CarSalesServices.Vehicles.CompleteSale(display, price);
             if (tradeIn != null && tradeInCredit > 0)
             {
