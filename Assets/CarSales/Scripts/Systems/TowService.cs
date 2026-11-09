@@ -80,7 +80,7 @@ namespace CarSales
         public bool Taxi(MapPlace place, out string message)
         {
             message = "";
-            var player = FindFirstObjectByType<PlayerInteractor>();
+            var player = FindAnyObjectByType<PlayerInteractor>();
             if (!player || !place) { message = "No taxi available."; return false; }
             if (CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving) { message = "Get out of the car first (F)."; return false; }
             int cost = TaxiCost(player.transform.position, place.ArrivalPosition);
@@ -95,7 +95,7 @@ namespace CarSales
 
         public static void TeleportPlayer(Vector3 pos, float yaw)
         {
-            var player = FindFirstObjectByType<PlayerInteractor>();
+            var player = FindAnyObjectByType<PlayerInteractor>();
             if (!player) return;
             var cc = player.GetComponent<CharacterController>();
             if (cc) cc.enabled = false;

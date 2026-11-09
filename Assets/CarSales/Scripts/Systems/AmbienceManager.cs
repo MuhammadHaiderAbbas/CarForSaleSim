@@ -98,7 +98,7 @@ namespace CarSales
         {
             if (!listener)
             {
-                var p = FindFirstObjectByType<PlayerInteractor>();
+                var p = FindAnyObjectByType<PlayerInteractor>();
                 listener = p ? p.transform : (Camera.main ? Camera.main.transform : null);
                 if (!listener) return AmbienceZone.Street;
             }

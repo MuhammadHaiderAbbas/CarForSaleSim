@@ -246,7 +246,7 @@ namespace CarSales
         void BuildTaxi()
         {
             Line("A taxi takes you anywhere in town. It costs money and time.", 15, UIFactory.TextDim, 44f);
-            var player = FindFirstObjectByType<PlayerInteractor>();
+            var player = FindAnyObjectByType<PlayerInteractor>();
             Vector3 me = player ? player.transform.position : Vector3.zero;
             foreach (var place in MapPlace.All.Where(p => p && p.IsVisible).OrderBy(p => Vector3.Distance(me, p.transform.position)))
             {

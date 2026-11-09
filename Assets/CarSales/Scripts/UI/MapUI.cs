@@ -192,7 +192,7 @@ namespace CarSales
         static Vector3 PlayerPos()
         {
             if (Camera.main) return Camera.main.transform.position;
-            var player = FindFirstObjectByType<PlayerInteractor>();
+            var player = FindAnyObjectByType<PlayerInteractor>();
             return player ? player.transform.position : Vector3.zero;
         }
 

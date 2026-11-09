@@ -91,14 +91,16 @@ namespace CarSales
             fallback = new Dictionary<string, InputAction>();
             fallbackMap = new InputActionMap("CarSalesDefaults");
 
-            var move = fallbackMap.AddAction("Move", InputActionType.Value, expectedControlType: "Vector2");
+            var move = fallbackMap.AddAction("Move", InputActionType.Value);
+            move.expectedControlType = "Vector2";   // set after: older Input System versions have no AddAction parameter for it
             move.AddCompositeBinding("2DVector")
                 .With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s")
                 .With("Left", "<Keyboard>/a").With("Right", "<Keyboard>/d");
             move.AddBinding("<Gamepad>/leftStick");
             fallback["Move"] = move;
 
-            var look = fallbackMap.AddAction("Look", InputActionType.Value, "<Mouse>/delta", expectedControlType: "Vector2");
+            var look = fallbackMap.AddAction("Look", InputActionType.Value, "<Mouse>/delta");
+            look.expectedControlType = "Vector2";
             look.AddBinding("<Gamepad>/rightStick", processors: "scaleVector2(x=12,y=8)");
             fallback["Look"] = look;
 

@@ -94,7 +94,7 @@ namespace CarSales
 
         void ApplyWeather(bool instant)
         {
-            foreach (var w in FindObjectsByType<WheelVehicleController>(FindObjectsSortMode.None)) w.SetEffects(w.Effects);
+            foreach (var w in UnityCompat.FindAll<WheelVehicleController>()) w.SetEffects(w.Effects);
             if (instant) { wetness = WorldSim.IsWet(state.Weather) ? 1f : 0f; sunFactor = WorldSim.SunLight(state.Weather); }
         }
 
@@ -102,7 +102,7 @@ namespace CarSales
         {
             // Wet roads: one runtime copy of the asphalt material, made shinier when it rains.
             var copies = new Dictionary<Material, Material>();
-            foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+            foreach (var r in UnityCompat.FindAll<Renderer>())
             {
                 var m = r.sharedMaterial;
                 if (!m || !(m.name.StartsWith("M_Asphalt") || m.name.StartsWith("M_Sidewalk"))) continue;

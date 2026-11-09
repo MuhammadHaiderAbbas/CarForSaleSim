@@ -39,7 +39,7 @@ namespace CarSales
         public static void HidePlaceholder(Transform root, Transform body)
         {
             foreach (var r in root.GetComponentsInChildren<Renderer>(true))
-                if (!body || !r.transform.IsChildOf(body)) { if (!(r is TMPro.TMP_Text) && !r.GetComponent<TMPro.TMP_Text>()) r.enabled = false; }
+                if (!body || !r.transform.IsChildOf(body)) { if (!r.GetComponent<TMPro.TMP_Text>()) r.enabled = false; }   // keep speech-bubble text
         }
     }
 }

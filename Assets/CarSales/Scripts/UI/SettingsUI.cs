@@ -115,7 +115,7 @@ namespace CarSales
             viewLabel = SettingRow(p, Loc.T("settings.view", "Camera view (V)"), () =>
             {
                 GameSettings.ThirdPerson = !GameSettings.ThirdPerson;
-                var me = FindFirstObjectByType<PlayerAvatar>();
+                var me = FindAnyObjectByType<PlayerAvatar>();
                 if (me) me.SetView(GameSettings.ThirdPerson);
             });
             sensitivityLabel = UIFactory.Text(p, "", 19, UIFactory.TextMain, TextAlignmentOptions.Left, true);
