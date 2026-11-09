@@ -55,3 +55,58 @@ namespace CarSales.Tests
         }
     }
 }
+
+namespace CarSales.Tests
+{
+    using System.Collections.Generic;
+    using System.Linq;
+    using CarSales.Studio;
+    using NUnit.Framework;
+
+    /// <summary>Phase 12c: Sketchfab links, real brands, release checklist.</summary>
+    public class Phase12cTests
+    {
+        [Test]
+        public void SketchfabLinks_GiveTheModelId()
+        {
+            Assert.AreEqual("8e87379f40fd40dcac0a751e22c1a188", SketchfabLinks.Uid("https://sketchfab.com/3d-models/bmw-m4-f82-8e87379f40fd40dcac0a751e22c1a188"));
+            Assert.AreEqual("f42d9d13b0404b5b9a2302a4c590a94d", SketchfabLinks.Uid("https://sketchfab.com/3d-models/mersedes-benz-s65-w222-f42d9d13b0404b5b9a2302a4c590a94d?utm=x"));
+            Assert.IsNull(SketchfabLinks.Uid("https://sketchfab.com/someone"));
+            var pasted = "https://sketchfab.com/3d-models/a-138a753d04dd4d8f8982d8f5583d212d\nhttps://sketchfab.com/3d-models/b-c35a14d811b042d792a6da69381f7f80\n\nhttps://sketchfab.com/3d-models/a-138a753d04dd4d8f8982d8f5583d212d";
+            CollectionAssert.AreEqual(new[] { "138a753d04dd4d8f8982d8f5583d212d", "c35a14d811b042d792a6da69381f7f80" }, SketchfabLinks.Uids(pasted));
+        }
+
+        [Test]
+        public void Brands_AreFound_ByWholeWord()
+        {
+            CollectionAssert.AreEquivalent(new[] { "Mercedes-Benz" }, TrademarkCheck.Brands("Mersedes-Benz S65 W222"));
+            CollectionAssert.Contains(TrademarkCheck.Brands("Mercedes-Benz S63 Coupe Brabus 800"), "Brabus");
+            CollectionAssert.AreEqual(new[] { "BMW" }, TrademarkCheck.Brands("BMW M4 F82"));
+            CollectionAssert.AreEqual(new[] { "Toyota" }, TrademarkCheck.Brands("Toyota Crown Athlete S210"));
+            Assert.IsEmpty(TrademarkCheck.Brands("Kestrel Velo"), "the game's own fictional makes are fine");
+            Assert.IsEmpty(TrademarkCheck.Brands("Fordham Motors"), "whole words only");
+            Assert.IsEmpty(TrademarkCheck.Brands(""));
+        }
+
+        [Test]
+        public void ReleaseChecklist_BlocksWhatCantShip()
+        {
+            var good = ReleaseRules.Evaluate(true, 16, 0, 0, new List<string>(), false, "Haider Games", "Car For Sale Simulator V2", "0.9.0", true, 12);
+            Assert.IsTrue(ReleaseRules.CanRelease(good), string.Join("\n", good.Where(c => c.Level != CheckLevel.Pass).Select(c => c.Title + ": " + c.Detail)));
+
+            var noPeople = ReleaseRules.Evaluate(false, 0, 4, 0, new List<string>(), false, "Haider Games", "Car For Sale Simulator V2", "0.9.0", true, 12);
+            Assert.IsFalse(ReleaseRules.CanRelease(noPeople), "no characters: plain shapes would ship");
+
+            var brands = ReleaseRules.Evaluate(true, 16, 0, 0, new List<string> { "BMW M4 F82" }, false, "Haider Games", "Car For Sale Simulator V2", "0.9.0", true, 12);
+            Assert.IsFalse(ReleaseRules.CanRelease(brands), "real brands need a decision");
+            var acknowledged = ReleaseRules.Evaluate(true, 16, 0, 0, new List<string> { "BMW M4 F82" }, true, "Haider Games", "Car For Sale Simulator V2", "0.9.0", true, 12);
+            Assert.IsTrue(ReleaseRules.CanRelease(acknowledged), "after confirming the rights it's a warning");
+            Assert.AreEqual(CheckLevel.Warning, acknowledged.First(c => c.Title == "Car brands").Level);
+
+            var defaults = ReleaseRules.Evaluate(true, 16, 0, 0, new List<string>(), false, "DefaultCompany", "CarSalesSim", "0.9.0", true, 12);
+            Assert.IsFalse(ReleaseRules.CanRelease(defaults));
+            var blockers = ReleaseRules.Evaluate(true, 16, 0, 2, new List<string>(), false, "A", "B", "1", false, 12);
+            Assert.AreEqual(2, blockers.Count(c => c.Level == CheckLevel.Blocker), "licences and notices");
+        }
+    }
+}

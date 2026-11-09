@@ -74,6 +74,12 @@ namespace CarSales.Studio.EditorTools
             }
             downloadAs = (AssetCategory)EditorGUILayout.EnumPopup("Import as", downloadAs);
 
+            // Phase 12: paste a list of model links (one per line) to look them all up at once.
+            EditorGUILayout.LabelField("Or paste model links (one per line)", EditorStyles.boldLabel);
+            pastedLinks = EditorGUILayout.TextArea(pastedLinks, GUILayout.MinHeight(54));
+            using (new EditorGUI.DisabledScope(busy != null))
+                if (GUILayout.Button($"Look up {SketchfabLinks.Uids(pastedLinks).Count} link(s)")) LookUp(SketchfabLinks.Uids(pastedLinks));
+
             foreach (var m in results)
             {
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
@@ -85,13 +91,16 @@ namespace CarSales.Studio.EditorTools
                         EditorGUILayout.LabelField($"by {m.Author}  ·  {m.Faces:N0} triangles");
                         var verdict = LicencePolicy.Check(new LicenceInfo { licence = m.Licence, author = m.Author, purchaseRef = "n/a" });
                         var style = new GUIStyle(EditorStyles.label) { normal = { textColor = verdict.BlocksRelease ? new Color(1f, 0.6f, 0.2f) : new Color(0.4f, 0.85f, 0.4f) } };
-                        EditorGUILayout.LabelField($"{(m.LicenceLabel.Length > 0 ? m.LicenceLabel : "Unknown licence")} - {verdict.Status}", style);
+                        EditorGUILayout.LabelField($"{(m.LicenceLabel.Length > 0 ? m.LicenceLabel : "Unknown licence")} - {verdict.Status}{(m.Downloadable ? "" : " - NOT downloadable")}", style);
+                        var brands = TrademarkCheck.Brands(m.Name);
+                        if (brands.Count > 0)
+                            EditorGUILayout.HelpBox($"{string.Join(", ", brands)}: " + TrademarkCheck.Advice, UnityEditor.MessageType.Warning);
                     }
                     using (new EditorGUILayout.VerticalScope(GUILayout.Width(150)))
                     {
                         if (GUILayout.Button("Open page")) Application.OpenURL(m.ViewerUrl);
                         using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(EditorPrefs.GetString(TokenKey, "")) || busy != null))
-                            if (GUILayout.Button("Download & set up")) DownloadSketchfab(m);
+                            if (GUILayout.Button("Download & set up") && m.Downloadable) DownloadSketchfab(m);
                     }
                 }
             }
@@ -116,6 +125,38 @@ namespace CarSales.Studio.EditorTools
                 catch (FormatException e) { SetStatus?.Invoke("Unexpected answer from Sketchfab: " + e.Message); }
                 Repaint?.Invoke();
             });
+        }
+
+        string pastedLinks = "";
+
+        /// <summary>Fetches each pasted model's details (name, author, licence, downloadable) and lists them first.</summary>
+        void LookUp(List<string> uids)
+        {
+            if (uids.Count == 0) { SetStatus?.Invoke("No Sketchfab model links found."); return; }
+            string token = EditorPrefs.GetString(TokenKey, "");
+            var headers = string.IsNullOrEmpty(token) ? null : new Dictionary<string, string> { { "Authorization", SketchfabApi.AuthHeader(token) } };
+            int left = uids.Count;
+            busy = $"Looking up {left} model(s)...";
+            foreach (var uid in uids)
+            {
+                EditorHttp.GetText(SketchfabApi.ModelUrl(uid), headers, (json, error) =>
+                {
+                    left--;
+                    if (error != null) SetStatus?.Invoke($"Model {uid}: {error}");
+                    else
+                    {
+                        try
+                        {
+                            var model = SketchfabApi.ParseModelJson(json);
+                            results.RemoveAll(r => r.Uid == model.Uid);
+                            results.Insert(0, model);
+                        }
+                        catch (Exception e) { SetStatus?.Invoke($"Model {uid}: {e.Message}"); }
+                    }
+                    if (left <= 0) busy = null;
+                    Repaint?.Invoke();
+                });
+            }
         }
 
         void DownloadSketchfab(SketchfabModel m)
