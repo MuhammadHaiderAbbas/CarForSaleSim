@@ -224,6 +224,7 @@ namespace CarSales.EditorTools
             BuildUserSite(env.transform, m, rec, displayPrefab, customerPrefab, surfaces);
             foreach (var s in surfaces)
             {
+                s.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;   // colliders only (no sign text or decoration meshes)
                 s.BuildNavMesh();
                 if (s.navMeshData) { AssetDatabase.CreateAsset(s.navMeshData, $"{Gen}/Scenes/NavMesh_{rec.id}.asset"); EditorUtility.SetDirty(s); }
             }

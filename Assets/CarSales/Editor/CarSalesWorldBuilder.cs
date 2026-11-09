@@ -3,6 +3,7 @@ using Unity.AI.Navigation;
 using UnityEditor;
 using CarSales.Sim;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Rendering;
 
 namespace CarSales.EditorTools
@@ -336,6 +337,9 @@ namespace CarSales.EditorTools
             var navGo = new GameObject("NavMesh");
             navGo.transform.SetParent(g, false);
             var surface = navGo.AddComponent<NavMeshSurface>();
+            // Bake from colliders only: sign text (TextMeshPro) and decoration meshes have no walkable geometry and made
+            // "Source mesh ... has invalid vertex data" warnings; imported meshes may also be unreadable at runtime.
+            surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
             surface.collectObjects = CollectObjects.Volume;
             surface.center = new Vector3(0f, 3f, -1f);
             surface.size = new Vector3(66f, 14f, 78f);

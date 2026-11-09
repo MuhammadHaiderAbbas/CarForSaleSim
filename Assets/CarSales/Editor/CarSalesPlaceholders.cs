@@ -71,6 +71,7 @@ namespace CarSales.EditorTools
                     try
                     {
                         string oldPath = surface.navMeshData ? AssetDatabase.GetAssetPath(surface.navMeshData) : "";
+                        surface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;   // colliders only (no sign text or decoration meshes)
                         surface.BuildNavMesh();
                         if (surface.navMeshData && !string.IsNullOrEmpty(oldPath))
                         {

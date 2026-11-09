@@ -110,3 +110,24 @@ namespace CarSales.Tests
         }
     }
 }
+
+namespace CarSales.Tests
+{
+    using CarSales.Studio;
+    using NUnit.Framework;
+
+    public class ImportLimitTests
+    {
+        [Test]
+        public void HighDetailCars_AreNeverBlocked()
+        {
+            var stats = new ModelStats { SizeX = 1.9f, SizeY = 1.4f, SizeZ = 4.8f, Triangles = 454913, Vertices = 300000, Renderers = 40, Materials = 48 };
+            var issues = ImportValidation.Validate(AssetCategory.Vehicle, stats, 4.8f, new LicenceInfo { licence = LicenceType.CCBY, author = "someone" }, true, 1);
+            Assert.IsFalse(issues.Exists(i => i.Level == IssueLevel.Error && i.Message.Contains("triangles")), "no triangle limit");
+            Assert.IsTrue(issues.Exists(i => i.Level == IssueLevel.Warning && i.Message.Contains("triangles")), "still advised");
+            stats.Triangles = 3000000;
+            issues = ImportValidation.Validate(AssetCategory.Vehicle, stats, 4.8f, new LicenceInfo { licence = LicenceType.CCBY, author = "someone" }, true, 1);
+            Assert.IsFalse(ImportValidation.HasErrors(issues), string.Join("; ", issues.ConvertAll(i => i.Message)));
+        }
+    }
+}

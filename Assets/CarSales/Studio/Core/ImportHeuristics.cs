@@ -166,8 +166,11 @@ namespace CarSales.Studio
 
             if (stats.Renderers == 0) Add(IssueLevel.Error, "The model has no visible meshes.");
             int budget = TriangleBudget(category);
-            if (stats.Triangles > budget * 2) Add(IssueLevel.Error, $"{stats.Triangles:N0} triangles - more than twice the {budget:N0} budget for a {category}. Use a lower-detail version.");
-            else if (stats.Triangles > budget) Add(IssueLevel.Warning, $"{stats.Triangles:N0} triangles - over the {budget:N0} budget for a {category}; performance may suffer.");
+            // No triangle limit: high-detail models (e.g. Sketchfab cars) import fine. Over the budget is only advice,
+            // because many such models on screen at once lower the frame rate.
+            if (stats.Triangles > budget)
+                Add(IssueLevel.Warning, $"{stats.Triangles:N0} triangles - high detail (performance budget {budget:N0} for a {category}). It will work; " +
+                                        "with many of these on screen the frame rate may drop - check it in the frame-rate overlay.");
 
             if (ScaleHeuristics.Expected(category, out _, out float min, out float max) && (finalSize < min || finalSize > max))
                 Add(IssueLevel.Error, $"Size {finalSize:0.##} m is outside {min:0.##}-{max:0.##} m for a {category}. Fix the scale.");

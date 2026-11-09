@@ -600,6 +600,7 @@ namespace CarSales.EditorTools
             {
                 try
                 {
+                    surface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;   // colliders only (no sign text or decoration meshes)
                     surface.BuildNavMesh();
                     if (surface.navMeshData != null)
                     {
