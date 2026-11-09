@@ -49,6 +49,10 @@ namespace CarSales
 
         public override void Build()
         {
+            // Phase 12: frame the master-map town.
+            var (cx, cz, half) = CarSales.Sim.TownPlan.MapFrame;
+            mapCenter = new Vector3(cx, 0f, cz);
+            mapHalfSize = half;
             var bg = Root.gameObject.AddComponent<Image>();
             bg.color = UIFactory.WindowBg;
 
@@ -148,7 +152,7 @@ namespace CarSales
 
         void RenderMap()
         {
-            if (!rt) rt = new RenderTexture(1024, 1024, 16) { name = "TownMap" };
+            if (!rt) rt = new RenderTexture(2048, 2048, 16) { name = "TownMap" };   // phase 12: the town is ~1 km across
             if (!mapCam)
             {
                 var go = new GameObject("TownMapCamera");

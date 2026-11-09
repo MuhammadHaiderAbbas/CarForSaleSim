@@ -261,6 +261,7 @@ namespace CarSales.EditorTools
             public Material concrete, liftYellow, toolRed, brushBlue, barrel, platform, ringGlow;
             public Material[] buildings; public Material windowsGlow;
             public Material timber, cladding, brick, darkGlass, solar, water, goldTrim, ledStrip;   // phase 11b building levels
+            public Material fieldWheat, fieldSoil;   // phase 12 countryside
         }
 
         static bool loadMaterialsOnly;
@@ -385,6 +386,8 @@ namespace CarSales.EditorTools
                 water = M("M_Water", new Color(0.2f, 0.55f, 0.85f), 0.95f),
                 goldTrim = M("M_GoldTrim", new Color(0.85f, 0.65f, 0.25f), 0.7f, metallic: 0.8f),
                 ledStrip = M("M_LedStrip", new Color(0.4f, 0.8f, 1f), 0.5f, true, 3f),
+                fieldWheat = M("M_FieldWheat", new Color(0.72f, 0.66f, 0.38f), 0.05f),
+                fieldSoil = M("M_FieldSoil", new Color(0.42f, 0.33f, 0.22f), 0.05f),
                 buildings = new[]
                 {
                     M("M_BuildingA", new Color(0.55f, 0.58f, 0.62f), 0.3f),

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.AI.Navigation;
 using UnityEditor;
+using CarSales.Sim;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,44 +22,45 @@ namespace CarSales.EditorTools
             public Transform playerStart;
         }
 
+        /// <summary>
+        /// Phase 12: the master-map town (TownPlan). Every site is built at its plan position; the old two-road town
+        /// (v4-v5) is gone, and saves made with it move cars parked on old streets to the dealership.
+        /// </summary>
         static TownRefs BuildTown(Transform env, Mats m, CarDatabase db, CarDisplay carDisplayPrefab, CustomerAI customerPrefab)
         {
             var refs = new TownRefs();
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Ground";
-            ground.transform.SetParent(env, false);
-            ground.transform.localPosition = new Vector3(0f, 0f, 60f);
-            ground.transform.localScale = new Vector3(52f, 1f, 52f);   // 520 x 520 m
-            ground.GetComponent<Renderer>().sharedMaterial = m.ground;
-            ground.isStatic = true;
-
-            BuildRoads(Group(env, "Roads"), m);
+            BuildGroundV2(env, m);
+            Progress("Roads and roundabouts", 0.45f);
+            BuildPlanRoads(Group(env, "Roads"), m);
 
             Progress("Dealerships", 0.5f);
-            refs.mainDealer = BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "autoworld", "AUTO WORLD", "autoworld", Vector3.zero, true, 1f, false);
-            BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_downtown", "Downtown Motors", "dealer_downtown", new Vector3(-140f, 0f, 0f), false, 1f, false);
-            BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_luxury", "Luxury Lane", "dealer_luxury", new Vector3(140f, 0f, 0f), false, 1.6f, true);
+            Vector3 Pos(string id) => W(TownPlan.Site(id).Position);
+            float Yaw(string id) => TownPlan.Site(id).Yaw;
+            refs.mainDealer = BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "autoworld", "AUTO WORLD", "autoworld", Pos("autoworld"), true, 1f, false, yaw: Yaw("autoworld"));
+            BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_downtown", "Downtown Motors", "dealer_downtown", Pos("dealer_downtown"), false, 1f, false, yaw: Yaw("dealer_downtown"));
+            BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_luxury", "Luxury Lane", "dealer_luxury", Pos("dealer_luxury"), false, 1.6f, true, yaw: Yaw("dealer_luxury"));
 
             Progress("Town services", 0.6f);
-            BuildFuelStation(Site(env, "FuelStation", new Vector3(40f, 0f, -38f), 180f), m);
-            BuildWorkshop(Site(env, "MechanicWorkshop", new Vector3(-45f, 0f, -38f), 180f), m, db);
-            BuildServiceCentre(Site(env, "ServiceCentre", new Vector3(50f, 0f, -2f), 0f), m);
-            BuildPartsShop(Site(env, "PartsDirect", new Vector3(-12f, 0f, -38f), 180f), m);
-            BuildMapleClose(Site(env, "MapleClose", new Vector3(215f, 0f, 10f), 0f), m);
-            BuildCarWashCenter(Site(env, "CarWashCenter", new Vector3(100f, 0f, -38f), 180f), m);
-            BuildUsedCarMarket(Site(env, "UsedCarMarket", new Vector3(-100f, 0f, -38f), 180f), m, carDisplayPrefab);
-            BuildAuctionCenter(Site(env, "AuctionCenter", new Vector3(-110f, 0f, 112f), 0f), m, carDisplayPrefab);
+            BuildFuelStation(PlanSiteRoot(env, "FuelStation"), m);
+            BuildWorkshop(PlanSiteRoot(env, "MechanicWorkshop"), m, db);
+            BuildServiceCentre(PlanSiteRoot(env, "ServiceCentre"), m);
+            BuildPartsShop(PlanSiteRoot(env, "PartsDirect"), m);
+            BuildMapleClose(PlanSiteRoot(env, "MapleClose"), m, "Maple Close");
+            BuildMapleClose(PlanSiteRoot(env, "BirchClose"), m, "Birch Close");
+            BuildCarWashCenter(PlanSiteRoot(env, "CarWashCenter"), m);
+            BuildUsedCarMarket(PlanSiteRoot(env, "UsedCarMarket"), m, carDisplayPrefab);
+            BuildAuctionCenter(PlanSiteRoot(env, "AuctionCenter"), m, carDisplayPrefab);
 
             Progress("Homes & properties", 0.65f);
-            refs.playerStart = BuildHome(Site(env, "Home_Trailer", new Vector3(40f, 0f, 106f), 0f), m, PropertyManager.StarterHome, "Starter Trailer", 0);
-            BuildHome(Site(env, "Home_House", new Vector3(95f, 0f, 106f), 0f), m, "home_house", "Suburban House", 1);
-            BuildHome(Site(env, "Home_Villa", new Vector3(152f, 0f, 106f), 0f), m, "home_villa", "Hillside Villa", 2);
-            BuildInvestment(Site(env, "RentalApartments", new Vector3(-40f, 0f, 106f), 0f), m, "prop_apartments", "Rental Apartments", new Vector3(16f, 13f, 10f), "APARTMENTS");
-            BuildInvestment(Site(env, "OfficeTower", new Vector3(-175f, 0f, 106f), 0f), m, "prop_office", "Office Tower", new Vector3(16f, 42f, 14f), "OFFICES");
-            BuildParkingGarage(Site(env, "ParkingGarage", new Vector3(200f, 0f, 106f), 0f), m);
+            refs.playerStart = BuildHome(PlanSiteRoot(env, "Home_Trailer"), m, PropertyManager.StarterHome, "Starter Trailer", 0);
+            BuildHome(PlanSiteRoot(env, "Home_House"), m, "home_house", "Suburban House", 1);
+            BuildHome(PlanSiteRoot(env, "Home_Villa"), m, "home_villa", "Hillside Villa", 2);
+            BuildInvestment(PlanSiteRoot(env, "RentalApartments"), m, "prop_apartments", "Rental Apartments", new Vector3(16f, 13f, 10f), "APARTMENTS");
+            BuildInvestment(PlanSiteRoot(env, "OfficeTower"), m, "prop_office", "Office Tower", new Vector3(16f, 42f, 14f), "OFFICES");
+            BuildParkingGarage(PlanSiteRoot(env, "ParkingGarage"), m);
 
-            BuildStreetTrees(Group(env, "StreetTrees"), m);
-            BuildBackdrop(Group(env, "CityBackdrop"), m);
+            Progress("Park, town centre, industrial estate", 0.68f);
+            BuildZoneDecor(env, m);
             return refs;
         }
 

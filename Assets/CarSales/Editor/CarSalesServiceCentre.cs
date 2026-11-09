@@ -114,11 +114,11 @@ namespace CarSales.EditorTools
         }
     
         /// <summary>Phase 7b: a cul-de-sac of six houses where private sellers show their cars on the driveway.</summary>
-        static void BuildMapleClose(Transform g, Mats m)
+        static void BuildMapleClose(Transform g, Mats m, string closeName = "Maple Close")
         {
             Solid(g, "Road", new Vector3(0f, 0.012f, 9f), new Vector3(7f, 0.024f, 80f), m.asphalt);   // joins the main road without overlapping it
             Solid(g, "TurningCircle", new Vector3(0f, 0.013f, 50f), new Vector3(16f, 0.026f, 12f), m.asphalt);
-            SignText(g, new Vector3(5f, 2.4f, -34f), "MAPLE CLOSE", 5f, Color.white, new Vector2(4f, 0.6f));
+            SignText(g, new Vector3(5f, 2.4f, -34f), closeName.ToUpperInvariant(), 5f, Color.white, new Vector2(4f, 0.6f));
             Solid(g, "SignPost", new Vector3(5f, 1.1f, -33.9f), new Vector3(0.12f, 2.2f, 0.12f), m.metal);
             int n = 0;
             foreach (float side in new[] { -1f, 1f })
@@ -137,11 +137,11 @@ namespace CarSales.EditorTools
                     spot.localRotation = Quaternion.Euler(0f, side > 0 ? -90f : 90f, 0f);
                     var sellerPoint = Child("SellerPoint", spot, new Vector3(-1.8f, 0f, 0.5f));
                     var ss = spot.gameObject.AddComponent<SellerSpot>();
-                    ss.address = "Maple Close";
+                    ss.address = closeName;
                     ss.sellerPoint = sellerPoint;
                     SignText(g, new Vector3(side * 13.9f, 2.6f, z + 3.2f), n.ToString(), 3f, Color.white, new Vector2(0.6f, 0.6f), side > 0 ? -90f : 90f);
                 }
-            AddMapPlace(g.gameObject, "Maple Close", "M", UIFactory.Home, new Vector3(0f, 0.1f, -30f));
+            AddMapPlace(g.gameObject, closeName, "M", UIFactory.Home, new Vector3(0f, 0.1f, -30f));
         }
     }
 }

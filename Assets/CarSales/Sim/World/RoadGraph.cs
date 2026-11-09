@@ -19,7 +19,12 @@ namespace CarSales.Sim
 
     /// <summary>A straight piece of road between two junctions or ends.</summary>
     [Serializable]
-    public struct RoadSegment { public V2 a, b; public float speedLimit; public RoadSegment(V2 a, V2 b, float limit = 13.4f) { this.a = a; this.b = b; speedLimit = limit; } }
+    public struct RoadSegment
+    {
+        public V2 a, b; public float speedLimit;
+        public bool oneWay;   // phase 12: roundabout rings (one lane, a -> b, on the centre line)
+        public RoadSegment(V2 a, V2 b, float limit = 13.4f) { this.a = a; this.b = b; speedLimit = limit; oneWay = false; }
+    }
 
     public sealed class Lane
     {
@@ -28,6 +33,7 @@ namespace CarSales.Sim
         public float speedLimit;
         public bool alongX;                       // for the traffic-light phase
         public bool endsAtJunction;
+        public float offset;                      // distance from the road's centre line (0 for one-way rings)
         public readonly List<int> next = new List<int>();
         public float Length => V2.Distance(start, end);
         public V2 Dir => (end - start).Normalized;
@@ -41,20 +47,23 @@ namespace CarSales.Sim
     /// </summary>
     public static class RoadGraph
     {
-        public static List<Lane> Build(IList<RoadSegment> segments, float roadWidth = 9f, float joinRadius = 6f)
+        /// <param name="lightNodes">Phase 12: if given, only junctions at these nodes have traffic lights (the rest are give-way).</param>
+        public static List<Lane> Build(IList<RoadSegment> segments, float roadWidth = 9f, float joinRadius = 6f, IList<V2> lightNodes = null)
         {
             var lanes = new List<Lane>();
             float off = roadWidth / 4f;
             foreach (var s in segments)
                 foreach (bool forward in new[] { true, false })
                 {
+                    if (s.oneWay && !forward) continue;
+                    float o = s.oneWay ? 0f : off;
                     V2 a = forward ? s.a : s.b, b = forward ? s.b : s.a;
                     V2 dir = (b - a).Normalized;
                     var left = new V2(-dir.z, dir.x);      // left of travel
                     lanes.Add(new Lane
                     {
-                        id = lanes.Count, start = a + left * off, end = b + left * off, speedLimit = s.speedLimit,
-                        alongX = Math.Abs(dir.x) >= Math.Abs(dir.z),
+                        id = lanes.Count, start = a + left * o, end = b + left * o, speedLimit = s.speedLimit,
+                        alongX = Math.Abs(dir.x) >= Math.Abs(dir.z), offset = o,
                     });
                 }
             // Junction nodes: road ends shared by 3+ segment ends.
@@ -70,23 +79,32 @@ namespace CarSales.Sim
             {
                 // The road node this lane ends at (lane end minus the side offset).
                 var dir = l.Dir;
-                var node = l.end - new V2(-dir.z, dir.x) * off;
-                l.endsAtJunction = IsJunction(node);
+                var node = l.end - new V2(-dir.z, dir.x) * l.offset;
+                l.endsAtJunction = IsJunction(node) && (lightNodes == null || HasLight(node));
                 foreach (var m in lanes)
                 {
                     if (m == l) continue;
                     var mdir = m.Dir;
-                    var mNode = m.start - new V2(-mdir.z, mdir.x) * off;
+                    var mNode = m.start - new V2(-mdir.z, mdir.x) * m.offset;
                     if (V2.Distance(node, mNode) > joinRadius) continue;
                     if (V2.Dot(dir, mdir) < -0.5f) continue;   // no U-turns
                     l.next.Add(m.id);
                 }
             }
             return lanes;
+
+            bool HasLight(V2 p)
+            {
+                foreach (var n in lightNodes) if (V2.Distance(n, p) < joinRadius * 2f) return true;
+                return false;
+            }
         }
 
+        /// <summary>The town's network: phase 12 master map (TownPlan), with roundabouts.</summary>
+        public static List<RoadSegment> DefaultTown() => TownPlan.Segments();
+
         /// <summary>The default v4 town: two long roads (z = -27 and 95) and two cross roads (x = ±70).</summary>
-        public static List<RoadSegment> DefaultTown()
+        public static List<RoadSegment> LegacyTown()
         {
             var list = new List<RoadSegment>();
             foreach (float z in new[] { -27f, 95f })

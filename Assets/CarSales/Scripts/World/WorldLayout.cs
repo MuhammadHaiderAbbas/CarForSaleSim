@@ -38,11 +38,14 @@ namespace CarSales
         public List<SiteRecord> sites = new List<SiteRecord>();
         public List<CarSales.Sim.RoadSegment> roads = new List<CarSales.Sim.RoadSegment>();
         public List<UserRoad> userRoads = new List<UserRoad>();
+        [Tooltip("Phase 12: the town plan version these sites and roads were placed on (2 = the master-map town).")]
+        public int townVersion;
 
         /// <summary>The town's road network: the default roads plus yours (split where they meet).</summary>
         public List<CarSales.Sim.RoadSegment> Network()
         {
-            var net = roads.Count > 0 ? new List<CarSales.Sim.RoadSegment>(roads) : CarSales.Sim.RoadGraph.DefaultTown();
+            bool current = townVersion >= CarSales.Sim.TownPlan.Version;
+            var net = roads.Count > 0 && current ? new List<CarSales.Sim.RoadSegment>(roads) : CarSales.Sim.RoadGraph.DefaultTown();
             foreach (var r in userRoads) CarSales.Sim.RoadEditing.Add(net, r.a, r.b);
             return net;
         }

@@ -103,9 +103,9 @@ namespace CarSales.Tests
         }
 
         [Test]
-        public void DefaultTown_IsConnected_WithJunctions()
+        public void LegacyTown_IsConnected_WithJunctions()
         {
-            var lanes = RoadGraph.Build(RoadGraph.DefaultTown());
+            var lanes = RoadGraph.Build(RoadGraph.LegacyTown());
             Assert.AreEqual(16, lanes.Count);
             Assert.IsTrue(lanes.Any(l => l.endsAtJunction));
             foreach (var l in lanes.Where(x => x.endsAtJunction)) Assert.IsNotEmpty(l.next, $"lane {l.id} at a junction leads somewhere");

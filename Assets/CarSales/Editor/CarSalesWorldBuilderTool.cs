@@ -25,6 +25,7 @@ namespace CarSales.EditorTools
             if (l || !create) return l;
             if (!AssetDatabase.IsValidFolder("Assets/CarSales/Data")) AssetDatabase.CreateFolder("Assets/CarSales", "Data");
             l = ScriptableObject.CreateInstance<WorldLayout>();
+            l.townVersion = TownPlan.Version;
             AssetDatabase.CreateAsset(l, LayoutPath);
             return l;
         }
@@ -144,6 +145,7 @@ namespace CarSales.EditorTools
             var net = env.GetComponent<RoadNetwork>();
             if (!net) net = env.AddComponent<RoadNetwork>();
             net.segments = layout.Network();
+            net.lightNodes = TownPlan.LightNodes.ToList();
             int swapped = PlaceholderReplacer.ApplyToOpenScene(false);
             EditorUtility.SetDirty(net);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -164,6 +166,17 @@ namespace CarSales.EditorTools
             var net = env.gameObject.GetComponent<RoadNetwork>();
             if (!net) net = env.gameObject.AddComponent<RoadNetwork>();
             net.segments = layout ? layout.Network() : RoadGraph.DefaultTown();
+            net.lightNodes = TownPlan.LightNodes.ToList();
+            if (layout && layout.townVersion < TownPlan.Version)
+            {
+                // Phase 12: the town was rebuilt to the master map; sites placed on the old town may now sit in a new zone.
+                if (layout.sites.Count > 0 || layout.userRoads.Count > 0)
+                    Debug.LogWarning($"[Car Sales] The town is now the master-map layout. Your {layout.sites.Count} World Builder site(s) and {layout.userRoads.Count} road(s) " +
+                                     "were placed on the old town - open Tools > Car Sales > World Builder > Validate and move any that overlap.");
+                layout.roads.Clear();
+                layout.townVersion = TownPlan.Version;
+                EditorUtility.SetDirty(layout);
+            }
 
             // The generated v4 town as a layout (for reference and the validator).
             var def = AssetDatabase.LoadAssetAtPath<WorldLayout>(DefaultLayoutPath);

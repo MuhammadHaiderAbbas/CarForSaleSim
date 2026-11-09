@@ -9,6 +9,8 @@ namespace CarSales
     {
         public List<RoadSegment> segments = new List<RoadSegment>();
         public float roadWidth = 9f;
+        [Tooltip("Phase 12: junctions with traffic lights (empty = every junction).")]
+        public List<V2> lightNodes = new List<V2>();
         public static RoadNetwork Instance { get; private set; }
         void OnEnable() => Instance = this;
         void OnDisable() { if (Instance == this) Instance = null; }

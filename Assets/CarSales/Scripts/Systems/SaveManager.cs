@@ -164,6 +164,7 @@ namespace CarSales
                 hour = day.Hour,
                 energy = day.Energy,
                 shopClosedByPlayer = day.ClosedByPlayer,
+                townLayout = CarSales.Sim.TownPlan.Version,
                 ownedCars = CarSalesServices.Inventory.OwnedCars,
                 marketListings = CarSalesServices.Marketplace.Listings,
                 lotListings = CarSalesServices.Marketplace.LotListings,
@@ -290,6 +291,11 @@ namespace CarSales
             if (CarSalesServices.Bank) CarSalesServices.Bank.SetLoan(data.loan);
             if (CarSalesServices.Progress) CarSalesServices.Progress.SetState(data.stats, data.objectiveIndex, data.daysInDebt, data.hasWon);
             foreach (var c in data.ownedCars) c.inspected = true;
+            // Phase 12: the town was rebuilt. Cars left on the old streets would now be inside buildings: park them at the dealership.
+            int moved = 0;
+            if (data.townLayout < CarSales.Sim.TownPlan.Version)
+                foreach (var c in data.ownedCars)
+                    if (c.location == CarLocation.World) { c.location = CarLocation.Spot; c.dealershipId = ""; moved++; }
             CarSalesServices.Inventory.SetCars(data.ownedCars);
             if (CarSalesServices.Workshop) CarSalesServices.Workshop.SetState(workshop);
             if (CarSalesServices.Market) CarSalesServices.Market.SetState(market);
@@ -308,6 +314,7 @@ namespace CarSales
             if (!string.IsNullOrEmpty(result.Message)) CarSalesServices.UI.Toast(ToastType.Warning, "Save recovered", result.Message);
             if (fixes > 0) Debug.LogWarning($"[CarSales] Repaired {fixes} invalid value(s) in the save.");
             CarSalesServices.UI.Notify($"Slot {ActiveSlot} loaded (Day {data.day}). You're at home.");
+            if (moved > 0) CarSalesServices.UI.Toast(ToastType.Info, "The town has been rebuilt", $"{moved} car(s) you'd parked around town are now at AUTO WORLD.");
             EventBus.Publish(new GameLoaded(ActiveSlot, result.FromBackup));
             return true;
         }

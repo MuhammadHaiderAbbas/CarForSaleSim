@@ -26,7 +26,8 @@ namespace CarSales
         {
             var net = RoadNetwork.Instance ? RoadNetwork.Instance : FindFirstObjectByType<RoadNetwork>();
             var segs = net && net.segments.Count > 0 ? net.segments : RoadGraph.DefaultTown();
-            lanes = RoadGraph.Build(segs, net ? net.roadWidth : 9f);
+            var lights = net && net.lightNodes.Count > 0 ? net.lightNodes : (IList<V2>)TownPlan.LightNodes;
+            lanes = RoadGraph.Build(segs, net ? net.roadWidth : 9f, 6f, lights);
             BuildLights();
             if (!FindFirstObjectByType<PerformanceGovernor>()) gameObject.AddComponent<PerformanceGovernor>();
         }

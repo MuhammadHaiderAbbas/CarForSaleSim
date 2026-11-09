@@ -32,5 +32,8 @@ namespace CarSales
         public string activeHome;
         public List<CarInstance> lotListings = new List<CarInstance>();
         public bool shopClosedByPlayer;
+
+        // Phase 12: town plan the save was made on (0 = the old two-road town).
+        public int townLayout;
     }
 }

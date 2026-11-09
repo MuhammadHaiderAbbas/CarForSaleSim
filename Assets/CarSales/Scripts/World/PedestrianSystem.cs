@@ -11,8 +11,9 @@ namespace CarSales
     /// </summary>
     public class PedestrianSystem : MonoBehaviour
     {
-        class Walker { public Transform t; public float z, x, dir, speed; public bool turnedIn; }
-        static readonly float[] Pavements = { -33.2f, 101.2f };
+        // Phase 12: people walk the pavements of the master-map town (TownPlan), turning round at the ends.
+        class Walker { public Transform t; public int pavement; public float d, dir, speed; public bool turnedIn; }
+        List<(V2 a, V2 b)> pavements;
         readonly List<Walker> walkers = new List<Walker>();
         float spawnTimer, walkInTimer;
         public int Count => walkers.Count;
@@ -20,6 +21,7 @@ namespace CarSales
 
         void Start()
         {
+            pavements = TownPlan.Pavements();
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             mat = new Material(shader) { name = "Pedestrian" };
         }
@@ -39,19 +41,34 @@ namespace CarSales
             {
                 var w = walkers[i];
                 if (!w.t) { walkers.RemoveAt(i); continue; }
-                w.x += w.dir * w.speed * Time.deltaTime;
-                w.t.position = new Vector3(w.x, 0f, w.z);
-                w.t.rotation = Quaternion.LookRotation(new Vector3(w.dir, 0f, 0f));
-                if (Mathf.Abs(w.x) > 245f || Vector3.Distance(w.t.position, cam.transform.position) > 200f) { Destroy(w.t.gameObject); walkers.RemoveAt(i); }
+                var (pa, pb) = pavements[w.pavement];
+                float len = V2.Distance(pa, pb);
+                w.d += w.dir * w.speed * Time.deltaTime;
+                if (w.d > len || w.d < 0f) { w.dir = -w.dir; w.d = Mathf.Clamp(w.d, 0f, len); }   // end of the pavement: turn round
+                var p = pa + (pb - pa) * (w.d / Mathf.Max(0.01f, len));
+                var forward = (pb - pa).Normalized * w.dir;
+                w.t.position = new Vector3(p.x, 0.12f, p.z);
+                w.t.rotation = Quaternion.LookRotation(new Vector3(forward.x, 0f, forward.z));
+                if (Vector3.Distance(w.t.position, cam.transform.position) > 200f) { Destroy(w.t.gameObject); walkers.RemoveAt(i); }
             }
 
             spawnTimer -= Time.deltaTime;
-            if (spawnTimer <= 0f && walkers.Count < wanted)
+            if (spawnTimer <= 0f && walkers.Count < wanted && pavements.Count > 0)
             {
                 spawnTimer = 1.2f;
-                float z = Pavements[Random.Range(0, Pavements.Length)] + Random.Range(-0.6f, 0.6f);
-                float x = cam.transform.position.x + Random.Range(-120f, 120f);
-                if (Mathf.Abs(x) < 240f && Mathf.Abs(z - cam.transform.position.z) < 160f) Spawn(x, z);
+                // A random pavement within sight range of the camera.
+                for (int tries = 0; tries < 6; tries++)
+                {
+                    int k = Random.Range(0, pavements.Count);
+                    var (pa, pb) = pavements[k];
+                    float len = V2.Distance(pa, pb);
+                    float d = Random.Range(0f, len);
+                    var p = pa + (pb - pa) * (d / Mathf.Max(0.01f, len));
+                    float dist = Vector2.Distance(new Vector2(p.x, p.z), new Vector2(cam.transform.position.x, cam.transform.position.z));
+                    if (dist < 25f || dist > 150f) continue;
+                    Spawn(k, d);
+                    break;
+                }
             }
 
             // Walk-ins: someone passing an open dealership goes in.
@@ -63,7 +80,7 @@ namespace CarSales
                 {
                     if (!s || !s.Dealer.IsOpenNow) continue;
                     var p = s.transform.position;
-                    if (Mathf.Abs(w.x - p.x) < 12f && Mathf.Abs(w.z - p.z) < 45f && Random.value < 0.15f)
+                    if (w.t && Vector3.Distance(w.t.position, p) < 45f && Random.value < 0.15f)
                     {
                         w.turnedIn = true;
                         s.SpawnWalkIn();
@@ -73,7 +90,7 @@ namespace CarSales
                 }
         }
 
-        void Spawn(float x, float z)
+        void Spawn(int pavement, float d)
         {
             var root = new GameObject("Pedestrian").transform;
             float speed = Random.Range(1.1f, 1.6f);
@@ -94,7 +111,7 @@ namespace CarSales
                 mpb.SetColor("_BaseColor", col); mpb.SetColor("_Color", col);
                 r.SetPropertyBlock(mpb);
             }
-            walkers.Add(new Walker { t = root, x = x, z = z, dir = Random.value < 0.5f ? -1f : 1f, speed = speed });
+            walkers.Add(new Walker { t = root, pavement = pavement, d = d, dir = Random.value < 0.5f ? -1f : 1f, speed = speed });
         }
     }
 }
