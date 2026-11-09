@@ -245,7 +245,7 @@ namespace CarSales
             var ch = Profile.chassis;
             foreach (var w in wheels)
             {
-                float grip = w.front ? Effects.FrontGrip : Effects.RearGrip;
+                float grip = (w.front ? Effects.FrontGrip : Effects.RearGrip) * (CarSalesServices.World ? CarSalesServices.World.Grip : 1f);   // phase 8: wet roads
                 w.collider.forwardFriction = new WheelFrictionCurve
                 {
                     extremumSlip = 0.4f, extremumValue = 1f, asymptoteSlip = 0.8f, asymptoteValue = 0.5f,

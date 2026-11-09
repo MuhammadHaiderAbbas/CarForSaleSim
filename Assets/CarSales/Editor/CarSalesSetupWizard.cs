@@ -262,8 +262,23 @@ namespace CarSales.EditorTools
             public Material[] buildings; public Material windowsGlow;
         }
 
+        static bool loadMaterialsOnly;
+
+        /// <summary>The town's materials as already saved by Build Everything (made if missing). Used by the World Builder.</summary>
+        static Mats LoadMats()
+        {
+            loadMaterialsOnly = true;
+            try { return CreateMaterials(); }
+            finally { loadMaterialsOnly = false; }
+        }
+
         static Material M(string name, Color c, float smooth = 0.3f, bool emissive = false, float emission = 2f, float metallic = 0f)
         {
+            if (loadMaterialsOnly)
+            {
+                var existing = AssetDatabase.LoadAssetAtPath<Material>($"{Gen}/Materials/{name}.mat");
+                if (existing) return existing;
+            }
             var m = new Material(litShader) { name = name };
             if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
             if (m.HasProperty("_Color")) m.SetColor("_Color", c);
@@ -553,6 +568,7 @@ namespace CarSales.EditorTools
 
             var env = new GameObject("Town");
             var town = BuildTown(env.transform, m, db, carDisplayPrefab, customerPrefab);
+            BuildLayoutSites(env.transform, m, carDisplayPrefab, customerPrefab, town.surfaces);   // phase 8: your World Builder sites
 
             Progress("Systems", 0.8f);
             var systems = BuildSystems(db, a, carDisplayPrefab);
@@ -671,6 +687,7 @@ namespace CarSales.EditorTools
             systems.AddComponent<StaffManager>();
             systems.AddComponent<CrmManager>();
             systems.AddComponent<SourcingManager>();
+            systems.AddComponent<WorldManager>();
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();

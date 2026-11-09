@@ -348,7 +348,8 @@ namespace CarSales
             var day = CarSalesServices.DayCycle;
             float hod = day.HourOfDay;
             int h = Mathf.FloorToInt(hod), m = Mathf.FloorToInt((hod - h) * 60f);
-            clockText.text = $"{CarSales.Foundation.GameCalendar.WeekdayShort(day.CurrentDay)}  Day {day.CurrentDay}   {h:00}:{m:00}";
+            clockText.text = $"{CarSales.Foundation.GameCalendar.WeekdayShort(day.CurrentDay)}  Day {day.CurrentDay}   {h:00}:{m:00}" +
+                             (CarSalesServices.World ? $"  <size=60%><color={UIFactory.Hex(UIFactory.TextDim)}>{CarSalesServices.World.Describe()}</color></size>" : "");
             HandleShop(day.IsOpen);
         }
 

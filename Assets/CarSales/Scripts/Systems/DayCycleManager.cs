@@ -27,12 +27,13 @@ namespace CarSales
         public float HourOfDay => Hour % 24f;
         public float Energy => energyAtWake * Mathf.Clamp01((passOutHour - Hour) / Mathf.Max(0.1f, passOutHour - wakeHour));
         public bool ClosedByPlayer { get; private set; }
-        public bool IsBusinessHours => Hour >= openHour && Hour < closeHour;
+        public bool IsBusinessHours => Hour >= OpenHour && Hour < CloseHour;
         public bool IsOpen => IsBusinessHours && !ClosedByPlayer;
-        public bool IsDayOver => Hour >= closeHour;
+        public bool IsDayOver => Hour >= CloseHour;
         public bool CanSleep => Hour >= EarliestSleepHour || Energy < 25f;
-        public float OpenHour => openHour;
-        public float CloseHour => closeHour;
+        /// <summary>Phase 8: Sunday trading hours (an hour later, two hours earlier).</summary>
+        public float OpenHour => CarSales.Sim.WorldSim.Hours(CurrentDay, openHour, closeHour).open;
+        public float CloseHour => CarSales.Sim.WorldSim.Hours(CurrentDay, openHour, closeHour).close;
         public DailyReport Today { get; private set; } = new DailyReport { day = 1 };
 
         public event Action<float> OnTimeChanged;
@@ -65,7 +66,7 @@ namespace CarSales
             ClosedByPlayer = !ClosedByPlayer;
             foreach (var d in DealershipManager.All) d.ClosedByPlayer = ClosedByPlayer;
             if (!IsBusinessHours)
-                CarSalesServices.UI.Notify($"Dealerships are only open {openHour:00}:00-{closeHour:00}:00.");
+                CarSalesServices.UI.Notify($"Dealerships are only open {OpenHour:00}:00-{CloseHour:00}:00.");
             else CarSalesServices.UI.Notify(ClosedByPlayer ? "All dealerships closed for now." : "Dealerships are OPEN again!");
             CheckOpenState(true);
         }
@@ -98,13 +99,13 @@ namespace CarSales
             lastOpen = open;
             OnShopStateChanged?.Invoke(open);
             if (!changed) return;
-            if (open && IsBusinessHours && Hour < openHour + 0.1f)
+            if (open && IsBusinessHours && Hour < OpenHour + 0.1f)
             {
                 CarSalesServices.PlaySfx(Sfx.DoorChime);
-                CarSalesServices.UI.Toast(ToastType.Info, "Dealerships open", $"It's {openHour:00}:00 - customers are on their way to your listed cars.");
+                CarSalesServices.UI.Toast(ToastType.Info, "Dealerships open", $"It's {OpenHour:00}:00 - customers are on their way to your listed cars.");
                 if (CarSalesServices.Progress) CarSalesServices.Progress.Stats.shopOpened++;
             }
-            else if (!open && Hour >= closeHour && Hour < closeHour + 0.1f)
+            else if (!open && Hour >= CloseHour && Hour < CloseHour + 0.1f)
                 CarSalesServices.UI.Toast(ToastType.Info, "Closing time", "Dealerships are closed. Finish your work, then go home to sleep.");
             if (open && CarSalesServices.Progress) CarSalesServices.Progress.Stats.shopOpened = Mathf.Max(1, CarSalesServices.Progress.Stats.shopOpened);
         }

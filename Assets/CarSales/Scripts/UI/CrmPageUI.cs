@@ -20,7 +20,10 @@ namespace CarSales
             UIFactory.Vertical(Area, 0, 10f);
             summary = UIFactory.Text(Area, "", 18, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             UIFactory.LE(summary, h: 28);
-            views = UIFactory.Tabs(Area, new[] { "Customers", "Reviews" }, _ => Refresh(), 42f, 200f, 16f);
+            var top = UIFactory.HRow(Area, 44, 10, "Top", false);
+            views = UIFactory.Tabs(top, new[] { "Customers", "Reviews" }, _ => Refresh(), 42f, 200f, 16f);
+            var od = UIFactory.Btn(top, $"Book an open day tomorrow ({UIFactory.Money(CarSales.Sim.WorldSim.OpenDayCost)}, +60% customers)", UIFactory.Gold, () => { if (CarSalesServices.World) CarSalesServices.World.BookOpenDay(); }, 42f, 14f);
+            UIFactory.LE(od, h: 42, w: 420, flexW: 0);
             var host = UIFactory.Rect("Views", Area);
             UIFactory.LE(host, flexH: 1, flexW: 1);
             customersView = UIFactory.Rect("Customers", host); UIFactory.Stretch(customersView);

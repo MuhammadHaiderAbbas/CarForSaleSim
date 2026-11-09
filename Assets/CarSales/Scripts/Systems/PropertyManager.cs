@@ -48,6 +48,14 @@ namespace CarSales
         }
 
         public PropertyInfo Get(string id) => properties.Find(p => p.id == id);
+
+        /// <summary>Phase 8: properties added by World Builder sites (once per id).</summary>
+        public void RegisterProperty(PropertyInfo info)
+        {
+            if (info == null || string.IsNullOrEmpty(info.id) || properties.Exists(p => p.id == info.id)) return;
+            properties.Add(info);
+            OnPropertiesChanged?.Invoke();
+        }
         public bool Owns(string id) => !string.IsNullOrEmpty(id) && owned.Contains(id);
         public PropertyInfo ActiveHomeInfo => Get(ActiveHome) ?? Get(StarterHome);
         public float WakeHour => ActiveHomeInfo != null ? ActiveHomeInfo.wakeHour : 8f;

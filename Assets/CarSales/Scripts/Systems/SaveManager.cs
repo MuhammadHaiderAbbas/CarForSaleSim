@@ -16,8 +16,8 @@ namespace CarSales
     public class SaveManager : MonoBehaviour
     {
         public const string LegacyFileName = "carsales_save.json";
-        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing";
-        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1;   // game v6: per-car components
+        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing", WorldModule = "world";
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1, WorldModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-dev";
 
         [SerializeField] bool loadOnStart = true;
@@ -82,6 +82,7 @@ namespace CarSales
             if (CarSalesServices.Crm) CarSalesServices.Crm.ResetState();
             if (CarSalesServices.Staff) CarSalesServices.Staff.ResetState();
             if (CarSalesServices.Sourcing) CarSalesServices.Sourcing.ResetState();
+            if (CarSalesServices.World) CarSalesServices.World.ResetState();
             CarSalesServices.DayCycle.StartDay(1, 100f);
 
             var cars = new List<CarInstance>();
@@ -190,6 +191,7 @@ namespace CarSales
             if (CarSalesServices.Crm) env.Set(CrmModule, CrmModuleVersion, JsonUtility.ToJson(CarSalesServices.Crm.State));
             if (CarSalesServices.Staff) env.Set(StaffModule, StaffModuleVersion, JsonUtility.ToJson(CarSalesServices.Staff.State));
             if (CarSalesServices.Sourcing) env.Set(SourcingModule, SourcingModuleVersion, JsonUtility.ToJson(CarSalesServices.Sourcing.State));
+            if (CarSalesServices.World) env.Set(WorldModule, WorldModuleVersion, JsonUtility.ToJson(CarSalesServices.World.State));
             try
             {
                 Store.Write(ActiveSlot, env);
@@ -229,6 +231,7 @@ namespace CarSales
             CrmState crm = null;
             StaffState staff = null;
             SourcingState sourcing = null;
+            CarSales.Sim.WorldState world = null;
             try
             {
                 var game = result.Envelope.Get(GameModule);
@@ -257,6 +260,7 @@ namespace CarSales
                 crm = Module<CrmState>(result.Envelope, CrmModule, CrmModuleVersion);
                 staff = Module<StaffState>(result.Envelope, StaffModule, StaffModuleVersion);
                 sourcing = Module<SourcingState>(result.Envelope, SourcingModule, SourcingModuleVersion);
+                world = Module<CarSales.Sim.WorldState>(result.Envelope, WorldModule, WorldModuleVersion);
             }
             catch (Exception e)
             {
@@ -282,6 +286,7 @@ namespace CarSales
             if (CarSalesServices.Crm) CarSalesServices.Crm.SetState(crm);
             if (CarSalesServices.Staff) CarSalesServices.Staff.SetState(staff);   // after the workshop: takes over its mechanic
             if (CarSalesServices.Sourcing) CarSalesServices.Sourcing.SetState(sourcing);
+            if (CarSalesServices.World) CarSalesServices.World.SetState(world);
             if (CarSalesServices.Messages) CarSalesServices.Messages.SetMessages(data.messages);
             CarSalesServices.Vehicles.RebuildAll();
             CarSalesServices.Marketplace.SetListings(data.marketListings, data.lotListings);

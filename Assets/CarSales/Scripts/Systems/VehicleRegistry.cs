@@ -17,7 +17,8 @@ namespace CarSales
 
         readonly Dictionary<string, CarDisplay> displays = new Dictionary<string, CarDisplay>();
         public IEnumerable<CarDisplay> All => displays.Values.Where(d => d);
-        public float FuelPricePerPercent => fuelPricePerPercent;
+        /// <summary>Phase 8: today's fuel price (the world's fuel index moves it daily).</summary>
+        public float FuelPricePerPercent => fuelPricePerPercent * (CarSalesServices.World ? CarSalesServices.World.FuelIndex : 1f);
         public CarDisplay Prefab => carDisplayPrefab;
 
         void Awake() => CarSalesServices.Vehicles = this;
@@ -149,7 +150,7 @@ namespace CarSales
         }
 
         // ------------------------------------------------------------------ SERVICES
-        public int RefuelCost(CarInstance car) => Mathf.CeilToInt((100f - car.fuel) * fuelPricePerPercent);
+        public int RefuelCost(CarInstance car) => Mathf.CeilToInt((100f - car.fuel) * FuelPricePerPercent);
 
         public bool Refuel(CarDisplay car)
         {
@@ -161,7 +162,7 @@ namespace CarSales
                 int affordable = Mathf.Max(0, CarSalesServices.Economy.Money);
                 if (affordable <= 0) { CarSalesServices.UI.Error("Not enough money for fuel!"); return false; }
                 CarSalesServices.Economy.TrySpend(affordable, TxCategory.Fuel, $"Fuel (partial) - {car.Definition.displayName}", car.Data.instanceId);
-                car.Data.fuel = Mathf.Min(100f, car.Data.fuel + affordable / fuelPricePerPercent);
+                car.Data.fuel = Mathf.Min(100f, car.Data.fuel + affordable / FuelPricePerPercent);
                 cost = affordable;
             }
             else car.Data.fuel = 100f;

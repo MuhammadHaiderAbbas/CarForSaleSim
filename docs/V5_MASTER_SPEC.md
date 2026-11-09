@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-6 and 7a are merged; Phase 7b code is written (see [Phase 7 status](#phase-7-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-7 are merged; Phase 8a code is written (see [Phase 8 status](#phase-8-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1097,6 +1097,30 @@ a mechanic and a salesperson can each do their part of this without the player.
 4. Building interiors for dealership/auction hall/workshop (from imported assets).
 **Done when:** you can build a new dealership site from an imported building and it works (spots, customers,
 computer); traffic and pedestrians run at the performance budget.
+
+#### Phase 8 status
+**Phase 8a: code complete** (257 EditMode tests, compile-checked; not run in Unity, so frame times are not measured yet):
+
+| Item | Built |
+|---|---|
+| Weather | `Sim/World/WorldSim.cs` + `WorldManager`: hourly Markov weather (clear, cloudy, overcast, rain, heavy rain, fog; wetter in winter, fog clears by late morning). Rain particles around the camera, fog, dimmer sun, shiny wet roads (runtime copy of the asphalt material), **grip 85% / 75%** in rain / heavy rain (wheel friction), **footfall -30% / -45%**, lot cars get dirty in the rain. HUD shows the weather. |
+| Calendar | Sunday trading (open an hour later, close two earlier; `DayCycleManager.OpenHour/CloseHour`), bank holidays (+40% customers), Saturdays +30%, Sundays -20%. |
+| Fuel | Daily fuel price index (±2%, 0.75-1.4) → refuelling cost, and dear fuel makes economical cars worth more (`EconomyDemand`). |
+| Events | Police checks while driving (no MOT = $100 fine), breakdowns of stock with severe faults (off sale), road works (-20% customers for two days), theft attempts (staff may stop them), and an **open day** you book from the Customers app ($600, +60% customers). Save module `world`. |
+| Traffic | `Sim/World/RoadGraph.cs`: lane graph from road segments (two lanes each, **driving on the left**, junctions where 3+ road ends meet, no U-turns); `TrafficSystem` + `TrafficCar`: kinematic cars from the car database, gap keeping, stop at red lights (`TrafficLight` poles at every junction, two-phase 30 s cycle) and for anything with a rigidbody in front (you), stop with "hazards" after a bump, random turns, spawn out of sight 70-220 m away, despawn at 260 m, density by hour, **max 14 cars** (budget 30). |
+| Pedestrians | `PedestrianSystem`: up to **18 walkers** (budget 40) on the pavements, your imported characters if any, fewer at night and in rain; passers-by at an open dealership sometimes walk in as customers. |
+| World Builder | **Tools > Car Sales > World Builder**: *Sites* - add a dealership (name, standard or premium, standard glass showroom **or an imported Building from the Asset Studio** fitted into the footprint, price (0 = owned) and rent, position/turn, "use the Scene view's centre") → built into the town with 14 spots, computer, customers, sign, map icon, NavMesh baked; kept in `Data/WorldLayout.asset` and rebuilt by Build Everything; rebuild/remove. A bought-later site registers itself as a property (Real Estate). *Validate* - every `Site` in the scene: entrance on the NavMesh, a road within 45 m, map place, dealership spots/spawns/exit/NavMesh/computer. Generated town → `Data/Layout_DefaultTown.asset`; `RoadNetwork` holds the town's road segments. |
+
+**Phase 8b (next):** drawing new roads in the World Builder (spline tool) and joining them to the lane graph, scatter
+(trees/lamps along roads), more site templates (workshop, car wash, house, auction yard), interiors from imported
+Interior assets, LOD'd/2-5 Hz far AI ticks, and a measured performance pass.
+
+**Phase 8a play-test checklist:**
+1. Build Everything, Play. Watch traffic stop at the lights at x = ±70; stand in the road - cars stop for you.
+2. Wait for rain (or check the HUD): rain, wet roads, fewer customers; drive - the car slides more.
+3. Sunday: later opening. Customers app: book an open day; next day is busy.
+4. World Builder → Sites: add "Riverside Motors" at (-200, 0, 30) facing south, with an imported building; Play: buy it in Real Estate, list a car there, customers come.
+5. World Builder → Validate with the town open: all sites green (warnings are fine).
 
 ### Phase 9 — Advanced business (L)
 Accounts/P&L/cash flow, VAT returns (margin scheme), insurance & claims, business rates/utilities, marketing

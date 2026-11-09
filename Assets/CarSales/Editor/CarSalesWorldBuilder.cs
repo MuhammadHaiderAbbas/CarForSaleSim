@@ -259,11 +259,13 @@ namespace CarSales.EditorTools
         // ------------------------------------------------------------------ DEALERSHIPS
         /// <summary>Lot + glass showroom + spots + customers. Uses the original AUTO WORLD layout (world-aligned, road to the south).</summary>
         static GameObject BuildDealershipSite(Transform env, Mats m, TownRefs refs, CarDisplay carDisplayPrefab, CustomerAI customerPrefab,
-            string id, string name, string propertyId, Vector3 origin, bool isMain, float budgetMultiplier, bool premium)
+            string id, string name, string propertyId, Vector3 origin, bool isMain, float budgetMultiplier, bool premium,
+            GameObject building = null, bool computer = false, float yaw = 0f)
         {
             var site = new GameObject("Dealership_" + name);
             site.transform.SetParent(env, false);
             site.transform.localPosition = origin;
+            site.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             var g = site.transform;
 
             // Lot
@@ -274,7 +276,8 @@ namespace CarSales.EditorTools
                 Deco(g, "AisleMark", PrimitiveType.Cube, new Vector3(i * 6f, 0.025f, -9f), new Vector3(1.6f, 0.01f, 0.25f), m.yellowLine);
             Solid(g, "Path_ToShowroom", new Vector3(0f, 0.015f, 6.5f), new Vector3(6f, 0.03f, 7f), m.sidewalk);
 
-            BuildShowroom(g, m, name, premium);
+            if (building) FitBuilding(g, building, new Vector3(0f, 0f, 17f), new Vector3(24f, 8f, 14f));   // an imported building instead of the glass showroom
+            else BuildShowroom(g, m, name, premium);
             BuildDealerProps(g, m, premium);
 
             var dealer = site.AddComponent<DealershipManager>();
@@ -298,9 +301,9 @@ namespace CarSales.EditorTools
             spots.Add(CreateSpot(spotsParent, index++, new Vector3(-6f, 0.12f, 17f), 180f, m, lines: false));
             spots.Add(CreateSpot(spotsParent, index++, new Vector3(6f, 0.12f, 17f), 180f, m, lines: false));
 
-            if (isMain) BuildOfficeComputer(g, m);
+            if (isMain || computer) BuildOfficeComputer(g, m);
             BuildShopSign(g, m);
-            if (!isMain) PropertyForSaleSign(g, new Vector3(14f, 0f, -19.5f), propertyId, m);
+            if (!isMain && !string.IsNullOrEmpty(propertyId)) PropertyForSaleSign(g, new Vector3(14f, 0f, -19.5f), propertyId, m);
 
             var spawnA = Child("CustomerSpawn_West", g, new Vector3(-26f, 0f, -9f));
             var spawnB = Child("CustomerSpawn_East", g, new Vector3(26f, 0f, -9f));
@@ -322,7 +325,33 @@ namespace CarSales.EditorTools
             refs.surfaces.Add(surface);
 
             AddMapPlace(site, name, "D", premium ? UIFactory.Gold : UIFactory.Accent, new Vector3(0f, 0.1f, -24f));
+            var siteInfo = site.AddComponent<Site>();
+            siteInfo.siteId = id;
+            siteInfo.displayName = name;
+            siteInfo.function = SiteFunction.Dealership;
+            siteInfo.entrance = Child("Entrance", g, new Vector3(0f, 0f, -22f));
             return site;
+        }
+
+        /// <summary>Puts an imported building where the showroom would be: scaled to the footprint, on the ground, with colliders.</summary>
+        static void FitBuilding(Transform g, GameObject prefab, Vector3 centre, Vector3 footprint)
+        {
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, g);
+            go.name = "Building";
+            go.transform.localPosition = centre;
+            go.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);   // its front (+Z) faces the lot
+            var rs = go.GetComponentsInChildren<Renderer>();
+            if (rs.Length == 0) return;
+            Bounds Bounds() { var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds); return b; }
+            var bb = Bounds();
+            float k = Mathf.Min(footprint.x / Mathf.Max(0.01f, bb.size.x), footprint.z / Mathf.Max(0.01f, bb.size.z));
+            go.transform.localScale = Vector3.one * k;
+            bb = Bounds();
+            var target = g.TransformPoint(centre);
+            go.transform.position += new Vector3(target.x - bb.center.x, target.y - bb.min.y, target.z - bb.center.z);
+            if (go.GetComponentsInChildren<Collider>().Length == 0)
+                foreach (var mf in go.GetComponentsInChildren<MeshFilter>()) if (mf.sharedMesh) mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+            foreach (var t in go.GetComponentsInChildren<Transform>()) t.gameObject.isStatic = true;
         }
 
         static void BuildShowroom(Transform g, Mats m, string name, bool premium)

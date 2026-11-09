@@ -434,3 +434,13 @@ Won cars appear in the auction car park — drive or tow them home.
   `ListingEditorUI` (`CarInstance.listing`), `HandoverUI` (between the agreed price and `CustomerDeal.CompleteSale`),
   `NegotiationSession.Answer` / `TestDrive`, `CustomerAI.InspectAround`.
 
+## 19. World (Phase 8a)
+- **Rules** (tested): `Sim/World/WorldSim.cs` (weather Markov chain, grip/footfall/light/fog, bank holidays, Sunday hours,
+  fuel walk, events), `TrafficRules` (gap keeping, lights, density), `Sim/World/RoadGraph.cs` (lanes from segments).
+- **WorldManager** (module `world`): weather effects (`Grip` used by `WheelVehicleController`, `Footfall` by
+  `CustomerSpawner`, `SunFactor` by `DayNightLighting`, `FuelIndex` by `VehicleRegistry`), events, open day.
+- **TrafficSystem / TrafficCar / TrafficLight / PedestrianSystem**: added by `CarSalesBootstrap` if missing; read the
+  town's `RoadNetwork` (falls back to `RoadGraph.DefaultTown()`).
+- **World Builder:** `Editor/CarSalesWorldBuilderTool.cs` (`AddSiteToTown`, `BuildUserSite` → `BuildDealershipSite`
+  with an optional imported building, `ValidateSite`), runtime `Site` (registers a buyable property) and `WorldLayout`.
+

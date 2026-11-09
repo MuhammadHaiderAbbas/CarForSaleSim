@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.0-dev — Phase 8a "Living town"
+- **Weather**: rain, heavy rain, fog, overcast; wet roads, less grip, fewer customers, dirty cars.
+- **Calendar**: Sunday hours, bank holidays, busy Saturdays. **Fuel prices** change daily.
+- **Random events**: police checks, breakdowns, road works, theft attempts; book an **open day**.
+- **Traffic** that drives on the left, keeps its distance and stops at traffic lights (and for you).
+- **Pedestrians** on the pavements; some walk into your dealership.
+- **World Builder** (*Tools > Car Sales > World Builder*): add working dealerships anywhere, even inside an imported
+  building, and validate every site. Your sites survive Build Everything.
+- 8 new tests (257 total).
+
 ## v5.0-dev — Phase 7b "Sourcing & selling"
 - **Private sellers**: classified ads, viewings at houses on Maple Close, questions (they may lie), inspection,
   a drive round the block, haggling, logbook handover.

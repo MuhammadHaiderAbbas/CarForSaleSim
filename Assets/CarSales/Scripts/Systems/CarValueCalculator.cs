@@ -31,7 +31,15 @@ namespace CarSales
             float records = CarRecords.ValueMultiplier(car, knownOnly: useReported);
             // Phase 7: today's market (price index, season, demand, supply).
             if (CarSalesServices.Market) records *= CarSalesServices.Market.Multiplier(def);
+            // Phase 8: dear fuel makes economical cars more wanted.
+            if (CarSalesServices.World) records *= CarSales.Sim.WorldSim.EconomyDemand(CarSalesServices.World.FuelIndex, IsEconomical(def));
             return Mathf.RoundToInt(def.basePrice * conditionMult * cleanMult * mileageMult * def.popularity * records);
+        }
+
+        public static bool IsEconomical(CarDefinition def)
+        {
+            string f = (def.fuelType ?? "").ToLowerInvariant();
+            return f.Contains("electric") || f.Contains("hybrid") || def.category == CarCategory.Hatchback;
         }
 
         public const int InspectionFee = CarSales.Sim.InspectionEngine.FullInspectionCost;   // full workshop inspection

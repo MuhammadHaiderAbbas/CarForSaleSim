@@ -53,6 +53,9 @@ namespace CarSales
 
         public void Unregister(CustomerAI c) => active.Remove(c);
 
+        /// <summary>Phase 8: a passer-by walks in (pedestrians who turn into customers).</summary>
+        public void SpawnWalkIn() { if (Dealer.IsOpenNow) TrySpawn(); }
+
         IEnumerator SpawnLoop()
         {
             yield return new WaitForSeconds(2f);
@@ -61,6 +64,7 @@ namespace CarSales
                 TrySpawn();
                 float mult = CarSalesServices.Upgrades ? CarSalesServices.Upgrades.SpawnIntervalMultiplier : 1f;
                 if (CarSalesServices.Staff && CarSalesServices.Staff.Working(CarSales.Sim.StaffRole.Receptionist).Any()) mult *= 0.8f;
+                if (CarSalesServices.World) mult /= Mathf.Max(0.2f, CarSalesServices.World.Footfall);   // phase 8: weather, weekends, holidays, events
                 yield return new WaitForSeconds(Random.Range(spawnInterval.x, spawnInterval.y) * mult);
             }
         }

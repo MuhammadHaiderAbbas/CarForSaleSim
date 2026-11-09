@@ -45,7 +45,7 @@ namespace CarSales
             bool day = h >= sunrise && h <= sunset;
             float height = day ? Mathf.Sin(t * Mathf.PI) : 0f;
             sun.transform.rotation = Quaternion.Euler(day ? Mathf.Lerp(4f, 176f, t) : -25f, yaw, 0f);
-            sun.intensity = day ? Mathf.Lerp(0.15f, maxIntensity, Mathf.Clamp01(height * 1.5f)) : 0.03f;
+            sun.intensity = (day ? Mathf.Lerp(0.15f, maxIntensity, Mathf.Clamp01(height * 1.5f)) : 0.03f) * (CarSalesServices.World ? CarSalesServices.World.SunFactor : 1f);
             sun.color = Color.Lerp(eveningColor, noonColor, Mathf.Clamp01(height * 2f));
             RenderSettings.ambientIntensity = Mathf.Lerp(0.25f, baseAmbient, day ? Mathf.Clamp01(height * 2f + 0.2f) : 0f);
             if (sky)
