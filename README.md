@@ -51,7 +51,10 @@ a **credits** screen, **one-click Windows builds** (*Tools → Car Sales → Bui
 **PlayMode test suite** (*Window → General → Test Runner → PlayMode*). Phase 11 adds **animated Mixamo characters**
 (*Tools → Car Sales → Character Setup*: your character becomes the player and an AI cast; V = third person) and
 **building levels 1-3**: buy a building's upgrades, then rebuild it overnight into a completely new, bigger building
-(computer → **Buildings**).
+(computer → **Buildings**). Phase 12 (**CarForSaleSimV2**) rebuilds the town to the **master map** (14 zones round a
+test-drive loop with roundabouts), restyles the whole interface to the **V2 UI board** (icons, colours, new menus,
+settings, HUD, phone, fuel station), and adds a **Release Checklist** (*Tools → Car Sales*) that must pass before a
+Steam release build.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-10 are merged; Phase 11 (characters & building levels) code is written (see [Phase 11 status](#phase-11-status)). The release-candidate checks (2-week run in Unity, §11 budgets) are still to be done in the Editor.
+**Status:** Draft 1. Phases 1-11 are merged; Phase 12 (V2 master map, V2 interface, release tooling) code is written (see [Phase 12 status](#phase-12-status)). Nothing has been run in Unity yet: the release-candidate checks (2-week run, §11 budgets, Release Checklist) are to be done in the Editor.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1227,6 +1227,34 @@ once, and auction bidders always have different, fitting names.
 4. Buildings app: buy the Suburban House's 3 level-1 upgrades → the rebuild question appears → sleep → the house is extended.
 5. Upgrades app: buy one level of each upgrade → AUTO WORLD asks to rebuild → next day the two-storey showroom and 4 new lot spots.
 6. Old save with a developed Office Tower: it starts at the matching building level.
+
+### Phase 12 — CarForSaleSimV2: master map, V2 interface, release tooling (L)
+From the owner's master map and UI board. **Done when:** Build Everything builds the 14-zone master-map town, the
+interface follows the UI board (palette, icons, layouts), and a release build is refused until the Release Checklist passes.
+
+#### Phase 12 status
+**Code complete** (343 EditMode tests passing, compile-checked; not run in Unity).
+
+| Item | Built |
+|---|---|
+| Master map (12a) | `Sim/World/TownPlan.cs`: the 14 zones; a 2.8 km test-drive loop (zone 12) round a ~1,040 × 470 m town; Northern Avenue and Dealer Road with five cross roads; seven UK roundabouts (one-way clockwise rings in the traffic graph); traffic lights only at two crossroads by the dealership, the rest give-way. Every site in its zone: home (1), AUTO WORLD (2), auction and used-car market with car park and vehicle storage (3), service centre/MOT (4), mechanic and body shop (5), car wash (6), fuel (7), parts and tyre shop (8), Maple Close and Birch Close sellers (9), town centre terraces with the investments (10), industrial estate (11), park with lake and bandstand (13), Downtown Motors and Luxury Lane on the two expansion plots (14). Countryside fields and hedges round the loop. Preview: `docs/images/town-plan.png`. Tests: zones, sites off roads and reachable, no overlaps, connected network, no dead-end lanes, clockwise roundabouts, pavements never cross roads, loop length. |
+| Moving to the new town | Saves remember the town version; on loading an older save, cars parked on old streets go to AUTO WORLD (with a message). World Builder sites placed on the old town get a warning to re-check them. Pedestrians walk the plan's pavements; the world map frames the new town. |
+| V2 interface (12b) | Board palette as the default theme; money in £; Material Icons (Apache 2.0) rasterised in code (`Foundation/UI/VectorIcon`, tested). Every window gets a title icon and close cross. Main menu, pause, settings (side nav: Gameplay, Graphics, Audio, Controls, Language; Reset to Default, Apply), HUD (cash pill top-left, weather + clock top-right), phone (coloured app tiles; new Notifications and Missions apps), world map (icon markers, legend), desktop icons, Fuel Station screen (fuel type, price per litre, litres, refuel; wrong fuel refused), customer portrait in negotiation. New settings: invert Y, show hints, auto save, quality, resolution, display mode, V-Sync, frame-rate limit. |
+| Release tooling (12c) | Asset Studio > Online: paste Sketchfab links to look them all up (licence, downloadable, real-brand warning). Release Checklist (Tools > Car Sales): characters, licences, car brands, name/company, version, notices; release builds refuse to start with blockers. `THIRD_PARTY_NOTICES.txt` shipped with builds. |
+
+**Not done / needs you:** the six Sketchfab cars must be downloaded in Unity with your Sketchfab token (this
+environment can't reach Sketchfab), and real brands (Mercedes, BMW, Toyota) need renaming and de-badging or a
+licence before selling. Characters need Mixamo downloads. The board's photographic images (car photos, the customer
+face) are rendered live in game, not copied. Screens not listed above use the new palette and icons but keep their
+earlier layouts.
+
+**Phase 12 play-test checklist:**
+1. Build Everything; press Play: drive the test-drive loop and every roundabout (traffic goes clockwise).
+2. Visit all 14 zones (world map legend); check nothing is inside a building and customers come to AUTO WORLD.
+3. Load an old save: parked cars are at AUTO WORLD with a message.
+4. Main menu, pause, settings (try every page, Reset to Default), phone apps, Fuel Station, negotiation portrait.
+5. Asset Studio > Online: paste your six links, look them up, download one and set it up.
+6. Tools > Car Sales > Release Checklist: work through it, then Build > Windows (Release).
 
 ---
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.0-rc3 — Phase 12 "CarForSaleSimV2"
+- **New town from the master map**: 14 zones round a 2.8 km **test-drive loop**, avenues and seven
+  **roundabouts**, a park with a lake, a town centre, an industrial estate, two private-seller closes and two
+  expansion plots. Old saves move cars parked on old streets to the dealership.
+- **V2 interface** following the UI board: new colours, **icons everywhere**, new main menu, pause menu,
+  settings (graphics, gameplay, audio, controls, language, reset), HUD layout, phone apps (**Notifications**,
+  **Missions**), world map legend, **Fuel Station** screen, customer portraits. Money is now in **£**.
+- New settings: invert Y, show hints, auto save, quality, resolution, display mode, V-Sync, frame-rate limit.
+- **Sketchfab link list** in the Asset Studio with licence and real-brand checks.
+- **Release Checklist**: a release build won't start until characters, licences, brands, name and version are sorted.
+- 18 new tests (343 total).
+
 ## v5.0-rc2 — Phase 11 "Characters & building levels"
 - **Animated characters** from Mixamo: *Tools > Car Sales > Character Setup* takes your character and the listed
   animations (found automatically), and a popup after updating tells you exactly what to download.

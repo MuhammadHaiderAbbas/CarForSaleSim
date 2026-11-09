@@ -510,3 +510,27 @@ Won cars appear in the auction car park — drive or tow them home.
   `CarSalesBuildingLevels.cs` builds levels 2-3 for showrooms, the service centre, homes, investments and the car park;
   `SiteRecord.buildingAssetIdL2/L3` for World Builder dealerships. UI: `BuildingsPageUI` (computer → Buildings).
 
+## 24. Master-map town (Phase 12a)
+- **Plan** (tested): `Sim/World/TownPlan.cs` - `Ring` (test-drive loop), `Roads`, `Roundabouts`, `LightNodes`, `Zones`,
+  `Sites` (id, position, yaw, footprint), `Segments()` (traffic network with `Roundabout.Expand`), `Pavements()`,
+  `RoadClearance`, `MapFrame`, `Version`. `RoadSegment.oneWay` and `Lane.offset` support roundabout rings;
+  `RoadGraph.Build(..., lightNodes)` limits traffic lights. `RoadGraph.DefaultTown()` = the plan; `LegacyTown()` = v5.
+- **Build Everything**: `Editor/CarSalesTownV2.cs` (`BuildGroundV2`, `BuildPlanRoads`, `BuildZoneDecor`,
+  `PlanSiteRoot`) called from `BuildTown`. `RoadNetwork.lightNodes`; `WorldLayout.townVersion`.
+- **Runtime**: `PedestrianSystem` walks `TownPlan.Pavements()`; `MapUI` frames `TownPlan.MapFrame`;
+  `SaveData.townLayout` + the move of World-parked cars in `SaveManager.LoadGame`.
+
+## 25. V2 interface (Phase 12b)
+- **Icons**: `Foundation/UI/IconLibrary.cs` (Material Icons SVG, Apache 2.0, `UIIcon` enum), `VectorIcon` (SVG parser +
+  rasteriser, tested), `UI/Framework/UIIcons` (sprite cache, `ForTitle`), `UIFactory.IconImage/IconBtn/IconBadge`.
+- **Theme**: the Dark theme carries the V2 palette; `UIFactory.Currency` = £.
+- **Screens**: `MainMenuUI`, `PauseMenuUI`, `SettingsUI` (side nav, `GameSettings` InvertY/ShowHints/AutoSave/
+  QualityLevel/VSync/FrameCap/ResetToDefaults), `HUDController` (cash pill, weather icon), `PhoneUI` (+Notifications,
+  Missions; `NotificationLog` records every toast), `MapUI` (`IconOf`, legend), `ComputerHubUI.TileIcon`,
+  `FuelStationUI`, `NegotiationUI` + `Characters/PortraitCamera`.
+
+## 26. Release tooling (Phase 12c)
+- `Studio/Core/ReleaseRules.cs`: `TrademarkCheck`, `SketchfabLinks`, `ReleaseRules.Evaluate/CanRelease` (tested).
+- `Studio/Editor/ReleaseChecklistWindow.cs` (+ build gate), `OnlinePanel` link list. `THIRD_PARTY_NOTICES.txt` at
+  the project root is copied next to builds by `CarSalesBuild`.
+
