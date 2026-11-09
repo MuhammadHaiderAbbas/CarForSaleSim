@@ -260,7 +260,7 @@ namespace CarSales.EditorTools
         /// <summary>Lot + glass showroom + spots + customers. Uses the original AUTO WORLD layout (world-aligned, road to the south).</summary>
         static GameObject BuildDealershipSite(Transform env, Mats m, TownRefs refs, CarDisplay carDisplayPrefab, CustomerAI customerPrefab,
             string id, string name, string propertyId, Vector3 origin, bool isMain, float budgetMultiplier, bool premium,
-            GameObject building = null, bool computer = false, float yaw = 0f)
+            GameObject building = null, bool computer = false, float yaw = 0f, GameObject buildingL2 = null, GameObject buildingL3 = null)
         {
             var site = new GameObject("Dealership_" + name);
             site.transform.SetParent(env, false);
@@ -276,8 +276,12 @@ namespace CarSales.EditorTools
                 Deco(g, "AisleMark", PrimitiveType.Cube, new Vector3(i * 6f, 0.025f, -9f), new Vector3(1.6f, 0.01f, 0.25f), m.yellowLine);
             Solid(g, "Path_ToShowroom", new Vector3(0f, 0.015f, 6.5f), new Vector3(6f, 0.03f, 7f), m.sidewalk);
 
-            if (building) FitBuilding(g, building, new Vector3(0f, 0f, 17f), new Vector3(24f, 8f, 14f));   // an imported building instead of the glass showroom
-            else BuildShowroom(g, m, name, premium);
+            // Phase 11b: three looks (level 1 = the original or your imported building; 2-3 rebuilt, bigger showrooms).
+            var levels = LevelRoots(g, id, new Vector3(0f, 0f, 18f), new Vector3(38f, 11f, 20f));
+            if (building) FitBuilding(levels[0], building, new Vector3(0f, 0f, 17f), new Vector3(24f, 8f, 14f));   // an imported building instead of the glass showroom
+            else BuildShowroom(levels[0], m, name, premium);
+            if (buildingL2) FitBuilding(levels[1], buildingL2, new Vector3(0f, 0f, 18f), new Vector3(32f, 9f, 16f)); else BuildShowroomL2(levels[1], m, name, premium);
+            if (buildingL3) FitBuilding(levels[2], buildingL3, new Vector3(0f, 0f, 18f), new Vector3(36f, 11f, 18f)); else BuildShowroomL3(levels[2], m, name, premium);
             BuildDealerProps(g, m, premium);
 
             var dealer = site.AddComponent<DealershipManager>();
@@ -300,6 +304,19 @@ namespace CarSales.EditorTools
             }
             spots.Add(CreateSpot(spotsParent, index++, new Vector3(-6f, 0.12f, 17f), 180f, m, lines: false));
             spots.Add(CreateSpot(spotsParent, index++, new Vector3(6f, 0.12f, 17f), 180f, m, lines: false));
+            // Phase 11b: the rebuilt dealership's extra spots (4 on the lot at level 2, 4 more inside at level 3).
+            foreach (var (pos, spotYaw) in new[] { (new Vector3(-14.5f, 0.02f, -4f), 180f), (new Vector3(14.5f, 0.02f, -4f), 180f), (new Vector3(-14.5f, 0.02f, -14f), 0f), (new Vector3(14.5f, 0.02f, -14f), 0f) })
+            {
+                var spot = CreateSpot(spotsParent, index++, pos, spotYaw, m);
+                spot.requiredBuildingLevel = 2;
+                spots.Add(spot);
+            }
+            foreach (var pos in new[] { new Vector3(-12f, 0.14f, 14f), new Vector3(12f, 0.14f, 14f), new Vector3(-12f, 0.14f, 22f), new Vector3(12f, 0.14f, 22f) })
+            {
+                var spot = CreateSpot(spotsParent, index++, pos, 180f, m, lines: false);
+                spot.requiredBuildingLevel = 3;
+                spots.Add(spot);
+            }
 
             if (isMain || computer) BuildOfficeComputer(g, m);
             BuildShopSign(g, m);
@@ -330,6 +347,7 @@ namespace CarSales.EditorTools
             siteInfo.displayName = name;
             siteInfo.function = SiteFunction.Dealership;
             siteInfo.entrance = Child("Entrance", g, new Vector3(0f, 0f, -22f));
+            HideUpperLevels(levels);
             return site;
         }
 
@@ -696,9 +714,12 @@ namespace CarSales.EditorTools
         /// <returns>The wake point (where the player starts).</returns>
         static Transform BuildHome(Transform g, Mats m, string propertyId, string name, int tier)
         {
-            Solid(g, "Lawn", new Vector3(0f, 0.01f, 8f), new Vector3(tier == 2 ? 34f : 24f, 0.02f, 22f), m.ground);
+            Solid(g, "Lawn", new Vector3(0f, 0.01f, 8f), new Vector3(tier == 2 ? 38f : 26f, 0.02f, 24f), m.ground);
             Vector3 doorPos;
             float drivewayX;
+            var home = g;   // the street side stays; the house itself has three levels (phase 11b)
+            var levels = LevelRoots(g, propertyId, new Vector3(0f, 0f, 9f), new Vector3(tier == 2 ? 36f : 24f, tier == 2 ? 10f : 7f, 14f));
+            g = levels[0];
             if (tier == 0)
             {
                 Solid(g, "Trailer", new Vector3(0f, 1.8f, 6f), new Vector3(10f, 3f, 3.6f), m.pot);
@@ -738,6 +759,10 @@ namespace CarSales.EditorTools
                 drivewayX = 13.5f;
             }
 
+            g = home;
+            BuildHomeLevel(levels[1], m, tier, 2, doorPos);
+            BuildHomeLevel(levels[2], m, tier, 3, doorPos);
+            HideUpperLevels(levels);
             Solid(g, "Driveway", new Vector3(drivewayX, 0.015f, 0f), new Vector3(4.5f, 0.03f, 8f), m.concrete);
             Deco(g, "Mailbox", PrimitiveType.Cube, new Vector3(drivewayX - 3.2f, 0.9f, -3.5f), new Vector3(0.4f, 0.35f, 0.5f), m.flagRed);
 
@@ -764,6 +789,9 @@ namespace CarSales.EditorTools
         // ------------------------------------------------------------------ INVESTMENTS
         static void BuildInvestment(Transform g, Mats m, string propertyId, string name, Vector3 size, string sign)
         {
+            var site = g;
+            var levels = LevelRoots(g, propertyId, new Vector3(0f, 0f, size.z / 2f + 2f), new Vector3(size.x * 1.5f, size.y * 2.2f, size.z * 1.3f));
+            g = levels[0];
             Solid(g, "Building", new Vector3(0f, size.y / 2f, size.z / 2f + 2f), size, m.buildings[propertyId.Length % m.buildings.Length]);
             int floors = Mathf.FloorToInt(size.y / 3.3f);
             for (int f = 0; f < floors; f++)
@@ -771,12 +799,19 @@ namespace CarSales.EditorTools
             Deco(g, "Entrance", PrimitiveType.Cube, new Vector3(0f, 1.3f, 1.92f), new Vector3(3f, 2.6f, 0.08f), m.windowGlass);
             Deco(g, "SignBoard", PrimitiveType.Cube, new Vector3(0f, size.y + 1f, 2f), new Vector3(size.x * 0.8f, 1.6f, 0.3f), m.signBoard);
             SignText(g, new Vector3(0f, size.y + 1f, 1.8f), sign, 10f, Color.white, new Vector2(size.x * 0.75f, 1.3f));
-            PropertyForSaleSign(g, new Vector3(size.x / 2f + 2f, 0f, 0.5f), propertyId, m);
+            g = site;
+            BuildInvestmentLevel(levels[1], m, propertyId, size, sign, 2);
+            BuildInvestmentLevel(levels[2], m, propertyId, size, sign, 3);
+            HideUpperLevels(levels);
+            PropertyForSaleSign(g, new Vector3(size.x * 0.75f + 2f, 0f, 0.5f), propertyId, m);
             AddMapPlace(g.gameObject, name, "$", UIFactory.Gold, new Vector3(0f, 0.1f, -2f));
         }
 
         static void BuildParkingGarage(Transform g, Mats m)
         {
+            var site = g;
+            var levels = LevelRoots(g, "prop_parking", new Vector3(0f, 0f, 9f), new Vector3(26f, 27f, 16f));
+            g = levels[0];
             for (int level = 0; level < 4; level++)
                 Solid(g, "Deck", new Vector3(0f, level * 3.3f + 0.15f, 9f), new Vector3(18f, 0.3f, 14f), m.concrete);
             foreach (float x in new[] { -8.5f, 0f, 8.5f })
@@ -784,7 +819,11 @@ namespace CarSales.EditorTools
                     Solid(g, "Column", new Vector3(x, 5f, z), new Vector3(0.6f, 10f, 0.6f), m.concrete);
             Deco(g, "Sign", PrimitiveType.Cube, new Vector3(-7f, 11.5f, 2f), new Vector3(3f, 3f, 0.3f), m.flagBlue);
             SignText(g, new Vector3(-7f, 11.5f, 1.8f), "P", 20f, Color.white, new Vector2(2.6f, 2.6f));
-            PropertyForSaleSign(g, new Vector3(11f, 0f, 0.5f), "prop_parking", m);
+            g = site;
+            BuildParkingGarageLevel(levels[1], m, 2);
+            BuildParkingGarageLevel(levels[2], m, 3);
+            HideUpperLevels(levels);
+            PropertyForSaleSign(g, new Vector3(15f, 0f, 0.5f), "prop_parking", m);
             AddMapPlace(g.gameObject, "Parking Garage", "$", UIFactory.Gold, new Vector3(0f, 0.1f, -2f));
         }
 

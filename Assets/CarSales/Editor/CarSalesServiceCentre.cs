@@ -14,6 +14,10 @@ namespace CarSales.EditorTools
             Solid(g, "Driveway", new Vector3(0f, 0.012f, -9.5f), new Vector3(8f, 0.024f, 19f), m.concrete);   // stops at the road
             Solid(g, "Apron", new Vector3(0f, 0.014f, -1.5f), new Vector3(24f, 0.028f, 3f), m.concrete);
             Solid(g, "Floor", new Vector3(0f, 0.02f, 8f), new Vector3(24f, 0.04f, 16f), m.concrete);
+            // Phase 11b: the shed has three levels; bays, lifts and equipment stay where they are.
+            var site = g;
+            var levels = LevelRoots(g, BuildingManager.ServiceCentreId, new Vector3(2f, 0f, 9f), new Vector3(34f, 9f, 21f));
+            g = levels[0];
             Solid(g, "Wall_Back", new Vector3(0f, 2.75f, 16f), new Vector3(24.3f, 5.5f, 0.3f), m.wall);
             Solid(g, "Wall_W", new Vector3(-12f, 2.75f, 8f), new Vector3(0.3f, 5.5f, 16f), m.wall);
             Solid(g, "Wall_E", new Vector3(12f, 2.75f, 8f), new Vector3(0.3f, 5.5f, 16f), m.wall);
@@ -22,6 +26,10 @@ namespace CarSales.EditorTools
             Solid(g, "Header", new Vector3(0f, 5f, 0f), new Vector3(24.3f, 1f, 0.3f), m.wall);
             Solid(g, "Roof", new Vector3(0f, 5.65f, 8f), new Vector3(24.8f, 0.3f, 16.8f), m.roof);
             FrontSign(g, 24.8f, 0f, 6.5f, "AUTO WORLD SERVICE CENTRE", Color.white, m.accentPanel);
+            g = site;
+            BuildServiceCentreL2(levels[1], m);
+            BuildServiceCentreL3(levels[2], m);
+            HideUpperLevels(levels);
 
             Bay(g, m, StationType.Mechanical, "Mechanical bay (lift)", -8f);
             Bay(g, m, StationType.Tyres, "Tyre bay", 0f);

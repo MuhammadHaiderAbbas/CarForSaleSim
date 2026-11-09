@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.0-rc2 — Phase 11 "Characters & building levels"
+- **Animated characters** from Mixamo: *Tools > Car Sales > Character Setup* takes your character and the listed
+  animations (found automatically), and a popup after updating tells you exactly what to download.
+- **Your character** in the game, with a **third-person view (V)**.
+- **AI cast made from your character**: different heights, builds, skin tones, hair and clothes, hats and glasses;
+  staff in workwear. Add more Mixamo characters for more faces.
+- Customers, pedestrians, sellers, staff and the **auction room** now move and gesture (look round cars, kneel at
+  tyres, wave, talk, bid, clap, cheer or storm off).
+- **Your staff are visible** at work: reception, showroom, workshop bays, the lot.
+- **Building levels 1-3** for dealerships, the service centre, homes and investment properties: buy each level's
+  upgrades, then rebuild - builders work overnight and the building is **completely replaced** by a bigger one,
+  with more spots, customers, income or comfort. New **Buildings** app.
+- Fixed: the MOT listing the same part twice; auction bidders sharing names.
+- 42 new tests (325 total).
+
 ## v5.0-rc1 — Phase 10 "Production readiness"
 - **Settings** in tabs: General, Display, Audio, Driving, Controls.
 - **Key rebinding** for every control, saved between sessions, with a reset button.

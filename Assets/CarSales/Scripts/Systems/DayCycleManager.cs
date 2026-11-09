@@ -173,6 +173,7 @@ namespace CarSales
             CurrentDay = Mathf.Max(1, day);
             wakeHour = CarSalesServices.Properties ? CarSalesServices.Properties.WakeHour : 8f;
             Hour = wakeHour;
+            if (CarSalesServices.Buildings && CarSalesServices.Properties) energy += CarSalesServices.Buildings.MorningEnergy(CarSalesServices.Properties.ActiveHome);   // phase 11b: a better home
             energyAtWake = Mathf.Clamp(energy, 10f, 100f);
             warnedTired = warnedVeryTired = false;
             ClosedByPlayer = false;

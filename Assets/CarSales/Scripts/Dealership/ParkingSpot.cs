@@ -10,7 +10,19 @@ namespace CarSales
         public int requiredLotLevel;
         public CarDisplay Occupant { get; set; }
         public bool IsFree => Occupant == null;
-        public bool IsUnlocked => !CarSalesServices.Upgrades || CarSalesServices.Upgrades.LotLevel >= requiredLotLevel;
+        [Tooltip("Phase 11b: building level needed (2 or 3 = the bigger rebuilt dealership's extra spots; 0 = always).")]
+        public int requiredBuildingLevel;
+        DealershipManager dealer;
+        public bool IsUnlocked
+        {
+            get
+            {
+                if (CarSalesServices.Upgrades && CarSalesServices.Upgrades.LotLevel < requiredLotLevel) return false;
+                if (requiredBuildingLevel <= 1) return true;
+                if (!dealer) dealer = GetComponentInParent<DealershipManager>();
+                return dealer && CarSalesServices.Buildings && CarSalesServices.Buildings.Level(dealer.dealershipId) >= requiredBuildingLevel;
+            }
+        }
 
         void OnDrawGizmos()
         {

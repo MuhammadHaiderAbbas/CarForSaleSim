@@ -242,7 +242,7 @@ namespace CarSales
 
         public (int level, string next) LevelInfo() => BusinessRules.Level(Inputs());
 
-        public int MaxStaff => BusinessRules.MaxStaff(state.level);
+        public int MaxStaff => BusinessRules.MaxStaff(state.level) + (CarSalesServices.Buildings ? CarSalesServices.Buildings.ExtraStaff : 0);   // phase 11b: bigger dealerships
 
         void CheckLevel()
         {
@@ -257,7 +257,8 @@ namespace CarSales
 
         // ------------------------------------------------------------------ PROPERTY DEVELOPMENT
         public int DevelopmentLevel(string id) => state.developments.Find(d => d.id == id)?.level ?? 0;
-        public float IncomeFactor(string id) => BusinessRules.IncomeFactor(DevelopmentLevel(id));
+        /// <summary>Phase 11b: the building's level and upgrades (old developments were moved into building levels).</summary>
+        public float IncomeFactor(string id) => CarSalesServices.Buildings ? CarSalesServices.Buildings.IncomeFactor(id) : BusinessRules.IncomeFactor(DevelopmentLevel(id));
 
         public bool Develop(PropertyInfo p)
         {

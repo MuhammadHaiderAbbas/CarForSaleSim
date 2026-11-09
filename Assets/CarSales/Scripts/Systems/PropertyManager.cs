@@ -58,7 +58,7 @@ namespace CarSales
         }
         public bool Owns(string id) => !string.IsNullOrEmpty(id) && owned.Contains(id);
         public PropertyInfo ActiveHomeInfo => Get(ActiveHome) ?? Get(StarterHome);
-        public float WakeHour => ActiveHomeInfo != null ? ActiveHomeInfo.wakeHour : 8f;
+        public float WakeHour => (ActiveHomeInfo != null ? ActiveHomeInfo.wakeHour : 8f) - (CarSalesServices.Buildings ? CarSalesServices.Buildings.WakeEarlier(ActiveHome) : 0f);   // phase 11b
 
         /// <summary>Phase 9: developed properties earn more (BusinessManager.IncomeFactor).</summary>
         public int DailyIncome => properties.Where(p => Owns(p.id)).Sum(p => IncomeOf(p));

@@ -173,15 +173,15 @@ namespace CarSales
         {
             var props = CarSalesServices.Properties;
             if (!props) return;
-            Para("Develop the investment properties you own (refurbish, extend): each level costs 40% of the price × the level and adds 30% to the nightly income (max 3).", 44f);
+            Para("Phase 11b: investment properties are upgraded in the Buildings app - buy their upgrades, then rebuild them (3 levels, more income each time).", 44f);
             foreach (var p in props.Properties.Where(x => x.type == PropertyType.Investment))
             {
                 bool owned = props.Owns(p.id);
-                int lvl = B.DevelopmentLevel(p.id);
-                var row = Row($"<b>{p.displayName}</b>  -  {(owned ? $"level {lvl}, earns {UIFactory.Money(props.IncomeOf(p))} a night" : "not owned")}");
-                var pp = p;
-                if (owned && lvl < BusinessRules.MaxDevelopment)
-                    Button(row, $"Develop {UIFactory.Money(BusinessRules.DevelopmentCost(p.price, lvl))}", UIFactory.Good, () => B.Develop(pp), true, 200f);
+                int lvl = CarSalesServices.Buildings ? CarSalesServices.Buildings.Level(p.id) : 1 + B.DevelopmentLevel(p.id);
+                var row = Row($"<b>{p.displayName}</b>  -  {(owned ? $"building level {lvl}, earns {UIFactory.Money(props.IncomeOf(p))} a night" : "not owned")}");
+                string id = p.id;
+                if (owned && CarSalesServices.UI && CarSalesServices.UI.computerHub)
+                    Button(row, "Open in Buildings", UIFactory.Accent, () => CarSalesServices.UI.computerHub.ShowBuildings(id), true, 200f);
             }
         }
     }

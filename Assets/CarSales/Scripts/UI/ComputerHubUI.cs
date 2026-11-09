@@ -28,6 +28,7 @@ namespace CarSales
         public CrmPageUI Customers { get; private set; }
         public StaffPageUI Staff { get; private set; }
         public BusinessPageUI Business { get; private set; }
+        public BuildingsPageUI BuildingsApp { get; private set; }
 
         TextMeshProUGUI moneyText, titleText, clockText, taskClock, taskApp, todayText, goalText, mailText, unreadBadge;
         RectTransform content, appWindow, desktop;
@@ -67,6 +68,7 @@ namespace CarSales
             Customers = AddPage<CrmPageUI>("Customers");
             Staff = AddPage<StaffPageUI>("Staff");
             Business = AddPage<BusinessPageUI>("Business");
+            BuildingsApp = AddPage<BuildingsPageUI>("Buildings");
 
             BuildIcons();
         }
@@ -144,6 +146,7 @@ namespace CarSales
             Tile(Loc.T("app.staff", "Staff"), "T", UIFactory.Good, () => ShowPage(Staff));
             Tile(Loc.T("app.market", "Market"), "V", UIFactory.Info, () => ShowPage(MarketApp));
             Tile(Loc.T("app.business", "Business"), "L", UIFactory.Gold, () => ShowPage(Business));
+            Tile(Loc.T("app.buildings", "Buildings"), "^", UIFactory.Special, () => ShowPage(BuildingsApp));
             Tile(Loc.T("app.classifieds", "Classifieds"), "K", UIFactory.Gold, () => { ShowPage(MarketApp); MarketApp.ShowTab(3); });
         }
 
@@ -262,6 +265,9 @@ namespace CarSales
             taskApp.text = "Desktop";
             RefreshDesktop();
         }
+
+        /// <summary>Phase 11b: opens the Buildings app on one building.</summary>
+        public void ShowBuildings(string buildingId) { ShowPage(BuildingsApp); BuildingsApp.Show(buildingId); }
 
         public void ShowPage(ComputerPage page)
         {

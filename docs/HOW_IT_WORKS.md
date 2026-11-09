@@ -483,3 +483,30 @@ Won cars appear in the auction car park — drive or tow them home.
   licence check still runs before every build.
 - **Tests:** `Tests/PlayMode/GameFlowTests.cs` (needs the built scene; uses `SaveManager.SavesRootOverride`), and the
   save-migration matrix + balance + strings tests in `Tests/EditMode/Phase10Tests.cs`.
+
+## 22. Characters (Phase 11a)
+- **Rules** (tested, `Studio/Core/CharacterSetup.cs`): `CharacterAnim` (16 slots), `AnimRequirement` list with Mixamo
+  searches, `Match(name)`, `Resolve(anim, available)` fallbacks, `ShouldPrompt`, `VariantGenerator` (material roles,
+  optional parts, shape blends, seeded variants).
+- **Editor** (`Studio/Editor`): `CharacterSetupWindow` + `CharacterSetupData` (`Data/CharacterSetup.asset`),
+  `CharacterBuilder` (Humanoid, clip import settings, `CarSalesCharacters.controller`, player + AI prefabs in
+  `Art/Characters/Generated`, `Generated/Resources/CarSalesCharacterLibrary.asset`, licence records),
+  `CharacterSetupPrompt` (popup, EditorPrefs per project), `CharacterFolderWatcher`.
+- **Runtime** (`Scripts/Characters`): `CharacterLibrary`, `CharacterAnimator` (Speed / Action+Act / Loop; Play, Loop,
+  StopLoop), `CharacterSpawn` (library → Asset Studio characters → none), `PlayerAvatar` (V, third person,
+  `PlayerInteractor.ReachBonus`), `StaffAvatars` (bootstrap), `AuctionCrowd` (added by `AuctionHall`, listens to
+  `AuctionManager.OnHallEvent`). Hooks in `CustomerAI`, `PedestrianSystem`, `SourcingManager`/`SellerNpc`.
+
+## 23. Building levels (Phase 11b)
+- **Rules** (tested, `Sim/Buildings/BuildingRules.cs`): `BuildingKind`, `BuildingUpgrade` (tier, cost or share of the
+  price, or linked to an `UpgradeType` level for AUTO WORLD), `BuildingEffects`, `CanRebuild/CanBuy/Remaining`,
+  `RebuildCost`, `Effects`, `RebuildGain`, `LevelName`, `NextStep`, `LevelFromDevelopment`.
+- **BuildingManager** (module `buildings`, `CarSalesServices.Buildings`): records (level, upgrades, construction),
+  `BuyUpgrade`, `OfferRebuild` (asked once per level, also after the Upgrades app), `StartRebuild`, completion on
+  `DayStarted`, effects read by `ParkingSpot.requiredBuildingLevel`, `CustomerSpawner` (footfall, budgets),
+  `BusinessManager.IncomeFactor/MaxStaff`, `WorkshopManager` (repair cost, mechanic speed), `PropertyManager.WakeHour`,
+  `DayCycleManager.StartDay` (energy). Old Phase 9 developments → levels on first load.
+- **Visuals:** `BuildingLevelVisual` (Level1-3 children, construction props, NavMesh rebuild). Editor
+  `CarSalesBuildingLevels.cs` builds levels 2-3 for showrooms, the service centre, homes, investments and the car park;
+  `SiteRecord.buildingAssetIdL2/L3` for World Builder dealerships. UI: `BuildingsPageUI` (computer → Buildings).
+

@@ -21,6 +21,7 @@ namespace CarSales
         public SiteTemplate template;
         public string buildingAssetId = "";   // AssetRegistry id ("" = the standard glass showroom)
         public string interiorAssetId = "";   // AssetRegistry id of an Interior placed inside the showroom
+        public string buildingAssetIdL2 = "", buildingAssetIdL3 = "";   // phase 11b: imported buildings for the level 2 / 3 rebuilds ("" = built-in)
         public Vector3 position;
         public float yaw;
         public int price, dailyCost;
