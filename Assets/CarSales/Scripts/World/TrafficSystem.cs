@@ -24,12 +24,12 @@ namespace CarSales
 
         void Start()
         {
-            var net = RoadNetwork.Instance ? RoadNetwork.Instance : FindFirstObjectByType<RoadNetwork>();
+            var net = RoadNetwork.Instance ? RoadNetwork.Instance : FindAnyObjectByType<RoadNetwork>();
             var segs = net && net.segments.Count > 0 ? net.segments : RoadGraph.DefaultTown();
             var lights = net && net.lightNodes.Count > 0 ? net.lightNodes : (IList<V2>)TownPlan.LightNodes;
             lanes = RoadGraph.Build(segs, net ? net.roadWidth : 9f, 6f, lights);
             BuildLights();
-            if (!FindFirstObjectByType<PerformanceGovernor>()) gameObject.AddComponent<PerformanceGovernor>();
+            if (!FindAnyObjectByType<PerformanceGovernor>()) gameObject.AddComponent<PerformanceGovernor>();
         }
 
         /// <summary>Simple lights where lanes end at a junction (a pole with three lamps).</summary>

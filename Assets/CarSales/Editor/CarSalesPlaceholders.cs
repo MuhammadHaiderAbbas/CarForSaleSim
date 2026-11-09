@@ -59,14 +59,14 @@ namespace CarSales.EditorTools
                 models[kind] = list;
             }
 
-            foreach (var slot in Object.FindObjectsByType<PlaceholderSlot>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var slot in UnityCompat.FindAll<PlaceholderSlot>(true))
             {
                 var list = models[slot.kind];
                 if (Replace(slot, list.Count > 0 ? list[slot.StableHash() % list.Count] : null)) replaced++;
             }
 
             if (rebakeNavMesh)
-                foreach (var surface in Object.FindObjectsByType<NavMeshSurface>(FindObjectsSortMode.None))
+                foreach (var surface in UnityCompat.FindAll<NavMeshSurface>())
                 {
                     try
                     {
@@ -155,14 +155,14 @@ namespace CarSales.EditorTools
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
-            int total = Object.FindObjectsByType<PlaceholderSlot>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
+            int total = UnityCompat.FindAll<PlaceholderSlot>(true).Length;
             return $"Town updated: {n} of {total} placeholders now use your models.";
         }
 
         public static Dictionary<PlaceholderKind, int> CountSlotsInOpenScene()
         {
             var d = new Dictionary<PlaceholderKind, int>();
-            foreach (var s in Object.FindObjectsByType<PlaceholderSlot>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var s in UnityCompat.FindAll<PlaceholderSlot>(true))
                 d[s.kind] = d.TryGetValue(s.kind, out var n) ? n + 1 : 1;
             return d;
         }

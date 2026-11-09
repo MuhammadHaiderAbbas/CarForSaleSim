@@ -23,10 +23,10 @@ namespace CarSales
             if (!GetComponent<AmbienceManager>()) gameObject.AddComponent<AmbienceManager>();
             if (!GetComponent<BuildingManager>()) gameObject.AddComponent<BuildingManager>();   // phase 11b
             if (!GetComponent<StaffAvatars>()) gameObject.AddComponent<StaffAvatars>();   // phase 11: visible staff
-            var fpc = FindFirstObjectByType<SimpleFirstPersonController>();
+            var fpc = FindAnyObjectByType<SimpleFirstPersonController>();
             if (fpc && !fpc.GetComponent<PlayerAvatar>()) fpc.gameObject.AddComponent<PlayerAvatar>();   // phase 11: your character
-            if (!FindFirstObjectByType<TrafficSystem>()) new GameObject("Traffic").AddComponent<TrafficSystem>();
-            if (!FindFirstObjectByType<PedestrianSystem>()) new GameObject("Pedestrians").AddComponent<PedestrianSystem>();
+            if (!FindAnyObjectByType<TrafficSystem>()) new GameObject("Traffic").AddComponent<TrafficSystem>();
+            if (!FindAnyObjectByType<PedestrianSystem>()) new GameObject("Pedestrians").AddComponent<PedestrianSystem>();
         }
     }
 }

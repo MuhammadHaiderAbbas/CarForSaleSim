@@ -590,7 +590,7 @@ namespace CarSales
         {
             var hall = AuctionHall.Instance;
             if (!hall) return false;
-            var p = FindFirstObjectByType<PlayerInteractor>();
+            var p = FindAnyObjectByType<PlayerInteractor>();
             return p && hall.Contains(p.transform.position) && !(CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving);
         }
 
@@ -639,7 +639,7 @@ namespace CarSales
             // Paddle: E while you're in the hall and not looking at something else.
             if (interact != null && interact.WasPressedThisFrame() && PlayerInHall() && !(UI && UI.IsMenuOpen))
             {
-                var p = FindFirstObjectByType<PlayerInteractor>();
+                var p = FindAnyObjectByType<PlayerInteractor>();
                 if (p == null || p.CurrentTarget == null) PaddleBid();
             }
         }
@@ -686,7 +686,7 @@ namespace CarSales
             int next = AuctionRules.NextBid(live);
             if (!CarSalesServices.Economy.CanAfford(next)) { UI.Error("You can't afford that bid."); return; }
             CarSalesServices.PlaySfx(Sfx.Click);
-            var me = FindFirstObjectByType<PlayerAvatar>();
+            var me = FindAnyObjectByType<PlayerAvatar>();
             if (me) me.Gesture(CarSales.Studio.CharacterAnim.RaiseHand);   // phase 11: you raise your paddle
             PlaceLiveBid(AuctionRules.PlayerId);
         }

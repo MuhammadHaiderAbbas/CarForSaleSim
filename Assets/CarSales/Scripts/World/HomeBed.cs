@@ -11,7 +11,7 @@ namespace CarSales
 
         public static HomeBed Find(string id)
         {
-            foreach (var b in FindObjectsByType<HomeBed>(FindObjectsSortMode.None)) if (b.propertyId == id) return b;
+            foreach (var b in UnityCompat.FindAll<HomeBed>()) if (b.propertyId == id) return b;
             return null;
         }
 

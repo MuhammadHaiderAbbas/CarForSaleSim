@@ -41,8 +41,8 @@ namespace CarSales
             }
             overlay.gameObject.SetActive(true);
             if (worstTimer < 0.5f) return;
-            var traffic = FindFirstObjectByType<TrafficSystem>();
-            var people = FindFirstObjectByType<PedestrianSystem>();
+            var traffic = FindAnyObjectByType<TrafficSystem>();
+            var people = FindAnyObjectByType<PedestrianSystem>();
             overlay.text = $"{SmoothedFps:0} fps  {1000f / Mathf.Max(1f, SmoothedFps):0.0} ms  (worst {worstMs:0} ms)\n" +
                            $"traffic {(traffic ? traffic.Cars.Count : 0)}  people {(people ? people.Count : 0)}  density {Scale * 100f:0}%";
             worstMs = 0f;

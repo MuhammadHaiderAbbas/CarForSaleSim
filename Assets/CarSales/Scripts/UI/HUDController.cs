@@ -176,7 +176,7 @@ namespace CarSales
 
         void Start()
         {
-            interactor = FindFirstObjectByType<PlayerInteractor>();
+            interactor = FindAnyObjectByType<PlayerInteractor>();
             CreateMinimapCamera();
 
             var eco = CarSalesServices.Economy;
@@ -252,7 +252,7 @@ namespace CarSales
                 }
                 arrow.rectTransform.localEulerAngles = new Vector3(0f, 0f, -cam.transform.eulerAngles.y);
             }
-            if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
+            if (!interactor) interactor = FindAnyObjectByType<PlayerInteractor>();
             UpdateEnergyAndGps();
             weatherTimer -= Time.unscaledDeltaTime;
             if (weatherIcon && weatherTimer <= 0f && CarSalesServices.World)

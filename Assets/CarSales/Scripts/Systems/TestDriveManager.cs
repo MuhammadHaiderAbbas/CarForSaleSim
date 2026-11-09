@@ -81,7 +81,7 @@ namespace CarSales
         {
             if (CarSalesServices.UI && CarSalesServices.UI.IsMenuOpen) return;
             if (IsDriving) { EndDrive(); return; }
-            var interactor = FindFirstObjectByType<PlayerInteractor>();
+            var interactor = FindAnyObjectByType<PlayerInteractor>();
             var target = interactor ? interactor.CurrentTarget as CarDisplay : null;
             if (target && !target.IsForSaleListing) StartDrive(target);
         }
@@ -177,9 +177,9 @@ namespace CarSales
             vehicleCamera = cam.gameObject.AddComponent<VehicleCamera>();
             vehicleCamera.Init(vehicle.transform, cameraKey, carBounds);
 
-            blocker = FindFirstObjectByType<MenuInputBlocker>();
+            blocker = FindAnyObjectByType<MenuInputBlocker>();
             if (blocker) blocker.SetBlocked(true);
-            var player = FindFirstObjectByType<PlayerInteractor>();
+            var player = FindAnyObjectByType<PlayerInteractor>();
             if (player) foreach (var r in player.GetComponentsInChildren<Renderer>()) r.enabled = false;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -343,7 +343,7 @@ namespace CarSales
                 CarSalesServices.Vehicles.PlaceInWorld(car, parkPos, yaw);
                 CarSalesServices.Inventory.NotifyChanged();
             }
-            var player = FindFirstObjectByType<PlayerInteractor>();
+            var player = FindAnyObjectByType<PlayerInteractor>();
             if (player) foreach (var r in player.GetComponentsInChildren<Renderer>()) r.enabled = true;
             TowService.TeleportPlayer(exitPos, yaw);
             if (blocker) blocker.SetBlocked(false);

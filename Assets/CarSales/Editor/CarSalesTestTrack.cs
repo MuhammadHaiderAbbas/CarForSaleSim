@@ -118,7 +118,7 @@ namespace CarSales.EditorTools
         static void VerifySavedLinks(string path, CarDatabase db, ActionRefs a)
         {
             var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-            var controller = Object.FindFirstObjectByType<TestTrackController>();
+            var controller = Object.FindAnyObjectByType<TestTrackController>();
             if (!controller) { Debug.LogError("[CarSales] Test track: controller missing after saving the scene."); return; }
             var so = new SerializedObject(controller);
             var missing = new System.Collections.Generic.List<string>();

@@ -37,7 +37,7 @@ namespace CarSales
             cam = GetComponent<Camera>();
             if (!target)
             {
-                var showcase = FindFirstObjectByType<MenuShowcase>();
+                var showcase = FindAnyObjectByType<MenuShowcase>();
                 if (showcase) target = showcase.transform;
             }
         }

@@ -73,7 +73,7 @@ namespace CarSales
             if (!target) return false;
             car = target;
             CarSalesServices.UI.Close();
-            if (!player) player = FindFirstObjectByType<PlayerInteractor>();
+            if (!player) player = FindAnyObjectByType<PlayerInteractor>();
             interact = CarSalesInput.Resolve(null, "Interact");
             CreateOverlay();
             return true;

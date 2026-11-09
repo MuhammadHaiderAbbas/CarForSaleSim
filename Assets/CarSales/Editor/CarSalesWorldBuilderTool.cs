@@ -270,7 +270,7 @@ namespace CarSales.EditorTools
             if (s.function == SiteFunction.Other) return issues;
             if (!NavMesh.SamplePosition(p, out _, 4f, NavMesh.AllAreas)) issues.Add("Entrance is not on the NavMesh (bake it, or move the entrance).");
             var lanes = RoadGraph.Build(RoadGraph.DefaultTown());
-            var net = Object.FindFirstObjectByType<RoadNetwork>();
+            var net = Object.FindAnyObjectByType<RoadNetwork>();
             if (net && net.segments.Count > 0) lanes = RoadGraph.Build(net.segments, net.roadWidth);
             float road = lanes.Count == 0 ? 0f : lanes.Min(l => DistanceToLane(l, p));
             if (road > 45f) issues.Add($"No road within 45 m (nearest {road:0} m): customers and tow trucks need a road.");
@@ -499,7 +499,7 @@ namespace CarSales.EditorTools
             if (GUILayout.Button("Validate the open scene", GUILayout.Height(30)))
             {
                 results.Clear();
-                foreach (var s in Object.FindObjectsByType<Site>(FindObjectsSortMode.None).OrderBy(x => x.displayName))
+                foreach (var s in UnityCompat.FindAll<Site>().OrderBy(x => x.displayName))
                     results.Add((s.displayName, CarSalesSetupWizard.ValidateSite(s)));
                 if (results.Count == 0) status = "No sites in this scene. Open the town scene (Tools > Car Sales > Build Everything first).";
             }

@@ -49,7 +49,7 @@ namespace CarSales
 
         CarDisplay FindCar()
         {
-            foreach (var d in FindObjectsByType<CarDisplay>(FindObjectsSortMode.None))
+            foreach (var d in UnityCompat.FindAll<CarDisplay>())
                 if (d && d.Data != null && !d.IsForSaleListing && Contains(d.transform.position) && CarRecords.IsOwned(d.Data)) return d;
             return null;
         }
