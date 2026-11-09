@@ -456,24 +456,27 @@ namespace CarSales.EditorTools
         }
 
         // Fictional brands - replace with your own models later.
-        static readonly CarSpec[] Specs =
+        /// <summary>Phase 14: the 48 cars of the catalogue (8 per class; the first eight are the original ids).</summary>
+        static CarSpec[] Specs => CarSales.Studio.CarCatalogue.All
+            .Select(c => new CarSpec(c.Id, c.Name, c.Brand, (CarCategory)System.Enum.Parse(typeof(CarCategory), c.Category), c.Year, c.Price, c.Popularity, c.Fuel, c.Gearbox, c.Description))
+            .ToArray();
+
+        /// <summary>The car's model from the default content pack, if the Asset Studio has downloaded and set it up.</summary>
+        static GameObject DefaultContentCar(string carId)
         {
-            new CarSpec("hatch_velo", "Velo", "Kestrel", CarCategory.Hatchback, 2016, 12000, 1.0f, "Petrol", "Manual", "Nimble city hatchback. Cheap to run and easy to park."),
-            new CarSpec("hatch_metro", "Metro S", "Kestrel", CarCategory.Hatchback, 2019, 15500, 1.1f, "Petrol", "Automatic", "Sporty hatch with a modern infotainment system."),
-            new CarSpec("sedan_avenue", "Avenue", "Orion", CarCategory.Sedan, 2014, 18000, 1.0f, "Diesel", "Automatic", "Comfortable family sedan with a big boot."),
-            new CarSpec("sedan_avenuegt", "Avenue GT", "Orion", CarCategory.Sedan, 2020, 26000, 1.1f, "Petrol", "Automatic", "The sporty version of the Avenue. Popular with young professionals."),
-            new CarSpec("suv_ridge", "Ridge", "Titan", CarCategory.SUV, 2017, 32000, 1.2f, "Diesel", "Automatic", "Rugged 4x4 SUV. Families love it."),
-            new CarSpec("sports_stallion", "Stallion R", "Vortex", CarCategory.Sports, 2018, 55000, 1.3f, "Petrol", "Manual", "Two-door sports coupe. Fast, loud and very desirable."),
-            new CarSpec("pickup_hauler", "Hauler", "Titan", CarCategory.Pickup, 2015, 28000, 1.0f, "Diesel", "Manual", "Workhorse pickup truck. Tradespeople buy these all day."),
-            new CarSpec("lux_regent", "Regent", "Aurelia", CarCategory.Luxury, 2019, 70000, 1.2f, "Hybrid", "Automatic", "Executive luxury saloon with every option ticked."),
-        };
+            var item = CarSales.Studio.DefaultContent.ForCar(carId);
+            var reg = item != null ? AssetRegistry.Load() : null;
+            var rec = reg ? reg.Find(item.AssetId) : null;
+            return rec != null && rec.prefab ? rec.prefab : null;
+        }
 
         static CarDatabase CreateCars(Mats m)
         {
             var db = ScriptableObject.CreateInstance<CarDatabase>();
             foreach (var s in Specs)
             {
-                var model = CreateCarModel(s, m);
+                var model = DefaultContentCar(s.id);   // phase 14: the real model once downloaded
+                if (!model) model = CreateCarModel(s, m);
                 var def = ScriptableObject.CreateInstance<CarDefinition>();
                 def.carId = s.id;
                 def.displayName = s.name;

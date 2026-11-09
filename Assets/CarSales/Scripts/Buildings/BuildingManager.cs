@@ -16,6 +16,7 @@ namespace CarSales
         public int constructingTo;      // > 0: builders are on site
         public int readyDay;
         public int offeredFor;          // the level whose "rebuild?" question was already asked
+        public int startDay;            // phase 14c: the day the builders arrived (0 in older saves: worked out from readyDay)
     }
 
     [Serializable]
@@ -145,6 +146,21 @@ namespace CarSales
         public int Level(string id) { var r = Peek(id); return r != null ? Mathf.Clamp(r.level, 1, BuildingRules.MaxLevel) : 1; }
         public bool Constructing(string id) { var r = Peek(id); return r != null && r.constructingTo > 0; }
 
+        /// <summary>Phase 14c: the construction stage today (None when no job is on).</summary>
+        public ConstructionStage Stage(string id)
+        {
+            var r = Peek(id);
+            if (r == null || r.constructingTo <= 0) return ConstructionStage.None;
+            var s = ConstructionSim.StageOn(ConstructionSim.StartDayFor(r.startDay, r.readyDay, r.constructingTo), CarRecords.Today, r.constructingTo);
+            return s == ConstructionStage.Finished || s == ConstructionStage.None ? ConstructionStage.Frame : s;   // finishing happens at the start of the ready day
+        }
+
+        public int DaysLeft(string id)
+        {
+            var r = Peek(id);
+            return r == null || r.constructingTo <= 0 ? 0 : Mathf.Max(1, r.readyDay - CarRecords.Today);
+        }
+
         public bool IsDone(string id, BuildingUpgrade u)
         {
             if (u == null) return false;
@@ -210,7 +226,8 @@ namespace CarSales
             if (!k.HasValue || !CanRebuild(id)) return;
             int to = Level(id) + 1, cost = RebuildCost(id);
             string body = $"Every level {to - 1} upgrade at {NameOf(id)} is done. Rebuild it into a {BuildingRules.LevelName(k.Value, to).ToLower()}?\n\n" +
-                          $"The builders work overnight; tomorrow the building is completely new: {BuildingRules.RebuildGain(k.Value, to).Describe()}.\n\nCost: {UIFactory.Money(cost)}";
+                          $"The builders take {ConstructionSim.TotalNights(to)} days: the old building comes down, machines and materials arrive, the frame goes up, " +
+                          $"and then it is completely new: {BuildingRules.RebuildGain(k.Value, to).Describe()}.\n\nCost: {UIFactory.Money(cost)}";
             UIFactory.Confirm($"Rebuild to level {to}", body, $"Rebuild for {UIFactory.Money(cost)}", UIFactory.Good, () => StartRebuild(id));
         }
 
@@ -223,9 +240,10 @@ namespace CarSales
             { CarSalesServices.UI.Error($"You need {UIFactory.Money(cost)} for the rebuild."); return false; }
             var r = Record(id);
             r.constructingTo = r.level + 1;
-            r.readyDay = CarRecords.Today + BuildingRules.ConstructionNights;
+            r.startDay = CarRecords.Today;
+            r.readyDay = CarRecords.Today + ConstructionSim.TotalNights(r.constructingTo);
             CarSalesServices.PlaySfx(Sfx.Success);
-            CarSalesServices.UI.Success("Builders booked", $"{NameOf(id)} will be a {BuildingRules.LevelName(k, r.constructingTo).ToLower()} tomorrow morning.");
+            CarSalesServices.UI.Success("Builders booked", $"{NameOf(id)} will be a {BuildingRules.LevelName(k, r.constructingTo).ToLower()} in {ConstructionSim.TotalNights(r.constructingTo)} days. Watch the site!");
             Changed(id);
             return true;
         }
@@ -241,6 +259,8 @@ namespace CarSales
                 if (CarSalesServices.Messages) CarSalesServices.Messages.Add(MessageType.Info, $"Builders: {NameOf(b.id)} is finished", $"Your {(k.HasValue ? BuildingRules.LevelName(k.Value, b.level).ToLower() : "building")} is ready: {(k.HasValue ? BuildingRules.RebuildGain(k.Value, b.level).Describe() : "")}.");
                 Changed(b.id);
             }
+            // Phase 14c: sites move on to their next stage each morning.
+            foreach (var b in state.buildings.Where(b => b.constructingTo > 0).ToList()) Changed(b.id);
             // Reputation from fine buildings.
             float rep = Buildings().Where(Owns).Sum(id => Effects(id).ReputationPerDay);
             if (rep > 0f && CarSalesServices.Economy) CarSalesServices.Economy.ChangeReputation(rep);

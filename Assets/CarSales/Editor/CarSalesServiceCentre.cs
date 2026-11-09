@@ -97,6 +97,7 @@ namespace CarSales.EditorTools
             counter.AddComponent<PartsCounter>();
             Deco(g, "Till", PrimitiveType.Cube, new Vector3(1.2f, 1.25f, 5.5f), new Vector3(0.5f, 0.3f, 0.4f), m.screen);
             FurnishPartsShop(g, m);   // phase 13c: racking with stock, tyre display
+            FurnishTyreShopExtras(g, m);   // phase 14d: tyre wall, balancer, waiting area
             PointLight(g, new Vector3(0f, 3.6f, 4.5f), 10f, 1.4f, new Color(1f, 0.97f, 0.9f));
             AddMapPlace(g.gameObject, "Parts Direct", "P", UIFactory.Warn, new Vector3(0f, 0.1f, -3f));
         }
@@ -115,11 +116,14 @@ namespace CarSales.EditorTools
                     n++;
                     var mat = m.buildings[n % m.buildings.Length];
                     Solid(g, "Lawn", new Vector3(side * 14f, 0.01f, z), new Vector3(16f, 0.02f, 14f), m.ground);
-                    Solid(g, "House", new Vector3(side * 18f, 3f, z), new Vector3(8f, 6f, 9f), mat);
-                    var roof = Deco(g, "Roof", PrimitiveType.Cube, new Vector3(side * 18f, 6.2f, z), new Vector3(8.6f, 3.2f, 3.2f), m.roofTiles ?? m.flagRed);
+                    // Phase 14: each house is a slot a downloaded house model can fill (front faces the road).
+                    var house = Child($"House_{n}", g, Vector3.zero);
+                    Solid(house, "House", new Vector3(side * 18f, 3f, z), new Vector3(8f, 6f, 9f), mat);
+                    var roof = Deco(house, "Roof", PrimitiveType.Cube, new Vector3(side * 18f, 6.2f, z), new Vector3(8.6f, 3.2f, 3.2f), m.roofTiles ?? m.flagRed);
                     roof.transform.localRotation = Quaternion.Euler(45f, 90f, 0f);
-                    Deco(g, "Door", PrimitiveType.Cube, new Vector3(side * 13.97f, 1.1f, z + 2f), new Vector3(0.06f, 2.2f, 1.1f), m.desk);
-                    Deco(g, "Window", PrimitiveType.Cube, new Vector3(side * 13.97f, 2.2f, z - 2f), new Vector3(0.06f, 1.2f, 1.8f), m.windowGlass);
+                    Deco(house, "Door", PrimitiveType.Cube, new Vector3(side * 13.97f, 1.1f, z + 2f), new Vector3(0.06f, 2.2f, 1.1f), m.desk);
+                    Deco(house, "Window", PrimitiveType.Cube, new Vector3(side * 13.97f, 2.2f, z - 2f), new Vector3(0.06f, 1.2f, 1.8f), m.windowGlass);
+                    WrapAsSlot(house, "house", -90f * side, n);
                     Solid(g, "Driveway", new Vector3(side * 7.5f, 0.015f, z), new Vector3(8f, 0.03f, 4.5f), m.concrete);
                     var spot = Child($"SellerSpot_{n}", g, new Vector3(side * 7.5f, 0.05f, z));
                     spot.localRotation = Quaternion.Euler(0f, side > 0 ? -90f : 90f, 0f);

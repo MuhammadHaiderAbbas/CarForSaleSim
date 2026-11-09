@@ -82,7 +82,7 @@ namespace CarSales.EditorTools
         }
 
         /// <summary>Group for placeholder primitives that the Asset Studio can replace with an imported model.</summary>
-        static Transform Slot(Transform parent, string name, Vector3 pos, PlaceholderKind kind, Vector3 footprint, float yaw = 0f)
+        static Transform Slot(Transform parent, string name, Vector3 pos, PlaceholderKind kind, Vector3 footprint, float yaw = 0f, string style = "", int variant = 0)
         {
             var g = new GameObject(name).transform;
             g.SetParent(parent, false);
@@ -91,7 +91,37 @@ namespace CarSales.EditorTools
             slot.kind = kind;
             slot.footprint = footprint;
             slot.yaw = yaw;
+            slot.style = style;
+            slot.variant = variant;
             return g;
+        }
+
+        /// <summary>
+        /// Phase 14: puts everything already built under <paramref name="root"/> into a PlaceholderSlot sized to it, so a
+        /// downloaded model of <paramref name="style"/> (villa, house, apartment, office...) can take its place.
+        /// <paramref name="yaw"/> turns the model so its front faces the street.
+        /// </summary>
+        static Transform WrapAsSlot(Transform root, string style, float yaw, int variant, PlaceholderKind kind = PlaceholderKind.Building)
+        {
+            var children = new List<Transform>();
+            foreach (Transform c in root) children.Add(c);
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (children.Count == 0 || renderers.Length == 0) return null;
+            bool any = false;
+            var b = new Bounds();
+            foreach (var r in renderers)
+            {
+                if (r is ParticleSystemRenderer) continue;
+                var wb = r.bounds;
+                for (int i = 0; i < 8; i++)
+                {
+                    var corner = root.InverseTransformPoint(wb.center + Vector3.Scale(wb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));
+                    if (!any) { b = new Bounds(corner, Vector3.zero); any = true; } else b.Encapsulate(corner);
+                }
+            }
+            var slot = Slot(root, "Model_" + style, new Vector3(b.center.x, 0f, b.center.z), kind, b.size, yaw, style, variant);
+            foreach (var c in children) c.SetParent(slot, true);
+            return slot;
         }
 
         static void StreetLamp(Transform g, Vector3 basePos, float headOffsetZ, float headLength, Mats m, float pole = 0.16f)
@@ -503,23 +533,19 @@ namespace CarSales.EditorTools
             Deco(g, "CanopyLight", PrimitiveType.Cube, new Vector3(0f, 4.73f, 6f), new Vector3(16f, 0.04f, 8f), m.ceilingLight);
             foreach (var p in new[] { new Vector3(-8.5f, 2.5f, 2f), new Vector3(8.5f, 2.5f, 2f), new Vector3(-8.5f, 2.5f, 10f), new Vector3(8.5f, 2.5f, 10f) })
                 Solid(g, "Pillar", p, new Vector3(0.5f, 5f, 0.5f), m.frame);
+            int pump = 0;
             foreach (float x in new[] { -3.3f, 3.3f })
             {
                 Solid(g, "PumpIsland", new Vector3(x, 0.15f, 6f), new Vector3(1.2f, 0.3f, 5f), m.concrete);
-                foreach (float z in new[] { 4.5f, 7.5f })
-                {
-                    Solid(g, "Pump", new Vector3(x, 1.1f, z), new Vector3(0.7f, 1.6f, 0.6f), m.wall);
-                    Deco(g, "PumpScreen", PrimitiveType.Cube, new Vector3(x, 1.5f, z - 0.31f), new Vector3(0.45f, 0.3f, 0.02f), m.screen);
-                    Deco(g, "PumpStripe", PrimitiveType.Cube, new Vector3(x, 0.6f, z - 0.31f), new Vector3(0.72f, 0.15f, 0.02f), m.flagRed);
-                }
+                foreach (float z in new[] { 4.5f, 7.5f }) FuelPump(g, new Vector3(x, 0.3f, z), 90f, ++pump, m);   // phase 14d: real pumps (default content)
             }
             PointLight(g, new Vector3(0f, 4.4f, 6f), 18f, 1.8f, Color.white);
+            FurnishFuelStation(g, m);
 
-            Solid(g, "Shop", new Vector3(0f, 2f, 17f), new Vector3(12f, 4f, 6f), m.wall);
-            Solid(g, "ShopWindow", new Vector3(-3f, 1.8f, 13.97f), new Vector3(4f, 2.2f, 0.06f), m.windowGlass);
+            // Phase 14d: a forecourt shop you walk into; you pay at the counter.
+            FuelShop(g, m, out var counterPos);
             FrontSign(g, 12f, 13.95f, 4.6f, "FUEL & SHOP", Color.white, m.flagRed);
-            var kiosk = InteractBox(g, "FuelKiosk", new Vector3(3f, 0.6f, 13.4f), new Vector3(2.2f, 1.2f, 0.9f), m.desk);
-            Deco(g, "KioskScreen", PrimitiveType.Cube, new Vector3(3f, 1.4f, 13.4f), new Vector3(0.6f, 0.4f, 0.05f), m.screen);
+            var kiosk = InteractBox(g, "FuelKiosk", counterPos, new Vector3(3.2f, 1.06f, 0.7f), m.desk);
 
             // Price pylon
             Solid(g, "Pylon", new Vector3(-11f, 3f, -1f), new Vector3(1.6f, 6f, 0.5f), m.signBoard);
@@ -595,6 +621,7 @@ namespace CarSales.EditorTools
             for (int i = 0; i < 5; i++)
                 Deco(g, "Puddle", PrimitiveType.Cylinder, new Vector3(-1.5f + i * 0.8f, 0.045f, 2f + (i % 2) * 0.7f), new Vector3(1.2f, 0.005f, 0.8f), m.windowGlass);
 
+            FurnishCarWash(g, m);   // phase 14d
             var booth = InteractBox(g, "WashAttendant", new Vector3(7.5f, 1.2f, 1.5f), new Vector3(2f, 2.4f, 2f), m.wall);
             Deco(g, "BoothWindow", PrimitiveType.Cube, new Vector3(7.5f, 1.5f, 0.48f), new Vector3(1.4f, 0.8f, 0.05f), m.windowGlass);
             var zone = AddZone(g, ServiceType.CarWash, "Car Wash", new Vector3(0f, 2f, 7f), new Vector3(9.5f, 4f, 14f), new Vector3(0f, 0.05f, 7f));
@@ -678,6 +705,7 @@ namespace CarSales.EditorTools
             PointLight(g, new Vector3(0f, 7f, 6f), 18f, 1.6f, new Color(1f, 0.92f, 0.8f));
             PointLight(g, new Vector3(0f, 6f, 13f), 12f, 2.2f, new Color(1f, 0.95f, 0.9f));
 
+            FurnishAuctionHall(g, m);   // phase 14d: truss and spotlights, clerks, office, refreshments, queue barriers
             var hall = g.gameObject.AddComponent<AuctionHall>();
             hall.center = new Vector3(0f, 4f, 9f);
             hall.size = new Vector3(26f, 8f, 18f);
@@ -769,6 +797,10 @@ namespace CarSales.EditorTools
             g = home;
             BuildHomeLevel(levels[1], m, tier, 2, doorPos);
             BuildHomeLevel(levels[2], m, tier, 3, doorPos);
+            // Phase 14: real houses and villas once downloaded (the starter trailer stays a trailer).
+            if (tier > 0) WrapAsSlot(levels[0], tier == 2 ? "villa" : "house", 180f, 1);
+            WrapAsSlot(levels[1], tier == 2 ? "villa" : "house", 180f, 2);
+            WrapAsSlot(levels[2], tier == 0 ? "house" : "villa", 180f, 3);
             HideUpperLevels(levels);
             Solid(g, "Driveway", new Vector3(drivewayX, 0.015f, 0f), new Vector3(4.5f, 0.03f, 8f), m.concrete);
             Deco(g, "Mailbox", PrimitiveType.Cube, new Vector3(drivewayX - 3.2f, 0.9f, -3.5f), new Vector3(0.4f, 0.35f, 0.5f), m.flagRed);
@@ -810,6 +842,8 @@ namespace CarSales.EditorTools
             g = site;
             BuildInvestmentLevel(levels[1], m, propertyId, size, sign, 2);
             BuildInvestmentLevel(levels[2], m, propertyId, size, sign, 3);
+            string style = propertyId.Contains("office") ? "office" : "apartment";
+            for (int i = 0; i < 3; i++) WrapAsSlot(levels[i], style, 180f, i + 1);   // phase 14: real buildings once downloaded
             HideUpperLevels(levels);
             PropertyForSaleSign(g, new Vector3(size.x * 0.75f + 2f, 0f, 0.5f), propertyId, m);
             AddMapPlace(g.gameObject, name, "$", UIFactory.Gold, new Vector3(0f, 0.1f, -2f));
@@ -850,7 +884,9 @@ namespace CarSales.EditorTools
         static void Building(Transform g, Vector3 pos, Vector3 size, Material mat, Mats m, bool facesSouth)
         {
             // Front of a replacement model (+Z) faces the street: south-facing buildings turn 180°.
-            var t = Slot(g, "Building", pos, PlaceholderKind.Building, size, facesSouth ? 180f : 0f);
+            // Phase 14: tall or clad blocks take office towers, low ones shops, the rest apartment buildings.
+            string style = mat == m.cladding || size.y >= 18f ? "office" : size.y <= 9f ? "shop" : "apartment";
+            var t = Slot(g, "Building", pos, PlaceholderKind.Building, size, facesSouth ? 180f : 0f, style, Mathf.RoundToInt(pos.x * 0.1f));
             var body = Solid(t, "Building", new Vector3(0f, size.y / 2f, 0f), size, mat);
             var facade = FacadeFor(mat, size, m);
             if (facade)

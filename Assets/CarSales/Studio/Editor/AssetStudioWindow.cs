@@ -92,6 +92,8 @@ namespace CarSales.Studio.EditorTools
             "TVs, fridges, coffee machines and water coolers.",
             "Wall art, lamps and other decoration.",
             "Workshop kit: tool chests, workbenches, tyre racks.",
+            "Construction sites: cranes, excavators, mixers, scaffolding, site cabins, materials (Environment or Prop).",
+            "Equipment: fuel pumps, car lifts, tool carts, tyre racks, shelving.",
         };
 
         static string KindHelpFor(PlaceholderKind kind) => (int)kind < KindHelp.Length ? KindHelp[(int)kind] : "";

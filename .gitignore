@@ -32,3 +32,6 @@ sysinfo.txt
 # Phase 13: generated surface textures (rebuilt automatically)
 /Assets/CarSales/GeneratedArt/
 /Assets/CarSales/GeneratedArt.meta
+
+# Phase 14: the default content pack (several GB, re-downloadable with Tools > Car Sales > Default Content)
+/Assets/CarSales/Art/*/Dc*

@@ -19,8 +19,15 @@ namespace CarSales
         [Tooltip("Ground footprint of the largest level (local), used for the building site.")]
         public Vector3 siteCentre = new Vector3(0f, 0f, 17f), siteSize = new Vector3(30f, 8f, 18f);
 
+        [Header("Phase 14c: construction stages (built by Build Everything)")]
+        public Transform constructionRoot;
+        [Tooltip("Clearing, Site, Frame.")]
+        public Transform[] constructionStages = new Transform[0];
+        public TMPro.TextMeshPro constructionLabel;
+
         GameObject construction;
         int shownLevel = -1;
+        ConstructionStage shownStage = ConstructionStage.None;
         static Material siteMat, poleMat, signMat;
 
         void OnEnable() { if (!All.Contains(this)) All.Add(this); }
@@ -35,14 +42,29 @@ namespace CarSales
             var bm = CarSalesServices.Buildings;
             int level = bm ? bm.Level(buildingId) : 1;
             bool building = bm && bm.Constructing(buildingId);
-            for (int i = 0; i < levels.Length; i++) if (levels[i]) levels[i].gameObject.SetActive(i == level - 1);
-            if (levels.Length >= level && !levels[level - 1] && levels.Length > 0 && levels[0]) levels[0].gameObject.SetActive(true);   // a missing look: keep level 1
-            ShowConstruction(building);
-            if (shownLevel != level)
+            var stage = building && bm ? bm.Stage(buildingId) : ConstructionStage.None;
+            bool staged = building && constructionRoot && constructionStages != null && constructionStages.Length >= 3;
+            // Phase 14c: while the builders are in, the old building is gone and the site shows the current stage.
+            for (int i = 0; i < levels.Length; i++) if (levels[i]) levels[i].gameObject.SetActive(!staged && i == level - 1);
+            if (!staged && levels.Length >= level && !levels[level - 1] && levels.Length > 0 && levels[0]) levels[0].gameObject.SetActive(true);   // a missing look: keep level 1
+            if (constructionRoot) constructionRoot.gameObject.SetActive(staged);
+            if (staged)
+            {
+                for (int i = 0; i < constructionStages.Length; i++)
+                    if (constructionStages[i]) constructionStages[i].gameObject.SetActive(i == (int)stage - 1);
+                if (constructionLabel)
+                {
+                    int left = bm.DaysLeft(buildingId);
+                    constructionLabel.text = $"UNDER CONSTRUCTION\n{ConstructionSim.Name(stage)}\n{left} day{(left == 1 ? "" : "s")} to go";
+                }
+            }
+            ShowConstruction(building && !staged);   // older scenes without stages: the simple site
+            if (shownLevel != level || shownStage != stage)
             {
                 bool rebake = shownLevel > 0;
                 shownLevel = level;
-                if (rebake) RebakeNavMesh();
+                shownStage = stage;
+                if (rebake) RebakeNavMesh();   // customers walk round the fences and the new walls
             }
         }
 

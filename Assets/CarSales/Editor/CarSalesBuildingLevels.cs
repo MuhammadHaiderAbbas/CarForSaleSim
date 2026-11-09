@@ -19,6 +19,7 @@ namespace CarSales.EditorTools
             v.levels = roots;
             v.siteCentre = siteCentre;
             v.siteSize = siteSize;
+            BuildConstructionSite(g, v);   // phase 14c: clearing, site and frame stages
             return roots;
         }
 

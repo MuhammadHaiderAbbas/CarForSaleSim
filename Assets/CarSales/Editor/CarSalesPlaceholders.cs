@@ -26,6 +26,8 @@ namespace CarSales.EditorTools
                 case PlaceholderKind.Tree: return category == CarSales.Studio.AssetCategory.Prop || category == CarSales.Studio.AssetCategory.Environment;
                 case PlaceholderKind.StreetLamp:
                 case PlaceholderKind.Bench: return category == CarSales.Studio.AssetCategory.Prop;
+                case PlaceholderKind.Construction: return category == CarSales.Studio.AssetCategory.Environment || category == CarSales.Studio.AssetCategory.Prop;
+                case PlaceholderKind.Equipment: return category == CarSales.Studio.AssetCategory.Prop || category == CarSales.Studio.AssetCategory.Interior;
                 default: return category == CarSales.Studio.AssetCategory.Interior || category == CarSales.Studio.AssetCategory.Prop;   // furniture
             }
         }
@@ -48,23 +50,23 @@ namespace CarSales.EditorTools
             var settings = LoadSettings(false);
             var reg = AssetRegistry.Load();
             int replaced = 0;
-            var models = new Dictionary<PlaceholderKind, List<GameObject>>();
+            var models = new Dictionary<PlaceholderKind, List<AssetRecord>>();
             foreach (PlaceholderKind kind in System.Enum.GetValues(typeof(PlaceholderKind)))
             {
-                var list = new List<GameObject>();
+                var list = new List<AssetRecord>();
                 if (settings && reg)
                     foreach (var id in settings.For(kind).assetIds)
                     {
                         var r = reg.Find(id);
-                        if (r != null && r.prefab && Accepts(kind, r.category)) list.Add(r.prefab);
+                        if (r != null && r.prefab && Accepts(kind, r.category)) list.Add(r);
                     }
                 models[kind] = list;
             }
 
             foreach (var slot in UnityCompat.FindAll<PlaceholderSlot>(true))
             {
-                var list = models[slot.kind];
-                if (Replace(slot, list.Count > 0 ? list[slot.StableHash() % list.Count] : null)) replaced++;
+                var list = Candidates(models[slot.kind], slot);
+                if (Replace(slot, list.Count > 0 ? list[slot.StableHash() % list.Count].prefab : null)) replaced++;
             }
 
             if (rebakeNavMesh)
@@ -86,6 +88,26 @@ namespace CarSales.EditorTools
                 }
             return replaced;
         }
+
+        /// <summary>
+        /// Phase 14: models whose style matches the slot's (a villa for a villa plot, a crane for the crane). Buildings fall
+        /// back to any building when none of that style was chosen; other kinds don't (a tyre rack must not replace a tool chest).
+        /// </summary>
+        public static List<AssetRecord> Candidates(List<AssetRecord> all, PlaceholderSlot slot)
+        {
+            if (string.IsNullOrEmpty(slot.style)) return all;
+            var match = all.FindAll(r => r.style == slot.style);
+            if (match.Count > 0) return match;
+            if (slot.kind == PlaceholderKind.Building || slot.kind == PlaceholderKind.Tree) return all.FindAll(r => string.IsNullOrEmpty(r.style) || Compatible(slot.style, r.style));
+            return all.FindAll(r => string.IsNullOrEmpty(r.style));   // models without a style (chosen by hand) still fit anywhere
+        }
+
+        /// <summary>Building styles that can stand in for each other when the wanted one is missing.</summary>
+        static bool Compatible(string wanted, string have) =>
+            wanted == have ||
+            (wanted == "house" && have == "villa") || (wanted == "villa" && have == "house") ||
+            (wanted == "apartment" && (have == "office" || have == "shop")) || (wanted == "office" && have == "apartment") ||
+            (wanted == "shop" && have == "apartment") || (wanted == "industrial" && have == "shop");
 
         /// <summary>Puts <paramref name="prefab"/> in the slot (null = show the placeholder again). True if a model is in place.</summary>
         public static bool Replace(PlaceholderSlot slot, GameObject prefab)

@@ -23,6 +23,7 @@ namespace CarSales
         public int version = 1;
         public string notes = "";
         public string jobJson = "";            // Asset Studio settings, to re-open and re-run the setup
+        public string style = "";              // phase 14: villa, house, apartment, office, tree, crane... ("" = any)
     }
 
     /// <summary>
