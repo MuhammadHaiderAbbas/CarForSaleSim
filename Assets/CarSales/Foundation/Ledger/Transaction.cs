@@ -45,6 +45,7 @@ namespace CarSales.Foundation
         Marketing = 33,
         Security = 34,
         PropertyDevelopment = 35,
+        CarHire = 36,       // phase 14e: hiring a car from a rival (-) and leasing your cars to their fleets (+)
     }
 
     public static class TxCategories
@@ -90,6 +91,7 @@ namespace CarSales.Foundation
                 case TxCategory.Marketing: return "Marketing";
                 case TxCategory.Security: return "Security";
                 case TxCategory.PropertyDevelopment: return "Property development";
+                case TxCategory.CarHire: return "Car hire";
                 default: return "Other";
             }
         }

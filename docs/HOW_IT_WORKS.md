@@ -571,3 +571,49 @@ Won cars appear in the auction car park — drive or tow them home.
 - `Studio/Core/RealismChecklist.cs` (tested): `RealismInputs` → `Evaluate` (items with weight, progress, why, next step),
   `Score`, `NextStep`. `Studio/Editor/RealismChecklistWindow.cs` gathers the inputs (registry, Surface Library,
   placeholder choices, Character Setup, Audio Library, graphics) and opens the right tool. Guide: `docs/REALISM_GUIDE.md`.
+
+## 31. Default content pack (Phase 14a-b)
+- **Data** (tested): `Studio/Core/DefaultContent.cs` - `ContentKind`, `ContentItem` (`Style`, `CarId`, `Uid`, licence,
+  author, `AssetId` = SafeName "dc_..." so the Asset Studio keeps it, `Category`, `Credit`), `All`, `OfStyle`,
+  `ForCar`, `LicenceAllowed`. `Studio/Core/CarCatalogue.cs` - the 48 `CatalogueCar`s; `CarSalesSetupWizard.Specs`
+  is built from it and `DefaultContentCar(id)` uses an installed model before the generated car.
+- **Installer**: `Studio/Editor/DefaultContentInstaller.cs` (queue; Sketchfab download API with your token; zip into
+  `Art/<Category>/Dc*/Source`; `ImportJob` + `AssetPipeline` analyse/fix/approve; record `style`; cars linked to their
+  `CarDefinition`; others added to `PlaceholderReplacements` for their kind) and `DefaultContentWindow`.
+- **Slots**: `PlaceholderSlot.style/variant`, kinds `Construction` and `Equipment`; `CarSalesPlaceholders.Candidates`
+  matches records by style. `WrapAsSlot` turns generated homes, closes, backdrop blocks and investments into slots.
+
+## 32. Construction stages (Phase 14c)
+- Rules (tested): `Sim/Buildings/ConstructionSim.cs` - `StageNights`, `StageOn(start, today, level)`, `Progress`,
+  `DaysLeft`, `StartDayFor` (old saves), names and descriptions.
+- `BuildingManager` records `startDay`; `Stage(id)`/`DaysLeft(id)`. `BuildingLevelVisual.constructionStages[]` +
+  `constructionLabel`, made by `Editor/CarSalesConstruction.cs` (`Machine` slots, fence panels, floodlights).
+
+## 33. Fitted-out stations (Phase 14d)
+- `Editor/CarSalesStations.cs` - `FuelPump` (Equipment slot), `FurnishFuelStation`, `FuelShop` (walk-in, counter =
+  fuel kiosk), `FurnishCarWash`, `FurnishAuctionHall` (keeps the crowd's `Bench` objects), `FurnishTyreShopExtras`.
+
+## 34. Rival dealerships (Phase 14e)
+- **Rules** (tested): `Sim/Market/RivalSim.cs` - `RivalProfile` (same names as `MarketModel.Competitors`, premises),
+  `IsOpen`, `AskingPrice`, `BestPrice`, `SellsToday`, `Refusal`, `TradeOffer`, `DailyRate`, `HireCost`, `Deposit`,
+  `Return` → `HireBill`, `LateDays`/`Recovered`, `LeaseRefusal`, `LeaseFee`, `LeaseKm`.
+- **Runtime**: `Systems/RivalManager.cs` (module "rivals": `RivalCar` stock and fleet, `HireContract`, `FleetLease`;
+  restock on `DayStarted`; `SyncToMarket` replaces the market's competitor listings; `Buy`, `AskBestPrice`, `Offer`,
+  `SellTo` (`VehicleRegistry.SellToTrade`), `Hire`, `BillFor`, `ReturnHire`, `Lease`, `RecallLease`; closes a rival on
+  `OnPropertiesChanged`; `Suspend()` while a game loads). `World/RivalDealership.cs` (displays via
+  `CarDisplay.MarkRival`, handover bays, staff, `openOnly`), `World/RivalDesk.cs`, `UI/RivalDealerUI.cs`.
+  Hire cars are `personal` with `CarInstance.hireId` (never sold). `ServiceType.RivalYard` zones are tow destinations.
+  `TxCategory.CarHire` (36).
+- **Editor**: `Editor/CarSalesRivals.cs` - `AddRivalToDealership` (lot spots for stock, level-2 corner bays for hire,
+  hire desk, yard zone) and `BuildCheapWheels` (site `CheapWheels` in `TownPlan`).
+
+## 35. Roads (Phase 14f)
+- **Mesher** (tested): `Sim/World/RoadMesher.cs` - `RoadInput` lines → nodes and arms (junction = 3+ arms, two roads
+  or a roundabout), trims per arm, `RoadRun`s with rounded bends (≤ 1 m inside the corner, so traffic lanes stay on the
+  tarmac), `RoadChunk`s per run / junction / roundabout with `RoadSurface` submeshes (asphalt, kerb, pavement,
+  marking, verge, island), UVs in metres, triangles wound for Unity, and `RoadFeature`s (give way, stop line, zebra,
+  roundabout entry). `BuildTown()` uses `TownPlan` roads, roundabouts, light nodes, site entrances and `TownCrossings`.
+- **Editor**: `Editor/CarSalesRoads.cs` - `BuildTownRoads` (a `TownRoad` + `SplineContainer` per road with linear
+  knots), `RoadInputsFromScene` (knots, curved spans sampled), `BuildRoadMeshes` (mesh sub-assets in
+  `Generated/Meshes/RoadMeshes.asset`, MeshColliders), `BuildRoadSigns`. Menu *Tools > Car Sales > Roads*.
+  `CarSales.Editor.asmdef` references `Unity.Splines`/`Unity.Mathematics` with the `CARSALES_SPLINES` version define.

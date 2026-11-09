@@ -103,6 +103,7 @@ namespace CarSales
                         condition = car.condition, mileage = car.mileage,
                     });
                 }
+            if (CarSalesServices.Rivals) CarSalesServices.Rivals.SyncToMarket();   // phase 14e: the rivals' real lots
             state.tradeBatches.RemoveAll(b => b.taken || b.expiresDay < day);
             if (newBatch || state.tradeBatches.Count == 0)
             {

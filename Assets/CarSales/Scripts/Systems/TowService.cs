@@ -39,6 +39,9 @@ namespace CarSales
                 var z = ServiceZone.Find(type);
                 if (z) list.Add(new Destination { name = z.displayName, zone = z });
             }
+            // Phase 14e: a rival's yard (sell them a car without the collection fee, hand back a hire car).
+            foreach (var z in ServiceZone.All)
+                if (z && z.type == ServiceType.RivalYard && RivalManager.IsOpen(z.propertyId)) list.Add(new Destination { name = z.displayName, zone = z });
             var home = CarSalesServices.Properties ? ServiceZone.Find(ServiceType.Home, CarSalesServices.Properties.ActiveHome) : null;
             if (home) list.Add(new Destination { name = "Home (" + home.displayName + ")", zone = home });
             return list;

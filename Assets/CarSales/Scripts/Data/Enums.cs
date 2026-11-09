@@ -16,6 +16,6 @@ namespace CarSales
 {
     /// <summary>Where an owned car physically is.</summary>
     public enum CarLocation { Spot, World }
-    public enum ServiceType { Workshop, CarWash, FuelStation, Home, UsedCarMarket, Auction }
+    public enum ServiceType { Workshop, CarWash, FuelStation, Home, UsedCarMarket, Auction, RivalYard }   // append only
     public enum PropertyType { Home, Dealership, Investment }
 }

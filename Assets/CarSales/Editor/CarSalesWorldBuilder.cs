@@ -38,8 +38,12 @@ namespace CarSales.EditorTools
             Vector3 Pos(string id) => W(TownPlan.Site(id).Position);
             float Yaw(string id) => TownPlan.Site(id).Yaw;
             refs.mainDealer = BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "autoworld", "AUTO WORLD", "autoworld", Pos("autoworld"), true, 1f, false, yaw: Yaw("autoworld"));
-            BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_downtown", "Downtown Motors", "dealer_downtown", Pos("dealer_downtown"), false, 1f, false, yaw: Yaw("dealer_downtown"));
-            BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_luxury", "Luxury Lane", "dealer_luxury", Pos("dealer_luxury"), false, 1.6f, true, yaw: Yaw("dealer_luxury"));
+            var downtown = BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_downtown", "Downtown Motors", "dealer_downtown", Pos("dealer_downtown"), false, 1f, false, yaw: Yaw("dealer_downtown"));
+            var luxury = BuildDealershipSite(env, m, refs, carDisplayPrefab, customerPrefab, "dealer_luxury", "Luxury Lane", "dealer_luxury", Pos("dealer_luxury"), false, 1.6f, true, yaw: Yaw("dealer_luxury"));
+            // Phase 14e: until you buy them, these two are rival dealers (sales, part-exchange, car hire); Cheap Wheels has its own yard.
+            AddRivalToDealership(downtown, "downtown", m, false);
+            AddRivalToDealership(luxury, "luxury", m, true);
+            BuildCheapWheels(PlanSiteRoot(env, "CheapWheels"), m);
 
             Progress("Town services", 0.6f);
             BuildFuelStation(PlanSiteRoot(env, "FuelStation"), m);

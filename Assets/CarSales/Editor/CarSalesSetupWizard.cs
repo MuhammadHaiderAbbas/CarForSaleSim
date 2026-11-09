@@ -758,6 +758,7 @@ namespace CarSales.EditorTools
             systems.AddComponent<BusinessManager>();
             systems.AddComponent<AmbienceManager>();
             systems.AddComponent<BuildingManager>();
+            systems.AddComponent<RivalManager>();   // phase 14e
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();

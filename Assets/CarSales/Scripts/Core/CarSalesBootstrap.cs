@@ -22,6 +22,7 @@ namespace CarSales
             if (!GetComponent<BusinessManager>()) gameObject.AddComponent<BusinessManager>();
             if (!GetComponent<AmbienceManager>()) gameObject.AddComponent<AmbienceManager>();
             if (!GetComponent<BuildingManager>()) gameObject.AddComponent<BuildingManager>();   // phase 11b
+            if (!GetComponent<RivalManager>()) gameObject.AddComponent<RivalManager>();         // phase 14e: rival dealers
             if (!GetComponent<StaffAvatars>()) gameObject.AddComponent<StaffAvatars>();   // phase 11: visible staff
             var fpc = FindAnyObjectByType<SimpleFirstPersonController>();
             if (fpc && !fpc.GetComponent<PlayerAvatar>()) fpc.gameObject.AddComponent<PlayerAvatar>();   // phase 11: your character

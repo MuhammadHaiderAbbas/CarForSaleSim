@@ -202,6 +202,20 @@ namespace CarSales
             CarSalesServices.UI.Success("Wholesale complete", $"{car.Definition.displayName} sold to the wholesaler for {UIFactory.Money(price)}.");
         }
 
+        /// <summary>Phase 14e: sold to a rival dealer at their price (the offer screen already checked it). No reputation change.</summary>
+        public void SellToTrade(CarDisplay car, int price, string buyer)
+        {
+            if (!car || car.Data.personal) return;
+            var d = car.Data;
+            int profit = price - d.purchasePrice - d.repairSpent;
+            if (CarSalesServices.TestDrive && CarSalesServices.TestDrive.IsDriving && CarSalesServices.TestDrive.CurrentCar == car)
+                CarSalesServices.TestDrive.EndDrive();
+            string name = car.Definition ? car.Definition.displayName : d.Name;
+            CarSalesServices.Economy.AddMoney(price, TxCategory.VehicleSale, $"Sold to {buyer} - {name}", d.instanceId);
+            RemoveSoldCar(car, price, profit);
+            CarSalesServices.PlaySfx(Sfx.Coin);
+        }
+
         void RemoveSoldCar(CarDisplay car, int price, int profit)
         {
             var d = car.Data;

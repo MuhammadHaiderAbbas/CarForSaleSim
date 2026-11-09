@@ -36,6 +36,7 @@ namespace CarSales
         public static WorldManager World;
         public static BusinessManager Business;
         public static BuildingManager Buildings;   // phase 11b
+        public static RivalManager Rivals;         // phase 14e
 
         /// <summary>Plays a sound if an AudioManager exists in the scene.</summary>
         public static void PlaySfx(Sfx sfx, float volume = 1f)
@@ -49,7 +50,7 @@ namespace CarSales
         {
             Database = null; Economy = null; Inventory = null; Marketplace = null;
             DayCycle = null; Save = null; UI = null; Dealership = null; Spawner = null;
-            Upgrades = null; Bank = null; Progress = null; Audio = null; TestDrive = null; Messages = null; Vehicles = null; Properties = null; Tow = null; Auction = null; Buildings = null;
+            Upgrades = null; Bank = null; Progress = null; Audio = null; TestDrive = null; Messages = null; Vehicles = null; Properties = null; Tow = null; Auction = null; Buildings = null; Rivals = null;
         }
     }
 }

@@ -76,6 +76,20 @@ and send me a screenshot plus the Console errors.
 
 ## 2. Step by step (do these in order)
 
+### Step 0 — The default content pack (one button, about an hour of downloading)
+
+Phase 14 does most of Steps 3 and 6 for you.
+
+1. Get a free Sketchfab account and copy your API token (Settings → Password & API).
+2. **Tools → Car Sales → Default Content**: paste the token, press **Install glTFast** if asked, then
+   **Download & set up everything**. You can stop and carry on later; finished models are kept.
+3. When it finishes, run **Build Everything**. Villas, houses, apartment and office blocks, trees, street lamps,
+   benches, fuel pumps, workshop kit and construction machines go into the town; the 48 cars go into the showrooms.
+4. Every model was checked: downloadable and **CC Attribution** (allowed in a paid game). The credits are added for you.
+5. The pack is several GB, so it is **not** in git: each computer downloads it once.
+
+The steps below are for going further (your own picks, scanned textures, people, sound).
+
 ### Step 1 — Graphics levels (automatic)
 
 Build Everything does this the first time. To redo it: **Tools → Car Sales → Realism → Apply Realistic Graphics**.
@@ -92,6 +106,8 @@ A photographed sky lights the whole town and reflects in every car.
 4. Run **Build Everything** again; the newest sky is used.
 
 ### Step 3 — Real cars (the biggest win: 30–60 minutes per car)
+
+The default pack (Step 0) already gives every class eight cars. Use this step for cars of your own choice.
 
 1. Get a free Sketchfab account. Find your API token under Settings → Password & API.
 2. **Asset Studio → Online → Sketchfab**: paste your links (the six cars) and press **Look up**. It shows each
@@ -164,6 +180,9 @@ Want better faces?
   MetaHumans into Unity takes extra work, and they are very heavy for a town full of people.
 
 ### Step 6 — Town models: buildings, trees, lamps, benches (a few evenings)
+
+The default pack (Step 0) fills the town. Use this step to swap in models you like better: give a building the style
+it should replace (villa, house, apartment, office, shop, industrial) in the Asset Studio and it goes to those spots.
 
 1. **Where to get them:**
    - **Sketchfab** (Downloadable + CC licence; check each one) for buildings, houses, shops and street furniture.
@@ -291,6 +310,7 @@ assets to launch.
 
 ## 6. What I could not do from here
 
-- **Download models**: this environment can't reach Sketchfab or Mixamo, and the licences need your account.
-- **See the result**: I can't run Unity. All values are a careful first pass checked by 375 automated tests, but
+- **Download models**: I checked every model in the default pack through the Sketchfab API, but the downloads need
+  your own token, so they happen in Unity. Mixamo needs your Adobe account.
+- **See the result**: I can't run Unity. All values are a careful first pass checked by 409 automated tests, but
   colours and brightness are a matter of taste. Send screenshots and I'll tune them.

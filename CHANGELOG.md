@@ -1,5 +1,26 @@
 # Changelog
 
+## v5.0-rc5 — Phase 14 "Final map"
+- **Default content pack** (*Tools > Car Sales > Default Content*): 109 realistic Sketchfab models, all checked as
+  downloadable and licensed for a paid game (credits added for you): villas, houses, apartment and office blocks, shops,
+  industrial units, trees, street lamps, benches, fuel pumps, workshop equipment and construction machines. One button
+  downloads and sets them all up; Build Everything puts each kind where it belongs (villas on the villa, houses in the
+  closes, offices and flats in town).
+- **48 cars, 8 in every class**, each with a description, year, fuel and gearbox, under fictional makes (your six cars
+  included). Old saves still load.
+- **Construction in stages**: a rebuild now clears the plot, brings in machines and materials, puts up the frame and
+  finishes over three or four days, with a board saying how long is left.
+- **Fitted-out service points**: fuel pumps with hoses and screens and a walk-in forecourt shop; car wash vacuums and
+  jet-wash bay; auction hall lighting rig, clerks, screens and office; tyre shop tyre wall and waiting area.
+- **Rival dealerships**: Downtown Motors, Luxury Lane and the new Cheap Wheels yard. Buy from their lots (ask for their
+  best price), sell them your cars for cash, hire a car by the day, or lease your stock to their hire fleets for daily
+  income. Buy Downtown Motors' or Luxury Lane's premises and they close down. Their real stock is now the competitor
+  prices on your market page (with GPS buttons), and their yards are tow destinations.
+- **Proper roads** built with **Unity Splines**: kerbs and raised pavements, dropped kerbs at every entrance, rounded
+  bends and junction corners, roundabouts with planted islands, verges on the loop, centre, hazard, edge, give-way and
+  stop lines, zebra crossings with Belisha beacons, give-way and roundabout signs. Edit a road's spline and rebuild.
+- 34 new tests (409 total).
+
 ## v5.0-rc4 — Phase 13 "Realism"
 - **Real textures on every surface**: asphalt, paving slabs, concrete, brick, painted walls, grass, porcelain and marble
   floors, wood, roof tiles, metal cladding and more, all at their real size. Background buildings have real fronts

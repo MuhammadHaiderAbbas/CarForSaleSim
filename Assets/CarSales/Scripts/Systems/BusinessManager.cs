@@ -169,7 +169,7 @@ namespace CarSales
         }
 
         // ------------------------------------------------------------------ INSURANCE & SECURITY
-        int StockValue() => CarSalesServices.Inventory ? CarSalesServices.Inventory.OwnedCars.Sum(c => CarValueCalculator.MarketValue(c)) : 0;
+        int StockValue() => CarSalesServices.Inventory ? CarSalesServices.Inventory.OwnedCars.Where(c => !c.IsHire).Sum(c => CarValueCalculator.MarketValue(c)) : 0;   // a hire car isn't yours
         int ClaimsLastYear => state.claimDays.Count(d => d >= Today - 364);
         public int WeeklyPremium(InsuranceTier t) => BusinessRules.WeeklyPremium(t, StockValue(), ClaimsLastYear, state.security);
 

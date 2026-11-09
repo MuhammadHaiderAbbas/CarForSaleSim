@@ -43,6 +43,10 @@ namespace CarSales
         public VehicleKnowledge knowledge = new VehicleKnowledge();
         public ListingInfo listing = new ListingInfo();   // phase 7b listing editor
 
+        // v5 phase 14e: set while this is a hire car from a rival dealer (it is then also `personal`: it can't be sold).
+        public string hireId;
+        public bool IsHire => !string.IsNullOrEmpty(hireId);
+
         /// <summary>Display name of the car model (not saved).</summary>
         public string Name => CarSalesServices.Database && CarSalesServices.Database.Get(carId) ? CarSalesServices.Database.Get(carId).displayName : carId;
     }

@@ -19,6 +19,18 @@ namespace CarSales
         public string AuctionLotId { get; private set; }
         /// <summary>Set for a private seller's car at a viewing (phase 7b).</summary>
         public string PrivateAdId { get; private set; }
+        /// <summary>Phase 14e: set for a car on a rival's lot or in its hire fleet.</summary>
+        public string RivalId { get; private set; }
+        public bool RivalFleet { get; private set; }
+
+        public void MarkRival(string rivalId, bool fleet, string tag)
+        {
+            RivalId = rivalId;
+            RivalFleet = fleet;
+            if (priceTag) priceTag.text = tag;
+            var rb = GetComponent<Rigidbody>();
+            if (rb) rb.isKinematic = true;
+        }
 
         public void MarkPrivateAd(string adId, int asking)
         {
@@ -107,11 +119,23 @@ namespace CarSales
                 return lot == null ? $"{Definition.displayName}" :
                     $"[E] Lot {lot.lotNo}: {Definition.year} {Definition.brand} {Definition.displayName}  |  grade {lot.report.grade}  |  guide £{lot.estimate:N0}";
             }
+            if (!string.IsNullOrEmpty(RivalId))
+            {
+                var rival = CarSales.Sim.RivalSim.Find(RivalId);
+                var rc = CarSalesServices.Rivals ? CarSalesServices.Rivals.Find(Data.instanceId) : null;
+                if (RivalFleet) return $"[E] {rival?.Name} hire: {Definition.brand} {Definition.displayName}  |  {(rc != null ? UIFactory.Money(CarSalesServices.Rivals.DailyRate(rc)) : "")} a day";
+                return $"[E] {rival?.Name}: {Definition.year} {Definition.brand} {Definition.displayName}  |  {(rc != null ? UIFactory.Money(CarSalesServices.Rivals.PriceOf(rc)) : "")}  |  {Data.condition:0}%  {Data.mileage:N0} km";
+            }
             if (!string.IsNullOrEmpty(PrivateAdId))
                 return $"[E] Private sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  £{Data.purchasePrice:N0} ono";
             if (IsForSaleListing)
                 return $"[E] For sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  £{Data.purchasePrice:N0}  |  free inspection on site";
             string name = $"{Definition.year} {Definition.brand} {Definition.displayName}";
+            if (Data.IsHire)
+            {
+                var hire = CarSalesServices.Rivals ? CarSalesServices.Rivals.HireFor(Data.instanceId) : null;
+                return $"[E] Hire car: {name}  |  due back day {(hire != null ? hire.dueDay : 0)}  |  Fuel {Data.fuel:0}%   [F] Drive";
+            }
             if (Data.personal) return $"[E] Your car: {name}  |  Fuel {Data.fuel:0}%   [F] Drive";
             return $"[E] {name}  |  Condition {Data.condition:0}%  |  Fuel {Data.fuel:0}%  |  {Data.state}   [F] Drive";
         }
@@ -120,6 +144,7 @@ namespace CarSales
         {
             if (!string.IsNullOrEmpty(AuctionLotId)) { CarSalesServices.UI.auction.ShowLot(AuctionLotId, this); return; }
             if (!string.IsNullOrEmpty(PrivateAdId)) { CarSalesServices.UI.privateSeller.Show(PrivateAdId); return; }
+            if (!string.IsNullOrEmpty(RivalId)) { RivalDealerUI.ShowCar(RivalId, Data.instanceId, this); return; }
             if (IsForSaleListing) CarSalesServices.UI.vehicleDetails.ShowPhysical(this);
             else CarSalesServices.UI.carMenu.Show(this);
         }

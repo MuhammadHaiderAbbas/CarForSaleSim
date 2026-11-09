@@ -147,6 +147,7 @@ namespace CarSales.Sim
             S("ParkingGarage", "Parking Garage", 10, -400, -51.5f, 180, -12, 0, 16, 17),
             S("dealer_downtown", "Downtown Motors", 14, 455, 115, 0, -19, -21, 19, 28),
             S("dealer_luxury", "Luxury Lane", 14, 380, -155, 0, -19, -21, 19, 28),
+            S("CheapWheels", "Cheap Wheels", 14, 443, 192, 180, -17, -3, 17, 32),   // phase 14e: a rival car sales & hire yard on the loop
         };
 
         public static PlanSite Site(string id) => Array.Find(Sites, s => s.Id == id);

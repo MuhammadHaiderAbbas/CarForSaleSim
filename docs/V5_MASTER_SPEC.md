@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-12 are merged; Phase 13 (realism: textures, lighting, interiors) code is written (see [Phase 13 status](#phase-13-status)). Nothing has been run in Unity yet: the release-candidate checks (2-week run, §11 budgets, Release Checklist) are to be done in the Editor.
+**Status:** Draft 1. Phases 1-13 are merged; Phase 14 (final map: default Sketchfab content, 48 cars, construction stages, fitted-out stations, rival dealers, spline roads) code is written (see [Phase 14 status](#phase-14-status)). Nothing has been run in Unity yet: the release-candidate checks (2-week run, §11 budgets, Release Checklist) are to be done in the Editor.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1286,6 +1286,47 @@ illumination (light probes / APV) is not set up: everything is real-time.
 6. Go home: E at the front door, walk to the bed, sleep after 18:00, wake beside it, E on the inside of the door.
 7. Realism Checklist and Surface Library: drop a Poly Haven asphalt in, Apply, see it in Play mode.
 8. Each graphics level: frame-rate overlay; Restore Original Graphics and Apply again both work.
+
+### Phase 14 — Final map: real models by default, rivals, proper roads (L)
+The owner asked for the final map to use realistic Sketchfab buildings and cars by default (no boxes), proper roads
+built with a Unity system, every service point furnished down to the small things, rival dealerships that buy, sell
+and rent, construction that goes plot → site with machines → frame → building, and eight described cars per class.
+**Done when:** one button downloads and sets up a checked, paid-game-safe content pack; homes, closes and backdrop
+blocks take the right kind of building; each class has eight cars with descriptions under fictional names; rebuilds
+run in visible stages over several days; the fuel station, car wash, auction hall and tyre shop are fitted out; three
+rival dealers trade (buy, sell, hire, fleet leasing); roads are real meshes from Unity Splines with kerbs, pavements,
+junctions, roundabouts and white lines.
+
+#### Phase 14 status
+**Code complete** (409 EditMode tests passing, compile-checked with and without Unity Splines; not run in Unity).
+
+| Item | Built |
+|---|---|
+| Content pack (14a) | `Studio/Core/DefaultContent.cs`: 109 Sketchfab models checked through the Sketchfab API (downloadable, licence CC Attribution - allowed in a paid game, credits added automatically): 6 villas (including your link), 7 houses, 8 apartment blocks, 8 offices, 2 shops, 3 industrial units; 5 trees, 2 street lamps, 2 benches, 2 fuel pumps, a car lift, tool cart, tyre rack and shelving; a tower crane, excavator, mixer, bulldozer, loader, dump truck, scaffold, site cabin, bricks, pallets, fencing and barriers; 48 cars. `Studio/Core/CarCatalogue.cs`: 48 cars, 8 per class (hatchback, saloon, SUV, sports, pickup, luxury) with year, price, popularity, fuel, gearbox and a description, under fictional makes (Kestrel, Orion, Titan, Vortex, Aurelia...). The original eight car ids are kept (saves load); your six cars are in (as the Halden Paragon V12, Paragon Coupe 800 and E5 Sport, Ardent Regalia Athlete, Brennan Sport 3 V8 and Sport 4). Tests: 8 per class, unique ids, no real makes in names or descriptions, one model per car, licences allowed, asset ids stable. |
+| One-click setup (14b) | *Tools > Car Sales > Default Content*: token, Install glTFast, **Download & set up everything** (queue, stop/resume, per-item Get/Retry, View). Each model: download, unzip, import, Asset Studio checks and fixes, approve, licence + credit recorded, then fitted where it belongs. Cars become the catalogue's display models. `PlaceholderSlot` gains `style` + `variant` and kinds Construction and Equipment; slots only take records of their style: villas on the villa and upper home levels, houses at Maple and Birch Close, apartments and offices on backdrop blocks (offices when clad or tall), shops on low blocks, pumps, lifts and racks in the stations. Downloads go to git-ignored folders. |
+| Construction (14c) | `Sim/Buildings/ConstructionSim.cs` (tested): Clearing (old building down, ground levelled) → Site (cabins, crane, materials, foundations) → Frame (columns, floors, brick walls, scaffolding) → Finished; 3 nights (level 3: 4). `Editor/CarSalesConstruction.cs` builds each stage with machine slots for the real models; `BuildingLevelVisual` shows the stage of the day and a board "UNDER CONSTRUCTION - stage - n days to go"; older saves work out the start day. |
+| Stations (14d) | `Editor/CarSalesStations.cs`: fuel pumps (hoses, holsters, screens, price displays), canopy, bollards, air/water, vacuum, gas cage, EV chargers and a walk-in forecourt shop (gondolas, fridges, counter and till, coffee, ATM, news stand); car wash (entry lights, programme board, drains, vacuums, jet-wash bay); auction hall (lighting truss and spots, clerks' desks, side screens, glass auction office, refreshments, queue barriers); tyre shop (tyre wall, balancer, waiting area). |
+| Rival dealers (14e) | `Sim/Market/RivalSim.cs` (tested): Downtown Motors and Luxury Lane trade from the two dealerships you can buy (buy the premises and they close down), Cheap Wheels from its own yard on the loop (new site). Asking price (margin ±4%), best price (reputation and days on the lot), daily turnover, cash offers (buy rate, specialities, condition, full lot), hire (0.8% of value a day, a week 15% off, deposit 10% £200-£3,000, 200 km a day, refuel +20%, damage, late days ×1.5, recovered after 3 late days + £250) and fleet leasing of your stock (half their day rate, mileage and wear). `RivalManager` (module "rivals"): daily restock, their lots are the market's competitor prices, buy/sell/hire/return/lease/recall, closes a rival when you buy its premises. `RivalDealership` (lot + hire bays, salesperson, signs), `RivalDesk`, `RivalDealerUI` (Buy / Sell / Hire / Lease tabs), hire cars marked on `CarInstance.hireId`, rival yards are tow destinations, ledger category Car hire, GPS buttons on the market page. Editor: `CarSalesRivals.cs` (Cheap Wheels yard, rival desks and hire bays in the two dealerships). |
+| Roads (14f) | `Sim/World/RoadMesher.cs` (tested): from each road's line - rounded bends, 2.4 m pavements on 12 cm kerbs with dropped kerbs at every site entrance, gravel verges and edge lines on the loop, junctions with 6 m kerb corners, roundabouts with a kerbed planted island, centre lines with hazard lines before junctions, give-way lines and triangles, stop lines at the lights, roundabout give-way lines, 5 zebra crossings. `Editor/CarSalesRoads.cs`: each road is a `TownRoad` with a Unity Splines `SplineContainer` (package installed by the dependency installer; `CARSALES_SPLINES`), meshes are saved to `Generated/Meshes/RoadMeshes.asset` with colliders, signs (give way, roundabout) and Belisha beacons are placed from the mesher's features. *Tools > Car Sales > Roads > Rebuild Road Meshes (from splines)* remakes everything after you edit a spline. Tests: every road and lane covered, carriageway width, faces up, lines on the road, pavements off it, smooth bends, dropped kerbs, junction lines. |
+
+**Not done / needs you:** the downloads themselves (several GB) happen in Unity with your free Sketchfab token. Car
+models of real cars still carry their makers' badges: remove them before release (Release Checklist warns). Your
+message ended with "people use assets which are available online having links:" but no links came through - send
+them and they go in the pack; until then people come from Mixamo (Character Setup). Traffic still drives the town plan's
+lanes, so keep junctions where they are when you edit splines. Rival lots have no browsing customers. During a rebuild
+of a dealership or the service centre, its computer and service bays stay standing on the site.
+
+**Phase 14 play-test checklist:**
+1. Tools > Car Sales > Default Content: paste your token, Install glTFast, Download & set up everything (or one group).
+2. Build Everything: villas, houses, apartment and office blocks, trees, lamps, pumps and machines appear; check sizes.
+3. Showrooms and the Used Car Market show the new cars; Inventory and listings show the descriptions.
+4. Buy a house and rebuild it (Buildings app): each morning the stage changes (cleared plot, site, frame, finished).
+5. Fuel station: walk into the shop, refuel at a pump; car wash, auction hall and tyre shop look fitted out.
+6. Drive to Cheap Wheels (Market page > Competitors > GPS): ask a best price, buy a car, sell one, hire a car and hand it
+   back late and early, lease a car for 3 days and see the daily payments and its return. Buy the Downtown Motors
+   premises: they close and their stock disappears.
+7. Drive the town: kerbs, pavements, dropped kerbs into every site, junction corners, roundabouts, white lines, signs.
+8. Move a spline knot (Road_Park Road), Rebuild Road Meshes, Play: the road follows.
 
 ---
 

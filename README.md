@@ -56,7 +56,11 @@ test-drive loop with roundabouts), restyles the whole interface to the **V2 UI b
 settings, HUD, phone, fuel station), and adds a **Release Checklist** (*Tools → Car Sales*) that must pass before a
 Steam release build. Phase 13 (**Realism**) puts **real textures on every surface**, adds **Low–Ultra graphics levels**
 (shadows, ambient occlusion, real street lamps and headlights at night, wet roads in the rain, haze), **furnished
-interiors** and **walk-in homes**, and a **Realism Checklist** (*Tools → Car Sales → Realism*).
+interiors** and **walk-in homes**, and a **Realism Checklist** (*Tools → Car Sales → Realism*). Phase 14 (**Final map**)
+adds a one-click **Default Content** pack (*Tools → Car Sales → Default Content*: 109 checked Sketchfab buildings, cars,
+trees, props and construction machines), **48 described cars** (8 per class), **construction in stages**, fitted-out
+service points, **rival dealerships** you can buy from, sell to and hire from (or lease your cars to), and **proper
+roads** built with **Unity Splines** (kerbs, pavements, junctions, roundabouts, white lines, zebra crossings).
 **To make the game look real, follow [docs/REALISM_GUIDE.md](docs/REALISM_GUIDE.md)** (every step, all free sources).
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`

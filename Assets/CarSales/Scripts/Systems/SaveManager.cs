@@ -16,8 +16,8 @@ namespace CarSales
     public class SaveManager : MonoBehaviour
     {
         public const string LegacyFileName = "carsales_save.json";
-        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing", WorldModule = "world", BusinessModule = "business", BuildingsModule = "buildings";
-        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1, WorldModuleVersion = 1, BusinessModuleVersion = 1, BuildingsModuleVersion = 1;   // game v6: per-car components
+        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing", WorldModule = "world", BusinessModule = "business", BuildingsModule = "buildings", RivalsModule = "rivals";
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1, WorldModuleVersion = 1, BusinessModuleVersion = 1, BuildingsModuleVersion = 1, RivalsModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-rc1";
 
         [SerializeField] bool loadOnStart = true;
@@ -73,6 +73,7 @@ namespace CarSales
         public void NewGame()
         {
             StopEverything();
+            if (CarSalesServices.Rivals) CarSalesServices.Rivals.Suspend();
             CarSalesServices.Economy.ResetToStart();
             if (CarSalesServices.Properties) CarSalesServices.Properties.ResetToStart();
             if (CarSalesServices.Upgrades) CarSalesServices.Upgrades.SetLevels(null);
@@ -87,6 +88,7 @@ namespace CarSales
             if (CarSalesServices.World) CarSalesServices.World.ResetState();
             if (CarSalesServices.Business) CarSalesServices.Business.ResetState();
             if (CarSalesServices.Buildings) CarSalesServices.Buildings.ResetState();
+            if (CarSalesServices.Rivals) CarSalesServices.Rivals.ResetState();
             CarSalesServices.DayCycle.StartDay(1, 100f);
 
             var cars = new List<CarInstance>();
@@ -199,6 +201,7 @@ namespace CarSales
             if (CarSalesServices.World) env.Set(WorldModule, WorldModuleVersion, JsonUtility.ToJson(CarSalesServices.World.State));
             if (CarSalesServices.Business) env.Set(BusinessModule, BusinessModuleVersion, JsonUtility.ToJson(CarSalesServices.Business.State));
             if (CarSalesServices.Buildings) env.Set(BuildingsModule, BuildingsModuleVersion, JsonUtility.ToJson(CarSalesServices.Buildings.State));
+            if (CarSalesServices.Rivals) env.Set(RivalsModule, RivalsModuleVersion, JsonUtility.ToJson(CarSalesServices.Rivals.State));
             try
             {
                 Store.Write(ActiveSlot, env);
@@ -241,6 +244,7 @@ namespace CarSales
             CarSales.Sim.WorldState world = null;
             BusinessState business = null;
             BuildingsState buildings = null;
+            RivalsState rivals = null;
             try
             {
                 var game = result.Envelope.Get(GameModule);
@@ -272,6 +276,7 @@ namespace CarSales
                 world = Module<CarSales.Sim.WorldState>(result.Envelope, WorldModule, WorldModuleVersion);
                 business = Module<BusinessState>(result.Envelope, BusinessModule, BusinessModuleVersion);
                 buildings = Module<BuildingsState>(result.Envelope, BuildingsModule, BuildingsModuleVersion);
+                rivals = Module<RivalsState>(result.Envelope, RivalsModule, RivalsModuleVersion);
             }
             catch (Exception e)
             {
@@ -283,6 +288,7 @@ namespace CarSales
             var fixes = SaveValidator.Validate(data);
 
             StopEverything();
+            if (CarSalesServices.Rivals) CarSalesServices.Rivals.Suspend();   // until its own state is loaded below
             CarSalesServices.Economy.SetState(data.money, data.reputation);
             CarSalesServices.Economy.LoadLedger(ledger, data.day);
             if (CarSalesServices.Properties) CarSalesServices.Properties.SetState(data.ownedProperties, data.activeHome);
@@ -306,6 +312,7 @@ namespace CarSales
             if (CarSalesServices.Business) CarSalesServices.Business.SetState(business);
             if (CarSalesServices.Buildings) CarSalesServices.Buildings.SetState(buildings);   // after business: old developments become levels
             if (CarSalesServices.Messages) CarSalesServices.Messages.SetMessages(data.messages);
+            if (CarSalesServices.Rivals) CarSalesServices.Rivals.SetState(rivals);   // after the market: their lots are its competitor prices
             CarSalesServices.Vehicles.RebuildAll();
             CarSalesServices.Marketplace.SetListings(data.marketListings, data.lotListings);
             if (CarSalesServices.Auction) CarSalesServices.Auction.SetState(auction);

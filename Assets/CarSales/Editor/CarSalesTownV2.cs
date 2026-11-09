@@ -64,53 +64,21 @@ namespace CarSales.EditorTools
         // ------------------------------------------------------------------ ROADS
         static void BuildPlanRoads(Transform root, Mats m)
         {
-            int k = 0;
-            foreach (var r in TownPlan.Roads)
-            {
-                var g = Group(root, r.Name);
-                bool loop = r.Pavements == false;
-                for (int i = 0; i < r.Points.Length - 1; i++, k++)
-                {
-                    V2 a = r.Points[i], b = r.Points[i + 1];
-                    float len = V2.Distance(a, b);
-                    if (len < 1f) continue;
-                    var dir = (b - a).Normalized;
-                    float ta = TownPlan.IsRoundabout(a) ? TownPlan.RoundaboutRadius : 0f, tb = TownPlan.IsRoundabout(b) ? TownPlan.RoundaboutRadius : 0f;
-                    // Extend plain ends by half the width so bends and junctions have no gaps.
-                    float ea = ta > 0f ? 0f : r.Width / 2f, eb = tb > 0f ? 0f : r.Width / 2f;
-                    var start = a + dir * (ta - ea); var end = b - dir * (tb - eb);
-                    float pieceLen = V2.Distance(start, end);
-                    var piece = Group(g, "Segment");
-                    piece.position = W((start + end) * 0.5f);
-                    piece.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.z));
-                    Solid(piece, "Asphalt", new Vector3(0f, 0.008f + (k % 7) * 0.0006f, 0f), new Vector3(r.Width, 0.016f, pieceLen), m.asphalt);
-                    // Centre line (dashed in town, solid edge lines on the loop), kept clear of junctions.
-                    float clear = 14f;
-                    for (float d = -len / 2f + ta + clear; d < len / 2f - tb - clear; d += 12f)
-                        Deco(piece, "CentreDash", PrimitiveType.Cube, new Vector3(0f, 0.022f, d - (ea - eb) / 2f + (ta - tb) / 2f), new Vector3(0.15f, 0.01f, 4f), m.line);
-                    if (loop)
-                        foreach (float side in new[] { -1f, 1f })
-                            Deco(piece, "EdgeLine", PrimitiveType.Cube, new Vector3(side * (r.Width / 2f - 0.35f), 0.022f, 0f), new Vector3(0.12f, 0.01f, Mathf.Max(1f, pieceLen - 2f * r.Width)), m.line);
-                }
-            }
+            // Phase 14f: real road meshes (carriageway, kerbs, pavements, junctions, roundabouts, white lines) and a
+            // Unity Splines spline per road - see CarSalesRoads. Only the dressing is added here.
+            BuildTownRoads(root, m);
 
-            // Roundabouts: asphalt circle, raised grass island with a kerb, a tree in the middle.
+            // Roundabout islands: a tree and shrubs on the kerbed grass.
             foreach (var rb in TownPlan.Roundabouts)
             {
-                var g = Group(root, "Roundabout");
-                g.position = W(rb.Centre);
-                float outer = rb.Radius + 5.5f, island = rb.Radius - 5f;
-                var disc = Deco(g, "Asphalt", PrimitiveType.Cylinder, new Vector3(0f, 0.012f, 0f), new Vector3(outer * 2f, 0.012f, outer * 2f), m.asphalt);
-                disc.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
-                var kerb = Prim(PrimitiveType.Cylinder, "Kerb", g, new Vector3(0f, 0.1f, 0f), new Vector3(island * 2f + 0.6f, 0.1f, island * 2f + 0.6f), m.sidewalk);
-                kerb.AddComponent<MeshCollider>();
-                kerb.isStatic = true;
-                Deco(g, "Island", PrimitiveType.Cylinder, new Vector3(0f, 0.2f, 0f), new Vector3(island * 2f, 0.02f, island * 2f), m.ground);
+                var g = Group(root, "RoundaboutPlanting");
+                g.position = W(rb.Centre, RoadMesher.RoadY + 0.15f);
+                float island = rb.Radius - RoadMesher.IslandInset;
                 Tree(g, Vector3.zero, m, 1.2f);
                 for (int i = 0; i < 6; i++)
                 {
                     float a = i * Mathf.PI / 3f;
-                    Deco(g, "Bush", PrimitiveType.Sphere, new Vector3(Mathf.Cos(a) * island * 0.6f, 0.5f, Mathf.Sin(a) * island * 0.6f), new Vector3(1.6f, 0.9f, 1.6f), m.leaves);
+                    Deco(g, "Bush", PrimitiveType.Sphere, new Vector3(Mathf.Cos(a) * island * 0.6f, 0.35f, Mathf.Sin(a) * island * 0.6f), new Vector3(1.6f, 0.9f, 1.6f), m.leaves);
                 }
             }
 
@@ -123,7 +91,6 @@ namespace CarSales.EditorTools
                 var piece = Group(pav, "Pavement");
                 piece.position = W((a + b) * 0.5f);
                 piece.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.z));
-                Solid(piece, "Kerb", new Vector3(0f, 0.06f, 0f), new Vector3(2.4f, 0.12f, len), m.sidewalk);
                 for (float d = -len / 2f + 12f; d < len / 2f - 6f; d += 42f)
                 {
                     var lamp = Group(piece, "LampSpot");

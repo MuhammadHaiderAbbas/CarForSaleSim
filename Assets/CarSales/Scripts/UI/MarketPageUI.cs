@@ -39,6 +39,21 @@ namespace CarSales
             }, 36f, false);
             mine.SetEmptyText("You have no cars listed for sale.");
             UIFactory.SectionTitle(rivalsView, "Competitor stock");
+            // Phase 14e: the competitors are real dealers in town - visit them to buy, sell, hire or lease.
+            var visit = UIFactory.HRow(rivalsView, 40f, 8f);
+            var visitText = UIFactory.Text(visit, "Visit them in town - buy, sell, hire or lease:", 14, UIFactory.TextDim, TextAlignmentOptions.Left);
+            UIFactory.LE(visitText, flexW: 1);
+            foreach (var r in RivalSim.Rivals)
+            {
+                var rival = r;
+                var b = UIFactory.Btn(visit, "GPS " + r.Name, UIFactory.CardLight, () =>
+                {
+                    if (!RivalManager.IsOpen(rival)) { CarSalesServices.UI.Notify($"{rival.Name} has stopped trading - you own their premises."); return; }
+                    var place = MapPlace.All.FirstOrDefault(p => p && p.placeName == rival.Name);
+                    if (place) { GpsSystem.SetTarget(place); CarSalesServices.UI.Success("GPS", "Route set to " + rival.Name); }
+                }, 38f, 13f);
+                UIFactory.LE(b, h: 38, w: 190, flexW: 0);
+            }
             rivals = UIFactory.MakeTable(rivalsView, new List<UIFactory.TableColumn>
             {
                 new UIFactory.TableColumn("Dealer", 200f), new UIFactory.TableColumn("Car"), new UIFactory.TableColumn("Condition", 120f),

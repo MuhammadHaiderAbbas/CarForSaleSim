@@ -27,7 +27,7 @@ namespace CarSales.Studio
         {
             new CatalogueCar("hatch_velo", "Velo", "Kestrel", "Hatchback", 2016, 12000, 1.0f, "Petrol", "Manual", "Nimble city hatchback. Cheap to run and easy to park."),
             new CatalogueCar("hatch_metro", "Metro S", "Kestrel", "Hatchback", 2019, 15500, 1.1f, "Petrol", "Automatic", "Sporty hatch with a modern infotainment system."),
-            new CatalogueCar("hatch_saeta", "Saeta R", "Kestrel", "Hatchback", 1998, 9500, 1.2f, "Petrol", "Manual", "A cult 90s hot hatch with a screaming 1.8 VTEC-style engine. Enthusiasts pay over the odds for clean, unmodified ones."),
+            new CatalogueCar("hatch_saeta", "Saeta R", "Kestrel", "Hatchback", 1998, 9500, 1.2f, "Petrol", "Manual", "A cult 90s hot hatch with a screaming high-revving 1.8 twin-cam. Enthusiasts pay over the odds for clean, unmodified ones."),
             new CatalogueCar("hatch_dash", "Dash S", "Pellar", "Hatchback", 2011, 8900, 1.1f, "Petrol", "Manual", "Supercharged three-door with go-kart handling and a premium cabin. Check the timing chain and the clutch."),
             new CatalogueCar("hatch_pip", "Pip", "Novaro", "Hatchback", 2001, 2400, 0.9f, "Petrol", "Manual", "Tiny, frugal and almost unbreakable. A favourite first car for new drivers and students."),
             new CatalogueCar("hatch_lune", "Lune", "Calder", "Hatchback", 2020, 13500, 1.0f, "Petrol", "Manual", "Stylish modern supermini with a big touchscreen, lane assist and low insurance."),
@@ -40,7 +40,7 @@ namespace CarSales.Studio
             new CatalogueCar("sedan_h1900", "1900 Classic", "Halden", "Sedan", 1987, 6500, 1.0f, "Petrol", "Manual", "Compact 80s executive saloon built like a bank vault. Collectors want low-mileage, rust-free cars."),
             new CatalogueCar("sedan_b320", "3-Twenty", "Brennan", "Sedan", 1996, 4800, 1.0f, "Petrol", "Manual", "Rear-wheel-drive 90s saloon with a smooth straight-six. A favourite for tuners and track days."),
             new CatalogueCar("sedan_steppe", "Steppe", "Novaro", "Sedan", 2004, 1600, 0.8f, "Petrol", "Manual", "Basic budget saloon. Nothing fancy, but parts are cheap and it starts every morning."),
-            new CatalogueCar("sedan_marshal", "Marshal", "Lumen", "Sedan", 2003, 4200, 0.9f, "Petrol", "Automatic", "Big, soft American V8 cruiser with a bench seat and a boot you could live in."),
+            new CatalogueCar("sedan_marshal", "Marshal", "Lumen", "Sedan", 2003, 4200, 0.9f, "Petrol", "Automatic", "Big, soft American V8 cruiser with a front bench and a boot you could live in."),
             new CatalogueCar("suv_ridge", "Ridge", "Titan", "SUV", 2017, 32000, 1.2f, "Diesel", "Automatic", "Rugged 4x4 SUV. Families love it."),
             new CatalogueCar("suv_trekker", "Trekker 110", "Titan", "SUV", 2016, 34000, 1.2f, "Diesel", "Manual", "Boxy, go-anywhere off-roader with a ladder chassis. Holds its value better than almost anything."),
             new CatalogueCar("suv_prism", "Prism Coupe", "Calder", "SUV", 2015, 21000, 1.1f, "Diesel", "Automatic", "Fashionable compact SUV with a coupe roofline and a premium badge. Check the infotainment and the gearbox."),
