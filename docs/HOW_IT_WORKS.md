@@ -443,4 +443,7 @@ Won cars appear in the auction car park — drive or tow them home.
   town's `RoadNetwork` (falls back to `RoadGraph.DefaultTown()`).
 - **World Builder:** `Editor/CarSalesWorldBuilderTool.cs` (`AddSiteToTown`, `BuildUserSite` → `BuildDealershipSite`
   with an optional imported building, `ValidateSite`), runtime `Site` (registers a buyable property) and `WorldLayout`.
+- **Phase 8b:** `RoadEditing` (snap, split, scatter; tested), `WorldLayout.userRoads` + `Network()`, `BuildUserRoads` /
+  `ApplyRoadsToTown` and the Scene-view drawing in `WorldBuilderWindow`, `SiteTemplate` builders in `BuildUserSite`,
+  `PerformanceGovernor` (density scale + overlay), `GameSettings.TrafficLevel/ShowPerformance`.
 

@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-7 are merged; Phase 8a code is written (see [Phase 8 status](#phase-8-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-7 and 8a are merged; Phase 8b code is written (see [Phase 8 status](#phase-8-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1111,9 +1111,19 @@ computer); traffic and pedestrians run at the performance budget.
 | Pedestrians | `PedestrianSystem`: up to **18 walkers** (budget 40) on the pavements, your imported characters if any, fewer at night and in rain; passers-by at an open dealership sometimes walk in as customers. |
 | World Builder | **Tools > Car Sales > World Builder**: *Sites* - add a dealership (name, standard or premium, standard glass showroom **or an imported Building from the Asset Studio** fitted into the footprint, price (0 = owned) and rent, position/turn, "use the Scene view's centre") → built into the town with 14 spots, computer, customers, sign, map icon, NavMesh baked; kept in `Data/WorldLayout.asset` and rebuilt by Build Everything; rebuild/remove. A bought-later site registers itself as a property (Real Estate). *Validate* - every `Site` in the scene: entrance on the NavMesh, a road within 45 m, map place, dealership spots/spawns/exit/NavMesh/computer. Generated town → `Data/Layout_DefaultTown.asset`; `RoadNetwork` holds the town's road segments. |
 
-**Phase 8b (next):** drawing new roads in the World Builder (spline tool) and joining them to the lane graph, scatter
-(trees/lamps along roads), more site templates (workshop, car wash, house, auction yard), interiors from imported
-Interior assets, LOD'd/2-5 Hz far AI ticks, and a measured performance pass.
+**Phase 8b: code complete** (259 EditMode tests, compile-checked; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Roads | World Builder → **Roads**: *Draw a road* - click start and end in the Scene view (cyan ring = snapped point; ends snap to road ends or onto a road within 8 m, `RoadEditing.Snap`). A road ending on another splits it so a junction (and traffic lights) appear (`RoadEditing.Add/SplitAt`). *Apply roads to the town*: asphalt, pavements, centre dashes, trees every 24 m and street lamps every 40 m on both sides (optional per road; they're placeholder slots, so the Asset Studio *Town* tab swaps them too), and the `RoadNetwork` (default roads + yours) that traffic follows. Kept in `Data/WorldLayout.asset` (`userRoads`) and rebuilt by Build Everything. Straight pieces: chain several for a bend. |
+| Site types | Dealership, Premium dealership, **Workshop**, **Car wash**, **Fuel station**, **Parts shop**, **House** (buy it, live there: wake 07:00, +0.3 rep/day), **Apartments** (buy, earns your set income nightly), **Building** (scenery: an imported building). Houses and apartments with a price register as properties (Real Estate). |
+| Interiors | Dealerships can have an imported **Interior** asset fitted inside the showroom (21×11 m, no extra colliders). |
+| Performance | Settings → *Traffic & people* (off / low / normal / busy) and *Frame-rate overlay* (fps, frame time, worst frame, counts, density). `PerformanceGovernor`: under 45 fps for 5 s → 15% fewer cars and people (down to 30%); over 58 fps for 10 s → back up. Traffic more than 120 m away ticks at 4 Hz (spec §11). Measuring against the §11 budgets needs a run on the target PC - use the overlay. |
+
+**Phase 8b play-test checklist:**
+1. World Builder → Roads (town scene open): draw a road from the south road at (0, -27) down to (0, -120), and a second one across it; Apply. Play: traffic turns into it, lights at the new junction.
+2. Sites: add a Workshop and a House next to the new road, and a dealership with an imported building + interior; Validate.
+3. Settings → Frame-rate overlay ON; Traffic BUSY in the rain at AUTO WORLD: note the fps and whether the density drops.
 
 **Phase 8a play-test checklist:**
 1. Build Everything, Play. Watch traffic stop at the lights at x = ±70; stand in the road - cars stop for you.

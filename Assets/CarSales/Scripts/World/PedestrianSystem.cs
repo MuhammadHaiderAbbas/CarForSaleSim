@@ -15,6 +15,7 @@ namespace CarSales
         static readonly float[] Pavements = { -33.2f, 101.2f };
         readonly List<Walker> walkers = new List<Walker>();
         float spawnTimer, walkInTimer;
+        public int Count => walkers.Count;
         Material mat;
 
         void Start()
@@ -31,8 +32,9 @@ namespace CarSales
             if (!cam) return;
             float hour = CarSalesServices.DayCycle ? CarSalesServices.DayCycle.HourOfDay : 12f;
             float weather = CarSalesServices.World ? WorldSim.Footfall(CarSalesServices.World.Weather) : 1f;
-            int wanted = Mathf.RoundToInt(TrafficRules.MaxPedestrians * TrafficRules.Density(hour) * weather);
+            int wanted = Mathf.RoundToInt(TrafficRules.MaxPedestrians * TrafficRules.Density(hour) * weather * GameSettings.TrafficMultiplier * PerformanceGovernor.Scale);
 
+            if (walkers.Count > wanted + 2 && walkers.Count > 0) { var last = walkers[walkers.Count - 1]; if (last.t) Destroy(last.t.gameObject); walkers.RemoveAt(walkers.Count - 1); }
             for (int i = walkers.Count - 1; i >= 0; i--)
             {
                 var w = walkers[i];

@@ -334,12 +334,12 @@ namespace CarSales.EditorTools
         }
 
         /// <summary>Puts an imported building where the showroom would be: scaled to the footprint, on the ground, with colliders.</summary>
-        static void FitBuilding(Transform g, GameObject prefab, Vector3 centre, Vector3 footprint)
+        static void FitBuilding(Transform g, GameObject prefab, Vector3 centre, Vector3 footprint, bool turn = true, bool colliders = true)
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, g);
-            go.name = "Building";
+            go.name = turn ? "Building" : "Interior";
             go.transform.localPosition = centre;
-            go.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);   // its front (+Z) faces the lot
+            go.transform.localRotation = Quaternion.Euler(0f, turn ? 180f : 0f, 0f);   // a building's front (+Z) faces the lot
             var rs = go.GetComponentsInChildren<Renderer>();
             if (rs.Length == 0) return;
             Bounds Bounds() { var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds); return b; }
@@ -349,7 +349,7 @@ namespace CarSales.EditorTools
             bb = Bounds();
             var target = g.TransformPoint(centre);
             go.transform.position += new Vector3(target.x - bb.center.x, target.y - bb.min.y, target.z - bb.center.z);
-            if (go.GetComponentsInChildren<Collider>().Length == 0)
+            if (colliders && go.GetComponentsInChildren<Collider>().Length == 0)
                 foreach (var mf in go.GetComponentsInChildren<MeshFilter>()) if (mf.sharedMesh) mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
             foreach (var t in go.GetComponentsInChildren<Transform>()) t.gameObject.isStatic = true;
         }

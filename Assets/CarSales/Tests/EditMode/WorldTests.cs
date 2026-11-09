@@ -117,3 +117,37 @@ namespace CarSales.Tests
         }
     }
 }
+
+namespace CarSales.Tests
+{
+    using System.Collections.Generic;
+    using System.Linq;
+    using CarSales.Sim;
+    using NUnit.Framework;
+
+    public class RoadEditingTests
+    {
+        [Test]
+        public void NewRoad_SnapsToEnds_AndSplitsForAJunction()
+        {
+            var roads = new List<RoadSegment> { new RoadSegment(new V2(0f, 0f), new V2(100f, 0f)) };
+            Assert.IsTrue(RoadEditing.Add(roads, new V2(50f, 3f), new V2(50f, 80f)), "starts 3 m from the road: snapped onto it");
+            Assert.AreEqual(3, roads.Count, "the old road was split at x = 50");
+            var lanes = RoadGraph.Build(roads);
+            Assert.IsTrue(lanes.Any(l => l.endsAtJunction), "a T-junction appears");
+            Assert.AreEqual(50f, roads[2].a.x, 1e-3);
+            Assert.AreEqual(0f, roads[2].a.z, 1e-3);
+            Assert.IsTrue(RoadEditing.Add(roads, new V2(103f, 2f), new V2(103f, -60f)));
+            Assert.AreEqual(100f, roads.Last().a.x, 1e-3, "snapped to the road end");
+            Assert.IsFalse(RoadEditing.Add(roads, new V2(0f, 0f), new V2(4f, 0f)), "too short");
+        }
+
+        [Test]
+        public void Scatter_PutsPointsOnBothSides()
+        {
+            var pts = RoadEditing.Scatter(new RoadSegment(new V2(0f, 0f), new V2(100f, 0f)), 20f, 7f);
+            Assert.AreEqual(10, pts.Count);   // d = 10, 30, 50, 70, 90 on both sides
+            Assert.IsTrue(pts.All(p => System.Math.Abs(System.Math.Abs(p.point.z) - 7f) < 1e-3));
+        }
+    }
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.0-dev — Phase 8b "Build your town"
+- **Draw roads** in the World Builder: click start and end, ends snap and make junctions; pavements, trees and
+  lamps are added and traffic drives on them.
+- **More site types**: workshop, car wash, fuel station, parts shop, house, rental apartments, scenery buildings.
+- **Showroom interiors** from imported Interior assets.
+- **Performance**: traffic/people setting, frame-rate overlay, automatic thinning when the frame rate drops, far
+  traffic updated less often.
+- 2 new tests (259 total).
+
 ## v5.0-dev — Phase 8a "Living town"
 - **Weather**: rain, heavy rain, fog, overcast; wet roads, less grip, fewer customers, dirty cars.
 - **Calendar**: Sunday hours, bank holidays, busy Saturdays. **Fuel prices** change daily.

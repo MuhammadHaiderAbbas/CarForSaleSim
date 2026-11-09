@@ -8,13 +8,13 @@ namespace CarSales
     public class SettingsUI : UIPanel
     {
         Slider sensitivity, volume;
-        TextMeshProUGUI sensitivityLabel, volumeLabel, drivingLabel, gearboxLabel, absLabel, tcsLabel, escLabel, themeLabel, scaleLabel;
+        TextMeshProUGUI sensitivityLabel, volumeLabel, drivingLabel, gearboxLabel, absLabel, tcsLabel, escLabel, themeLabel, scaleLabel, trafficLabel, perfLabel;
         Slider uiScale;
         public GameObject showOnBackInMenu;
 
         public override void Build()
         {
-            var body = UIFactory.Window(Root, "Settings", new Vector2(720f, 860f), Back);
+            var body = UIFactory.Window(Root, "Settings", new Vector2(720f, 920f), Back);
             UIFactory.Vertical(body, 0, 12f);
             sensitivityLabel = UIFactory.Text(body, "", 21, UIFactory.TextMain, TextAlignmentOptions.Left, true);
             sensitivity = UIFactory.MakeSlider(body, UIFactory.Accent, 32f);
@@ -37,6 +37,10 @@ namespace CarSales
                 GameSettings.Theme = (UIThemeChoice)(((int)GameSettings.Theme + 1) % 4);
                 UpdateLabels();
             }, out themeLabel, 48f, 18f);
+
+            var world = UIFactory.HRow(body, 46f, 10f);
+            UIFactory.Btn(world, "", UIFactory.AccentDark, () => { GameSettings.TrafficLevel = (GameSettings.TrafficLevel + 1) % 4; UpdateLabels(); }, out trafficLabel, 46f, 16f);
+            UIFactory.Btn(world, "", UIFactory.Neutral, () => { GameSettings.ShowPerformance = !GameSettings.ShowPerformance; UpdateLabels(); }, out perfLabel, 46f, 16f);
 
             UIFactory.Text(body, "DRIVING", 16, UIFactory.TextDim, TextAlignmentOptions.Left, true);
             UIFactory.Btn(body, "", UIFactory.AccentDark, () =>
@@ -91,6 +95,9 @@ namespace CarSales
             absLabel.text = "ABS: " + (GameSettings.Abs ? "ON" : "OFF");
             tcsLabel.text = "Traction control: " + (GameSettings.TractionControl ? "ON" : "OFF");
             escLabel.text = "Stability: " + (GameSettings.StabilityControl ? "ON" : "OFF");
+            string[] traffic = { "OFF", "LOW", "NORMAL", "BUSY" };
+            trafficLabel.text = $"Traffic & people: {traffic[GameSettings.TrafficLevel]}";
+            perfLabel.text = "Frame-rate overlay: " + (GameSettings.ShowPerformance ? "ON" : "OFF");
         }
     }
 }

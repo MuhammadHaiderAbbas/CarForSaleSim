@@ -41,7 +41,9 @@ kinds of buyer**, negotiation with **trade-ins, finance and fault disclosure**, 
 editor** with photos and online enquiries, customer **questions and test drives**, **paperwork and warranties**, and
 receptionist and manager staff. Phase 8a brings the town to life: **weather**, Sunday hours and bank holidays,
 fuel prices, random events, **traffic with lights**, **pedestrians**, and the **World Builder** for adding your own
-dealerships (also inside imported buildings).
+dealerships (also inside imported buildings). Phase 8b lets you **draw roads** (with junctions, trees and lamps), place
+**workshops, car washes, fuel stations, houses and apartments**, put imported interiors in showrooms, and keeps the
+frame rate up (traffic setting, overlay, automatic thinning).
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

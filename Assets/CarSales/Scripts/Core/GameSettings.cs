@@ -81,6 +81,21 @@ namespace CarSales
         /// <summary>CanvasScaler reference resolution for the current UI scale (bigger scale = smaller reference).</summary>
         public static Vector2 UiReferenceResolution => new Vector2(1920f, 1080f) / UiScale;
 
+        /// <summary>Phase 8b: traffic and pedestrians 0 = off, 1 = low, 2 = normal, 3 = busy.</summary>
+        public static int TrafficLevel
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetInt("CarSales.Traffic", 2), 0, 3);
+            set { PlayerPrefs.SetInt("CarSales.Traffic", Mathf.Clamp(value, 0, 3)); PlayerPrefs.Save(); }
+        }
+        public static float TrafficMultiplier => TrafficLevel == 0 ? 0f : TrafficLevel == 1 ? 0.5f : TrafficLevel == 2 ? 1f : 1.6f;
+
+        /// <summary>Phase 8b: small frame-time overlay (top right).</summary>
+        public static bool ShowPerformance
+        {
+            get => PlayerPrefs.GetInt("CarSales.ShowPerf", 0) == 1;
+            set => SetFlag("CarSales.ShowPerf", value);
+        }
+
         static bool Flag(string key) => PlayerPrefs.GetInt(key, 1) == 1;
         static void SetFlag(string key, bool on) { PlayerPrefs.SetInt(key, on ? 1 : 0); PlayerPrefs.Save(); }
 

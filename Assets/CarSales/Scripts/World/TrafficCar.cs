@@ -39,10 +39,21 @@ namespace CarSales
             if (!c.collider.GetComponentInParent<TrafficCar>()) hazardTimer = 6f;   // bumped: stop with the hazards on
         }
 
+        float farDt;
+
         void Update()
         {
             if (lane == null) return;
             float dt = Time.deltaTime;
+            // Spec §11: far cars tick at about 4 Hz.
+            var cam = Camera.main;
+            if (cam && (transform.position - cam.transform.position).sqrMagnitude > 120f * 120f)
+            {
+                farDt += dt;
+                if (farDt < 0.25f) return;
+                dt = farDt;
+            }
+            farDt = 0f;
             if (hazardTimer > 0f) { hazardTimer -= dt; Speed = 0f; return; }
 
             float gap = system.GapAhead(this, out float speedAhead);

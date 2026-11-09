@@ -98,5 +98,84 @@ namespace CarSales.Sim
             foreach (float x in new[] { -70f, 70f }) list.Add(new RoadSegment(new V2(x, -27f), new V2(x, 95f), 11f));
             return list;
         }
+    
     }
+    /// <summary>Editing the road network (World Builder, phase 8b): snapping new roads and splitting roads at T-junctions.</summary>
+    public static class RoadEditing
+    {
+        public const float SnapRadius = 8f;
+        public const float MinLength = 10f;
+
+        static float DistToSegment(V2 p, V2 a, V2 b, out float t)
+        {
+            var ab = b - a;
+            float len2 = V2.Dot(ab, ab);
+            t = len2 < 1e-6f ? 0f : Math.Max(0f, Math.Min(1f, V2.Dot(p - a, ab) / len2));
+            return V2.Distance(p, a + ab * t);
+        }
+
+        /// <summary>Moves a point onto the nearest road end (within the snap radius) or onto the nearest road.</summary>
+        public static V2 Snap(IList<RoadSegment> roads, V2 p, float radius = SnapRadius)
+        {
+            float best = radius; V2 snapped = p; bool found = false;
+            foreach (var r in roads)
+                foreach (var e in new[] { r.a, r.b })
+                    if (V2.Distance(e, p) < best) { best = V2.Distance(e, p); snapped = e; found = true; }
+            if (found) return snapped;
+            best = radius;
+            foreach (var r in roads)
+            {
+                float d = DistToSegment(p, r.a, r.b, out float t);
+                if (d < best) { best = d; snapped = r.a + (r.b - r.a) * t; }
+            }
+            return snapped;
+        }
+
+        /// <summary>
+        /// Adds a road: both ends are snapped; where an end lands in the middle of an existing road, that road is split
+        /// so a junction appears in the lane graph. Returns false if the new road is too short.
+        /// </summary>
+        public static bool Add(List<RoadSegment> roads, V2 a, V2 b, float speedLimit = 13.4f)
+        {
+            a = Snap(roads, a);
+            b = Snap(roads, b);
+            if (V2.Distance(a, b) < MinLength) return false;
+            SplitAt(roads, a);
+            SplitAt(roads, b);
+            roads.Add(new RoadSegment(a, b, speedLimit));
+            return true;
+        }
+
+        /// <summary>Splits the road that passes through <paramref name="p"/> (not at its ends) into two pieces.</summary>
+        public static bool SplitAt(List<RoadSegment> roads, V2 p)
+        {
+            for (int i = 0; i < roads.Count; i++)
+            {
+                var r = roads[i];
+                if (V2.Distance(r.a, p) < 1f || V2.Distance(r.b, p) < 1f) continue;
+                if (DistToSegment(p, r.a, r.b, out float t) > 0.5f || t <= 0.01f || t >= 0.99f) continue;
+                roads[i] = new RoadSegment(r.a, p, r.speedLimit);
+                roads.Insert(i + 1, new RoadSegment(p, r.b, r.speedLimit));
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>Points every <paramref name="spacing"/> metres along both sides of a road (for trees and lamps).</summary>
+        public static List<(V2 point, V2 facing)> Scatter(RoadSegment r, float spacing, float sideOffset, float endGap = 10f)
+        {
+            var list = new List<(V2, V2)>();
+            var dir = (r.b - r.a).Normalized;
+            var left = new V2(-dir.z, dir.x);
+            float len = V2.Distance(r.a, r.b);
+            for (float d = endGap; d <= len - endGap; d += spacing)
+            {
+                var c = r.a + dir * d;
+                list.Add((c + left * sideOffset, left * -1f));
+                list.Add((c - left * sideOffset, left));
+            }
+            return list;
+        }
+    }
+
 }

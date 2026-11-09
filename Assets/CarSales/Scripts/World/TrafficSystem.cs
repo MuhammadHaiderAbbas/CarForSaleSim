@@ -28,6 +28,7 @@ namespace CarSales
             var segs = net && net.segments.Count > 0 ? net.segments : RoadGraph.DefaultTown();
             lanes = RoadGraph.Build(segs, net ? net.roadWidth : 9f);
             BuildLights();
+            if (!FindFirstObjectByType<PerformanceGovernor>()) gameObject.AddComponent<PerformanceGovernor>();
         }
 
         /// <summary>Simple lights where lanes end at a junction (a pole with three lamps).</summary>
@@ -70,7 +71,13 @@ namespace CarSales
             if (spawnTimer > 0f) return;
             spawnTimer = 1.5f;
             float hour = CarSalesServices.DayCycle ? CarSalesServices.DayCycle.HourOfDay : 12f;
-            int wanted = Mathf.RoundToInt(TrafficRules.MaxTrafficCars * TrafficRules.Density(hour));
+            int wanted = Mathf.RoundToInt(TrafficRules.MaxTrafficCars * TrafficRules.Density(hour) * GameSettings.TrafficMultiplier * PerformanceGovernor.Scale);
+            if (cars.Count > wanted + 2)   // thinned out (setting / frame budget): remove the farthest
+            {
+                var far = cars.Where(c => c).OrderByDescending(c => Vector3.Distance(c.transform.position, me)).First();
+                cars.Remove(far);
+                Destroy(far.gameObject);
+            }
             if (cars.Count < wanted) TrySpawn(me, cam);
         }
 
