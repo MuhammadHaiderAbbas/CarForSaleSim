@@ -12,7 +12,10 @@ namespace CarSales
         bool finished;
         RawImage photo;
         TextMeshProUGUI headerText, carText, offerText, moodText, dealText;
-        Button discloseButton, tradeButton, financeButton;
+        Button discloseButton, tradeButton, financeButton, driveButton;
+        RectTransform questionRow;
+        TextMeshProUGUI questionText;
+        readonly System.Collections.Generic.Queue<CarSales.Sim.BuyerQuestion> questions = new System.Collections.Generic.Queue<CarSales.Sim.BuyerQuestion>();
         UIFactory.Bar patienceBar;
         RectTransform chat;
         ScrollRect chatScroll;
@@ -42,6 +45,15 @@ namespace CarSales
             discloseButton = UIFactory.Btn(extras, "Disclose faults", UIFactory.Warn, Disclose, 42f, 14f);
             tradeButton = UIFactory.Btn(extras, "Trade-in", UIFactory.CardLight, ToggleTradeIn, 42f, 14f);
             financeButton = UIFactory.Btn(extras, "Finance", UIFactory.CardLight, ToggleFinance, 42f, 14f);
+            driveButton = UIFactory.Btn(extras, "Test drive", UIFactory.Special, TestDrive, 42f, 14f);
+            // A customer question waiting for your answer
+            questionRow = UIFactory.HRow(body, 44, 10, "Question");
+            questionText = UIFactory.Text(questionRow, "", 16, UIFactory.Gold, TextAlignmentOptions.Left, true);
+            UIFactory.LE(questionText, flexW: 1);
+            var honest = UIFactory.Btn(questionRow, "Answer honestly", UIFactory.Good, () => AnswerQuestion(true), 42f, 14f);
+            UIFactory.LE(honest, h: 42, w: 170, flexW: 0);
+            var dodge = UIFactory.Btn(questionRow, "Dodge it", UIFactory.Neutral, () => AnswerQuestion(false), 42f, 14f);
+            UIFactory.LE(dodge, h: 42, w: 120, flexW: 0);
             dealText = UIFactory.Text(body, "", 15, UIFactory.TextDim, TextAlignmentOptions.Center);
             UIFactory.LE(dealText, h: 22);
 
@@ -90,6 +102,11 @@ namespace CarSales
                 Bubble($"I'd like to part-exchange my {session.TradeIn.Name} ({session.TradeIn.mileage:N0} km). I think it's worth {UIFactory.Money(session.TradeInCredit)}.", false);
             if (customer.Profile.wantsFinance) Bubble("I'd need finance on this.", false);
             Bubble($"Hi! I really like this {def.displayName}. Would you take {UIFactory.Money(session.CustomerOffer)}?", false);
+            questions.Clear();
+            var all = (CarSales.Sim.BuyerQuestion[])System.Enum.GetValues(typeof(CarSales.Sim.BuyerQuestion));
+            int n = 1 + (session.Persona.Knowledge > 0.5f ? 1 : 0) + (Random.value < 0.5f ? 1 : 0);
+            foreach (var q in all.OrderBy(_ => Random.value).Take(n)) questions.Enqueue(q);
+            NextQuestion();
             input.text = session.Car.Data.listedPrice.ToString();
             UpdateState();
         }
@@ -111,6 +128,52 @@ namespace CarSales
                     break;
                 default: UpdateState(); break;
             }
+        }
+
+        void NextQuestion()
+        {
+            bool any = questions.Count > 0;
+            questionRow.gameObject.SetActive(any);
+            if (any) questionText.text = CarSales.Sim.BuyerQuestions.Text(questions.Peek());
+        }
+
+        void AnswerQuestion(bool honest)
+        {
+            if (session == null || questions.Count == 0) return;
+            var q = questions.Dequeue();
+            Bubble(CarSales.Sim.BuyerQuestions.Text(q), false);
+            var c = session.Car.Data;
+            string truth = q == CarSales.Sim.BuyerQuestion.AnyProblems ? (CarRecords.KnownFaults(c).Any() ? "Yes - " + string.Join(", ", CarRecords.KnownFaults(c).Select(f => f.Def.Name)).ToLowerInvariant() + "." : "Nothing I know of.") :
+                           q == CarSales.Sim.BuyerQuestion.ServiceHistory ? CarRecords.ServiceText(c.documents) + "." :
+                           q == CarSales.Sim.BuyerQuestion.Mot ? CarRecords.MotText(c) + "." :
+                           q == CarSales.Sim.BuyerQuestion.Mileage ? (c.history.clockingConfirmed ? "No - the records show it's been clocked." : c.history.clockingSuspected ? "I'm not completely sure." : "Yes, as far as I know.") :
+                           (c.history.checkedHistory && c.history.writeOff != CarSales.Sim.WriteOff.None ? $"Yes, it's a {(c.history.writeOff == CarSales.Sim.WriteOff.CatN ? "Category N" : "Category S")} repair." : "Not that I know of.");
+            bool bad = session.TruthBad(q);
+            Bubble(honest ? truth : bad ? "Nothing to worry about, it's a great car." : "Er... I'd have to check.", true);
+            session.Answer(q, honest);
+            Bubble(honest ? (bad ? "OK, thanks for being straight with me." : "Good to hear.") : bad ? "Right..." : "Hmm, OK.", false);
+            NextQuestion();
+            UpdateState();
+        }
+
+        void TestDrive()
+        {
+            if (session == null || session.TestDriven) return;
+            var c = session.Car.Data;
+            if (!CarRecords.MotValid(c)) { Bubble("It hasn't got a valid MOT - I can't take it on the road.", false); return; }
+            if (c.documents.keys <= 0 || c.fuel < 3f) { CarSalesServices.UI.Error("The car can't be driven (no key or no fuel)."); return; }
+            UIFactory.Modal(CarSalesServices.UI.transform, "Test drive", $"{session.Customer.Profile.customerName} would like to take the {c.Name} out for 20 minutes.",
+                ("Let them go alone", UIFactory.Accent, () => DoDrive(false)),
+                ("Ride along", UIFactory.Good, () => DoDrive(true)));
+        }
+
+        void DoDrive(bool ride)
+        {
+            if (session == null) return;
+            if (CarSalesServices.DayCycle) CarSalesServices.DayCycle.AdvanceTime(0.33f);
+            Bubble(ride ? "(You ride along for twenty minutes.)" : "(Twenty minutes later they're back.)", true);
+            Bubble(session.TestDrive(ride), false);
+            UpdateState();
         }
 
         void Disclose()
@@ -173,6 +236,8 @@ namespace CarSales
             }
             financeButton.GetComponentInChildren<TextMeshProUGUI>().text = session.UseFinance ? $"Finance ON (+{Sim.Buyers.FinanceCommissionRate * 100f:0}% commission)" : "Offer finance";
             UIFactory.SetButtonColor(financeButton, session.UseFinance ? UIFactory.Accent : UIFactory.CardLight);
+            driveButton.interactable = !session.TestDriven;
+            driveButton.GetComponentInChildren<TextMeshProUGUI>().text = session.TestDriven ? "Test drive done" : "Test drive";
             int credit = session.IncludeTradeIn ? session.TradeInCredit : 0;
             dealText.text = credit > 0 ? $"At their offer you'd receive {UIFactory.Money(session.CustomerOffer - credit)} cash + their car" :
                             session.HiddenKnownFaults > 0 ? $"<color={UIFactory.Hex(UIFactory.Warn)}>You know of {session.HiddenKnownFaults} fault(s) you haven't mentioned - they may complain later.</color>" : "";
@@ -202,9 +267,17 @@ namespace CarSales
             var s = session;
             session = null;
             if (sold && s.Customer)
-                CustomerDeal.CompleteSale(s.Customer, s.FinalPrice, s.MarketValue, s.DisclosedFaults, s.HiddenKnownFaults, s.Rounds, null,
-                                          s.IncludeTradeIn ? s.TradeIn : null, s.IncludeTradeIn ? s.TradeInCredit : 0, s.UseFinance && s.FinanceApproved);
-            else if (s.Customer) s.Customer.EndNegotiation(false);
+            {
+                // Phase 7b: paperwork and handover (warranty offer) before the keys change hands.
+                CarSalesServices.UI.Close();
+                CarSalesServices.UI.handover.Show(new HandoverUI.Deal
+                {
+                    customer = s.Customer, price = s.FinalPrice, marketValue = s.MarketValue, disclosed = s.DisclosedFaults, hiddenKnown = s.HiddenKnownFaults,
+                    rounds = s.Rounds, tradeIn = s.IncludeTradeIn ? s.TradeIn : null, tradeInCredit = s.IncludeTradeIn ? s.TradeInCredit : 0, finance = s.UseFinance && s.FinanceApproved,
+                });
+                return;
+            }
+            if (s.Customer) s.Customer.EndNegotiation(false);
             CarSalesServices.UI.Close();
         }
 

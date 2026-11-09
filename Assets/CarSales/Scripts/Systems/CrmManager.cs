@@ -90,11 +90,11 @@ namespace CarSales
         }
 
         /// <summary>After a sale: the customer's review (stars → reputation) and, if you hid known faults, a complaint later.</summary>
-        public int RecordSale(CustomerProfile p, CarInstance car, int price, int marketValue, int disclosed, int hiddenKnown, int rounds, string soldBy)
+        public int RecordSale(CustomerProfile p, CarInstance car, int price, int marketValue, int disclosed, int hiddenKnown, int rounds, string soldBy, float bonus = 0f)
         {
             var r = Record(p);
             var persona = Buyers.Get((PersonaId)p.persona);
-            int stars = Buyers.ReviewStars(persona, car.condition, price / (float)Mathf.Max(1, marketValue), disclosed, hiddenKnown, rounds);
+            int stars = Mathf.Clamp(Mathf.RoundToInt(Buyers.ReviewStars(persona, car.condition, price / (float)Mathf.Max(1, marketValue), disclosed, hiddenKnown, rounds) + bonus), 1, 5);
             r.purchases++;
             r.spent += price;
             r.lastCar = car.Name;

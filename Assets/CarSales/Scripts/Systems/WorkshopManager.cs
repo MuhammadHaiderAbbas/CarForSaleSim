@@ -424,7 +424,7 @@ namespace CarSales
             bool staffMech = staff && staff.MechanicCount > 0;
             if ((!state.mechanicHired && !staffMech) || !WorkStation.Exists(StationType.Mechanical)) return;
             float mechSkill = staffMech ? staff.MechanicSkill / 100f : BoardLogic.MechanicSkill;
-            float hours = BoardLogic.WorkingHours(fromHour, toHour) * (staffMech ? StaffRules.MechanicSpeed(staff.MechanicSkill) * staff.MechanicCount : 1f);
+            float hours = BoardLogic.WorkingHours(fromHour, toHour) * (staffMech ? StaffRules.MechanicSpeed(staff.MechanicSkill) * staff.MechanicCount * staff.Productivity : 1f);
             while (hours > 0f)
             {
                 var card = state.board.Find(b => b.byMechanic && !b.done);

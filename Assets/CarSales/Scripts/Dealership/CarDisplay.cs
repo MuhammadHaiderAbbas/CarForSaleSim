@@ -17,6 +17,16 @@ namespace CarSales
         public Transform BrowsePoint => browsePoint ? browsePoint : transform;
         /// <summary>Set for cars standing in the auction yard / on the stage (phase 6).</summary>
         public string AuctionLotId { get; private set; }
+        /// <summary>Set for a private seller's car at a viewing (phase 7b).</summary>
+        public string PrivateAdId { get; private set; }
+
+        public void MarkPrivateAd(string adId, int asking)
+        {
+            PrivateAdId = adId;
+            if (priceTag) priceTag.text = $"${asking:N0} ono";
+            var rb = GetComponent<Rigidbody>();
+            if (rb) rb.isKinematic = true;
+        }
         CarVisual visual;
 
         public void InitializeForSale(CarInstance listing)
@@ -97,6 +107,8 @@ namespace CarSales
                 return lot == null ? $"{Definition.displayName}" :
                     $"[E] Lot {lot.lotNo}: {Definition.year} {Definition.brand} {Definition.displayName}  |  grade {lot.report.grade}  |  guide ${lot.estimate:N0}";
             }
+            if (!string.IsNullOrEmpty(PrivateAdId))
+                return $"[E] Private sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  ${Data.purchasePrice:N0} ono";
             if (IsForSaleListing)
                 return $"[E] For sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  ${Data.purchasePrice:N0}  |  free inspection on site";
             string name = $"{Definition.year} {Definition.brand} {Definition.displayName}";
@@ -107,6 +119,7 @@ namespace CarSales
         public void Interact(GameObject interactor)
         {
             if (!string.IsNullOrEmpty(AuctionLotId)) { CarSalesServices.UI.auction.ShowLot(AuctionLotId, this); return; }
+            if (!string.IsNullOrEmpty(PrivateAdId)) { CarSalesServices.UI.privateSeller.Show(PrivateAdId); return; }
             if (IsForSaleListing) CarSalesServices.UI.vehicleDetails.ShowPhysical(this);
             else CarSalesServices.UI.carMenu.Show(this);
         }

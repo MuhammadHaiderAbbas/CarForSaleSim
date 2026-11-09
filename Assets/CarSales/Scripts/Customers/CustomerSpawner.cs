@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
@@ -59,6 +60,7 @@ namespace CarSales
             {
                 TrySpawn();
                 float mult = CarSalesServices.Upgrades ? CarSalesServices.Upgrades.SpawnIntervalMultiplier : 1f;
+                if (CarSalesServices.Staff && CarSalesServices.Staff.Working(CarSales.Sim.StaffRole.Receptionist).Any()) mult *= 0.8f;
                 yield return new WaitForSeconds(Random.Range(spawnInterval.x, spawnInterval.y) * mult);
             }
         }
@@ -90,7 +92,18 @@ namespace CarSales
             var customer = Instantiate(customerPrefab, hit.position, point.rotation);
             var look = AssetRegistry.RandomCustomerModel();
             if (look) customer.UseAppearance(look);
-            customer.Init(GenerateProfile(), this);
+            var profile = GenerateProfile();
+            // Phase 7b: someone who booked a viewing from your online advert.
+            var lead = CarSalesServices.Sourcing && CarSalesServices.DayCycle ? CarSalesServices.Sourcing.TakeLead(Dealer, CarSalesServices.DayCycle.HourOfDay) : null;
+            if (lead != null)
+            {
+                profile.customerName = lead.name;
+                profile.persona = lead.persona;
+                profile.targetCarId = lead.carId;
+                var car = CarSalesServices.Inventory.OwnedCars.Find(c => c.instanceId == lead.carId);
+                if (car != null) profile.budget = Mathf.Max(profile.budget, Mathf.RoundToInt(car.listedPrice * 1.05f));
+            }
+            customer.Init(profile, this);
             active.Add(customer);
             CarSalesServices.PlaySfx(Sfx.DoorChime, 0.5f);
         }

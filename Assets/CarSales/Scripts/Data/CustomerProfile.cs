@@ -18,5 +18,6 @@ namespace CarSales
         public int creditScore = 650;
         public CarInstance tradeIn;  // null = no trade-in
         public int tradeInWants;     // what they think it's worth
+        public string targetCarId;   // phase 7b: came about an online advert for this car
     }
 }

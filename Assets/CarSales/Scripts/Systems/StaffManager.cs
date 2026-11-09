@@ -114,6 +114,8 @@ namespace CarSales
         /// <summary>Best available mechanic skill (0 = none at work). Used by the workshop board.</summary>
         public int MechanicSkill => Working(StaffRole.Mechanic).Select(e => e.skill).DefaultIfEmpty(0).Max();
         public int MechanicCount => Working(StaffRole.Mechanic).Count();
+        /// <summary>A manager at work speeds everyone up by 10%.</summary>
+        public float Productivity => Working(StaffRole.Manager).Any() ? 1.1f : 1f;
 
         public void MechanicFinishedJob()
         {
@@ -179,7 +181,7 @@ namespace CarSales
                 var car = CarSalesServices.Inventory.OwnedCars.Where(c => c.location == CarLocation.Spot && c.cleanliness < 85f)
                                                               .OrderBy(c => c.cleanliness).FirstOrDefault();
                 if (car == null) return;
-                car.cleanliness = Mathf.Min(100f, car.cleanliness + StaffRules.DetailPerHour(d.skill) * hours);
+                car.cleanliness = Mathf.Min(100f, car.cleanliness + StaffRules.DetailPerHour(d.skill) * hours * Productivity);
                 var disp = CarSalesServices.Vehicles ? CarSalesServices.Vehicles.GetDisplay(car.instanceId) : null;
                 if (disp) disp.Refresh();
                 StaffRules.GainExperience(d, 0.1f * hours);
@@ -226,7 +228,7 @@ namespace CarSales
             {
                 CarSalesServices.Economy.ForceSpend(emp.wage, TxCategory.Wages, $"Wage - {emp.name} ({StaffRules.RoleName(emp.Role)})");
                 total += emp.wage;
-                StaffRules.UpdateMorale(emp);
+                StaffRules.UpdateMorale(emp, manager: Working(StaffRole.Manager).Any() && emp.Role != StaffRole.Manager);
             }
             if (total > 0)
             {

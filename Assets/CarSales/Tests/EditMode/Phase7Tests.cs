@@ -143,3 +143,83 @@ namespace CarSales.Tests
         }
     }
 }
+
+namespace CarSales.Tests
+{
+    using System;
+    using System.Linq;
+    using CarSales.Sim;
+    using NUnit.Framework;
+
+    public class SourcingTests
+    {
+        [Test]
+        public void PrivateSellers_AskUnderMarket_AndKeepAFloor()
+        {
+            var r = new Random(1);
+            for (int i = 0; i < 50; i++)
+            {
+                int ask = PrivateSellers.Asking(10000, r);
+                Assert.That(ask, Is.InRange(7500, 9000));
+                int min = PrivateSellers.MinPrice(ask, r);
+                Assert.Less(min, ask);
+                var (ok, counter) = PrivateSellers.Haggle(min - 500, ask, min, r);
+                Assert.IsFalse(ok);
+                Assert.GreaterOrEqual(counter, min);
+            }
+            Assert.IsTrue(PrivateSellers.Haggle(9000, 9000, 8000, r).accepted);
+        }
+
+        [Test]
+        public void HonestSellers_TellTheTruth_LiarsDont()
+        {
+            int lies = 0;
+            for (int i = 0; i < 100; i++) if (PrivateSellers.Answer(SellerQuestion.AnyProblems, true, "clutch", 0f, new Random(i)).lie) lies++;
+            Assert.AreEqual(100, lies);
+            Assert.IsFalse(PrivateSellers.Answer(SellerQuestion.AnyProblems, true, "clutch", 1f, new Random(3)).lie);
+            Assert.IsFalse(PrivateSellers.Answer(SellerQuestion.AnyProblems, false, "", 0f, new Random(3)).lie, "no bad news, no lie");
+        }
+
+        [Test]
+        public void ListingQuality_RewardsPhotosAndFairPrices()
+        {
+            float bare = Listings.Quality(0, 0, false, 1.2f, 0f);
+            float good = Listings.Quality(6, 3, true, 0.95f, 4.5f);
+            Assert.Less(bare, 0.2f);
+            Assert.Greater(good, 0.7f);
+            Assert.Greater(Listings.LeadsPerDay(good, true), Listings.LeadsPerDay(good, false));
+            Assert.AreEqual("2015 Focus - 80k km - FSH - 1 owner", Listings.Headline("Focus", 2015, 80500, new[] { 0, 3 }));
+        }
+
+        [Test]
+        public void Questions_LyingDefersThePain()
+        {
+            Assert.IsTrue(BuyerQuestions.Effect(false, true).lie);
+            Assert.Less(BuyerQuestions.Effect(true, true).priceFactor, 1f);
+            Assert.Greater(BuyerQuestions.Effect(true, false).patience, BuyerQuestions.Effect(false, false).patience);
+        }
+
+        [Test]
+        public void Warranty_And_Paperwork()
+        {
+            Assert.AreEqual(150, AfterSale.WarrantyPrice(2000));
+            Assert.AreEqual(400, AfterSale.WarrantyPrice(10000));
+            Assert.AreEqual(900, AfterSale.WarrantyPrice(80000));
+            Assert.AreEqual(0f, AfterSale.ClaimChancePerDay(new float[0]));
+            Assert.Greater(AfterSale.ClaimChancePerDay(new[] { 0.8f, 0.5f }), 0.02f);
+            Assert.AreEqual(1f, AfterSale.Paperwork(true, true, 2, true), 1e-5);
+            Assert.Greater(AfterSale.ReviewBonus(1f), 0f);
+            Assert.Less(AfterSale.ReviewBonus(0.2f), 0f);
+        }
+
+        [Test]
+        public void NewRoles_HaveWages()
+        {
+            Assert.Greater(StaffRules.Wage(StaffRole.Manager, 50), StaffRules.Wage(StaffRole.Receptionist, 50));
+            Assert.AreEqual("Receptionist", StaffRules.RoleName(StaffRole.Receptionist));
+            var e = new Employee { role = (int)StaffRole.Detailer, skill = 50, wage = StaffRules.Wage(StaffRole.Detailer, 50), morale = 0.7f };
+            for (int i = 0; i < 20; i++) StaffRules.UpdateMorale(e, manager: true);
+            Assert.AreEqual(0.8f, e.morale, 0.02f);
+        }
+    }
+}

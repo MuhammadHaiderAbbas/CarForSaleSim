@@ -111,7 +111,7 @@ namespace CarSales
                     else CarSalesServices.UI.Error(msg);
                     break;
                 case Mode.Owned:
-                    if (physical) CarSalesServices.UI.priceUI.Show(physical);
+                    if (physical) CarSalesServices.UI.listingEditor.Show(physical);
                     else CarSalesServices.UI.Error("Park the car on one of your dealership spots to sell it.");
                     break;
             }

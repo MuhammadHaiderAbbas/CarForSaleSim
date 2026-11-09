@@ -17,6 +17,7 @@ namespace CarSales
             if (!GetComponent<MarketManager>()) gameObject.AddComponent<MarketManager>();
             if (!GetComponent<StaffManager>()) gameObject.AddComponent<StaffManager>();
             if (!GetComponent<CrmManager>()) gameObject.AddComponent<CrmManager>();
+            if (!GetComponent<SourcingManager>()) gameObject.AddComponent<SourcingManager>();
         }
     }
 }

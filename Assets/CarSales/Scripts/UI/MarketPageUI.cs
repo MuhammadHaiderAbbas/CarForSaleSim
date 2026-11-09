@@ -11,14 +11,14 @@ namespace CarSales
     public class MarketPageUI : ComputerPage
     {
         UIFactory.TabBar views;
-        RectTransform trendView, rivalsView, tradeView, factors, tradeList;
+        RectTransform trendView, rivalsView, tradeView, adsView, factors, tradeList, adList;
         UIFactory.MiniChart chart;
         UIFactory.Table rivals, mine;
 
         public override void Build()
         {
             UIFactory.Vertical(Area, 0, 10f);
-            views = UIFactory.Tabs(Area, new[] { "Market prices", "Competitors", "Trade offers" }, _ => Refresh(), 42f, 220f, 16f);
+            views = UIFactory.Tabs(Area, new[] { "Market prices", "Competitors", "Trade offers", "Classifieds" }, _ => Refresh(), 42f, 220f, 16f);
             var host = UIFactory.Rect("Views", Area);
             UIFactory.LE(host, flexH: 1, flexW: 1);
 
@@ -48,8 +48,58 @@ namespace CarSales
             tradeView = View(host);
             UIFactory.Vertical(tradeView, 0, 8f);
             tradeList = UIFactory.ScrollList(tradeView, 8f);
+
+            adsView = View(host);
+            UIFactory.Vertical(adsView, 0, 8f);
+            var tip = UIFactory.Text(adsView, "Private sellers: 10-25% under market, but they may not tell you everything. Book a viewing, go to their house, " +
+                                              "ask questions, inspect, drive it round the block, haggle.", 15, UIFactory.TextDim, TextAlignmentOptions.TopLeft);
+            tip.textWrappingMode = TextWrappingModes.Normal;
+            UIFactory.LE(tip, h: 40);
+            adList = UIFactory.ScrollList(adsView, 8f);
             views.Select(0, false);
         }
+
+        void RenderAds()
+        {
+            UIFactory.ClearChildren(adList);
+            var src = CarSalesServices.Sourcing;
+            if (!src) return;
+            foreach (var ad in src.State.ads.Where(a => !a.sold))
+            {
+                var car = src.CarOf(ad);
+                if (car == null) continue;
+                var def = CarSalesServices.Database.Get(car.carId);
+                var row = UIFactory.Panel(adList, ad.id, UIFactory.CardBg, 1.8f);
+                UIFactory.LE(row, h: 104);
+                var h = UIFactory.Horizontal(row, 10, 12f);
+                h.padding = new RectOffset(10, 12, 8, 8);
+                h.childForceExpandHeight = false;
+                var pic = UIFactory.CarPicture(row.transform, 86f, 150f);
+                UIFactory.SetCarPicture(pic, car);
+                string booked = ad.appointmentDay >= CarRecords.Today
+                    ? $"<color={UIFactory.Hex(UIFactory.Good)}>Viewing {(ad.appointmentDay == CarRecords.Today ? "today" : "tomorrow")} {ad.appointmentHour:00}:00 at {src.Address(ad)}</color>"
+                    : $"Ad ends day {ad.expiresDay}";
+                var t = UIFactory.Text(row.transform, $"<b>{def?.year} {def?.brand} {def?.displayName}</b>  -  {UIFactory.Money(ad.asking)} ono  -  seller: {ad.seller}\n" +
+                                                      $"<size=85%>\"{ad.claim}\"</size>\n<size=85%>{booked}</size>", 16, UIFactory.TextMain, TextAlignmentOptions.Left);
+                t.textWrappingMode = TextWrappingModes.Normal;
+                UIFactory.LE(t, flexW: 1);
+                var a = ad;
+                if (ad.appointmentDay >= CarRecords.Today)
+                {
+                    var gps = UIFactory.Btn(row.transform, "GPS", UIFactory.Accent, () =>
+                    {
+                        var place = MapPlace.All.FirstOrDefault(p => p && p.placeName == src.Address(a)) ?? MapPlace.All.FirstOrDefault(p => p && p.placeName.Contains("Used Car Market"));
+                        if (place) { GpsSystem.SetTarget(place); CarSalesServices.UI.Success("GPS", "Route set to " + place.placeName); }
+                    }, 44f, 15f);
+                    UIFactory.LE(gps, h: 44, w: 100, flexW: 0);
+                }
+                var book = UIFactory.Btn(row.transform, ad.appointmentDay >= CarRecords.Today ? "Rebook" : "Book a viewing", UIFactory.Good, () => { src.BookViewing(a); RenderAds(); }, 44f, 14f);
+                UIFactory.LE(book, h: 44, w: 150, flexW: 0);
+            }
+            if (adList.childCount == 0) UIFactory.EmptyState(adList, "No adverts today", "New private sellers advertise every morning.");
+        }
+
+        public void ShowTab(int i) { views.Select(i, false); Refresh(); }
 
         static RectTransform View(Transform host) { var v = UIFactory.Rect("View", host); UIFactory.Stretch(v); return v; }
 
@@ -59,6 +109,8 @@ namespace CarSales
             trendView.gameObject.SetActive(views.Index == 0);
             rivalsView.gameObject.SetActive(views.Index == 1);
             tradeView.gameObject.SetActive(views.Index == 2);
+            adsView.gameObject.SetActive(views.Index == 3);
+            if (views.Index == 3) { RenderAds(); return; }
             if (!m) return;
             var db = CarSalesServices.Database;
             if (views.Index == 0)

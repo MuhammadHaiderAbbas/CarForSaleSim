@@ -37,7 +37,9 @@ lift, history check), **paperwork and history** (logbook, keys, MOT, service boo
 sales, a walk-in sale hall where you raise your paddle (E), a viewing yard, AI bidders with personalities, proxy
 bids, invoices with fees and VAT, and collection from the car park. Phase 7a adds a **living market** with competitors and trade batches, **nine
 kinds of buyer**, negotiation with **trade-ins, finance and fault disclosure**, **reviews and a CRM**, and **staff**
-(salespeople, mechanics, detailers, drivers) who work without you.
+(salespeople, mechanics, detailers, drivers) who work without you. Phase 7b adds **private sellers** you visit at their houses, a **listing
+editor** with photos and online enquiries, customer **questions and test drives**, **paperwork and warranties**, and
+receptionist and manager staff.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

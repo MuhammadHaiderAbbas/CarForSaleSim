@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CarSales.Sim
 {
-    public enum StaffRole { Salesperson = 0, Mechanic = 1, Detailer = 2, Driver = 3 }
+    public enum StaffRole { Salesperson = 0, Mechanic = 1, Detailer = 2, Driver = 3, Receptionist = 4, Manager = 5 }
 
     [Serializable]
     public class Employee
@@ -27,18 +27,22 @@ namespace CarSales.Sim
         static readonly string[] Names = { "Sam", "Alex", "Jordan", "Priya", "Marco", "Chloe", "Dev", "Hannah", "Kofi", "Lena", "Owen", "Mei", "Tariq", "Zoe", "Ravi", "Ellie" };
         static readonly string[] Surnames = { "Patel", "Smith", "Okafor", "Novak", "Jones", "Khan", "Silva", "Brown", "Wright", "Chen", "Evans", "Murphy" };
 
-        public static string RoleName(StaffRole r) => r == StaffRole.Salesperson ? "Salesperson" : r == StaffRole.Mechanic ? "Mechanic" : r == StaffRole.Detailer ? "Detailer" : "Driver";
+        public static string RoleName(StaffRole r) => r == StaffRole.Salesperson ? "Salesperson" : r == StaffRole.Mechanic ? "Mechanic" : r == StaffRole.Detailer ? "Detailer" :
+                                                      r == StaffRole.Driver ? "Driver" : r == StaffRole.Receptionist ? "Receptionist" : "Manager";
 
         public static string RoleDuty(StaffRole r) =>
             r == StaffRole.Salesperson ? "Talks to customers you don't reach and closes deals above your minimum margin." :
             r == StaffRole.Mechanic ? "Works through the Ready column of the workshop board." :
             r == StaffRole.Detailer ? "Washes and valets the cars on your lots." :
-            "Brings paid auction cars from the Auction Center to your dealership.";
+            r == StaffRole.Driver ? "Brings paid auction cars from the Auction Center to your dealership." :
+            r == StaffRole.Receptionist ? "Answers calls: 30% more online leads, customers arrive 20% more often." :
+            "Keeps everyone happy and busy: +10% morale and +10% work speed for all staff.";
 
         /// <summary>Weekly wage: a base per role plus skill.</summary>
         public static int Wage(StaffRole r, int skill)
         {
-            int baseWage = r == StaffRole.Mechanic ? 520 : r == StaffRole.Salesperson ? 480 : r == StaffRole.Driver ? 380 : 340;
+            int baseWage = r == StaffRole.Mechanic ? 520 : r == StaffRole.Salesperson ? 480 : r == StaffRole.Driver ? 380 :
+                           r == StaffRole.Manager ? 700 : r == StaffRole.Receptionist ? 330 : 340;
             return (int)Math.Round((baseWage + skill * 6) / 10.0) * 10;
         }
 
@@ -48,7 +52,7 @@ namespace CarSales.Sim
             int n = 3 + rng.Next(4);
             for (int i = 0; i < n; i++)
             {
-                var role = (StaffRole)rng.Next(4);
+                var role = (StaffRole)rng.Next(6);
                 int skill = 25 + rng.Next(66);
                 list.Add(new Employee
                 {
@@ -91,10 +95,10 @@ namespace CarSales.Sim
         public static float DetailPerHour(int skill) => 30f + skill * 0.4f;
 
         /// <summary>Morale drifts towards a level set by pay vs. the market rate for their skill.</summary>
-        public static void UpdateMorale(Employee e)
+        public static void UpdateMorale(Employee e, bool manager = false)
         {
             float fair = Wage(e.Role, e.skill);
-            float target = Math.Max(0.2f, Math.Min(1f, 0.7f + (e.wage - fair) / fair));
+            float target = Math.Max(0.2f, Math.Min(1f, 0.7f + (e.wage - fair) / fair + (manager ? 0.1f : 0f)));
             e.morale += (target - e.morale) * 0.3f;
         }
     }

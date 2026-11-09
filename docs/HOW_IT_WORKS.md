@@ -429,4 +429,8 @@ Won cars appear in the auction car park — drive or tow them home.
   `StaffManager` (team, wages on `WeekEnded`, detailers/drivers on the clock, salespeople via `CustomerAI`),
   `CustomerDeal` (quote + finishing a sale, shared by `NegotiationSession` and salespeople).
 - All three managers are added by `CarSalesBootstrap` if missing and saved as modules `market`, `crm`, `staff`.
+- **Phase 7b:** `Sim/Customers/Sourcing.cs` (`PrivateSellers`, `Listings`, `BuyerQuestions`, `AfterSale`), `SourcingManager`
+  (ads + viewings at `SellerSpot`s with a `SellerNpc`, leads, warranties; module `sourcing`), `PrivateSellerUI`,
+  `ListingEditorUI` (`CarInstance.listing`), `HandoverUI` (between the agreed price and `CustomerDeal.CompleteSale`),
+  `NegotiationSession.Answer` / `TestDrive`, `CustomerAI.InspectAround`.
 

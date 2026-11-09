@@ -88,7 +88,10 @@ namespace CarSales
 
                 Face(TargetCar.transform.position);
                 SetBubble("...");
-                yield return new WaitForSeconds(Random.Range(browseTime.x, browseTime.y));
+                yield return new WaitForSeconds(Random.Range(browseTime.x, browseTime.y) * 0.5f);
+                // Phase 7b: walk round the car - tyres, inside, under the bonnet.
+                yield return InspectAround();
+                if (!IsTargetValid()) { TargetCar = null; continue; }
 
                 if (IsTargetValid() && WantsCar(TargetCar))
                 {
@@ -186,6 +189,11 @@ namespace CarSales
         {
             var options = spawner.Dealer.GetListedCars().Where(c => !seen.Contains(c)).ToList();
             if (options.Count == 0) return null;
+            if (!string.IsNullOrEmpty(Profile.targetCarId))
+            {
+                var wanted = options.Find(c => c.Data.instanceId == Profile.targetCarId);
+                if (wanted) return wanted;
+            }
             var scored = options.Select(c => (car: c, score: CustomerDeal.Score(Profile, c))).OrderByDescending(x => x.score).Take(3).ToList();
             float total = scored.Sum(x => x.score * x.score) + 0.0001f;
             float r = Random.value * total;
@@ -198,9 +206,33 @@ namespace CarSales
             float score = CustomerDeal.Score(Profile, car);
             if (score <= 0f) return false;
             float interest = score * 1.3f - 0.15f;
+            if (car.Data.instanceId == Profile.targetCarId) interest += CarSales.Sim.Listings.LeadInterestBonus;
             interest += (CarSalesServices.Economy.Reputation - 50f) / 200f;           // dealer reputation
             if (CarSalesServices.Upgrades) interest += CarSalesServices.Upgrades.ShowroomInterestBonus;
             return Random.value < Mathf.Clamp01(interest);
+        }
+
+        IEnumerator InspectAround()
+        {
+            if (!TargetCar) yield break;
+            var t = TargetCar.transform;
+            string[] lines = { "Checking the tyres...", "Looking inside...", "Under the bonnet..." };
+            Vector3[] offsets = { t.right * 1.9f + t.forward * 1.2f, -t.right * 1.9f, t.forward * 3f };
+            int stops = Random.Range(1, 3);
+            for (int i = 0; i < stops; i++)
+            {
+                int k = Random.Range(0, offsets.Length);
+                if (NavMesh.SamplePosition(t.position + offsets[k], out var hit, 1.5f, NavMesh.AllAreas))
+                {
+                    agent.SetDestination(hit.position);
+                    yield return WaitUntilArrived(10f);
+                }
+                if (!TargetCar) yield break;
+                Face(t.position);
+                SetBubble(lines[k]);
+                yield return new WaitForSeconds(Random.Range(1.5f, 3f));
+            }
+            SetBubble("");
         }
 
         // ---------------- HELPERS ----------------

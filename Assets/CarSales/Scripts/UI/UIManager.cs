@@ -29,6 +29,9 @@ namespace CarSales
         public MapUI map;
         public PhoneUI phone;
         public AuctionUI auction;
+        public PrivateSellerUI privateSeller;
+        public ListingEditorUI listingEditor;
+        public HandoverUI handover;
         public VehicleDetailsUI vehicleDetails;
         public InspectionUI inspection;
         public PartsUI parts;
@@ -86,6 +89,9 @@ namespace CarSales
             map = Create<MapUI>("Map");
             phone = Create<PhoneUI>("Phone");
             auction = Create<AuctionUI>("Auction");
+            privateSeller = Create<PrivateSellerUI>("PrivateSeller");
+            listingEditor = Create<ListingEditorUI>("ListingEditor");
+            handover = Create<HandoverUI>("Handover");
 
             toastArea = UIFactory.Rect("Notifications", transform);
             UIFactory.Place(toastArea, Vector2.one, Vector2.one, new Vector2(-24f, -150f), new Vector2(440f, 640f));

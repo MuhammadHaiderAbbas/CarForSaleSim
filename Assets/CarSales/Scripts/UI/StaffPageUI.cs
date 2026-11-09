@@ -81,7 +81,8 @@ namespace CarSales
             var h = UIFactory.Horizontal(row, 10, 12f);
             h.padding = new RectOffset(14, 12, 8, 8);
             h.childForceExpandHeight = false;
-            var color = e.Role == StaffRole.Salesperson ? UIFactory.Good : e.Role == StaffRole.Mechanic ? UIFactory.Warn : e.Role == StaffRole.Detailer ? UIFactory.Info : UIFactory.Special;
+            var color = e.Role == StaffRole.Salesperson ? UIFactory.Good : e.Role == StaffRole.Mechanic ? UIFactory.Warn : e.Role == StaffRole.Detailer ? UIFactory.Info :
+                        e.Role == StaffRole.Driver ? UIFactory.Special : e.Role == StaffRole.Receptionist ? UIFactory.Personal : UIFactory.Gold;
             UIFactory.Icon(row.transform, color, StaffRules.RoleName(e.Role).Substring(0, 1), 40f);
             var col = UIFactory.VCol(row.transform, 2f);
             UIFactory.Text(col, $"<b>{e.name}</b>  -  {StaffRules.RoleName(e.Role)}  -  skill {e.skill}  -  {UIFactory.Money(e.wage)}/week" +

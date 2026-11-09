@@ -35,7 +35,7 @@ namespace CarSales
         /// <summary>1 = calm, 0 = about to walk away.</summary>
         public float PatienceRatio => startPatience > 0 ? Mathf.Clamp01(patience / (float)startPatience) : 0f;
         /// <summary>Known faults you didn't mention and they didn't notice.</summary>
-        public int HiddenKnownFaults => Disclosed ? 0 : CarRecords.KnownFaults(Car.Data).Count(f => !spottedFaults.Contains(f));
+        public int HiddenKnownFaults => (Disclosed ? 0 : CarRecords.KnownFaults(Car.Data).Count(f => !spottedFaults.Contains(f))) + lies;
         public int DisclosedFaults => Disclosed ? CarRecords.KnownFaults(Car.Data).Count() : 0;
 
         public NegotiationSession(CustomerAI customer, CarDisplay car)
@@ -105,6 +105,65 @@ namespace CarSales
         }
 
         public void AcceptCustomerOffer() => FinalPrice = CustomerOffer;
+
+        // ------------------------------------------------------------------ Q&A (phase 7b)
+        int lies;
+        float trustFactor = 1f;
+        public bool TestDriven { get; private set; }
+        public int Lies => lies;
+
+        /// <summary>True when the honest answer to this question is bad news for the sale.</summary>
+        public bool TruthBad(BuyerQuestion q)
+        {
+            var c = Car.Data;
+            switch (q)
+            {
+                case BuyerQuestion.AnyProblems: return CarRecords.KnownFaults(c).Any() && !Disclosed;
+                case BuyerQuestion.ServiceHistory: return c.documents.service != ServiceHistory.Full;
+                case BuyerQuestion.Mot: return !CarRecords.MotValid(c);
+                case BuyerQuestion.Mileage: return c.history.clockingConfirmed || c.history.clockingSuspected;
+                default: return c.history.checkedHistory && c.history.writeOff != WriteOff.None;
+            }
+        }
+
+        /// <summary>You answer a customer's question honestly or dodge it.</summary>
+        public void Answer(BuyerQuestion q, bool honest)
+        {
+            var (factor, pat, lie) = BuyerQuestions.Effect(honest, TruthBad(q));
+            if (honest && q == BuyerQuestion.AnyProblems && TruthBad(q)) { Disclose(); return; }
+            trustFactor *= factor;
+            patience += pat;
+            if (lie) lies++;
+            maxWillingToPay = Mathf.Max(100, Mathf.RoundToInt(maxWillingToPay * factor));
+            CustomerOffer = Mathf.Min(CustomerOffer, maxWillingToPay);
+        }
+
+        /// <summary>
+        /// Customer test drive (alone or with you riding along): they may notice faults that show on the road; if not,
+        /// they like the car a bit more. Riding along, you notice what they notice.
+        /// </summary>
+        public string TestDrive(bool rideAlong)
+        {
+            if (TestDriven) return "They've already driven it.";
+            TestDriven = true;
+            var c = Car.Data;
+            c.mileage += 4;
+            c.fuel = Mathf.Max(0f, c.fuel - 2f);
+            var noticed = new List<string>();
+            foreach (var f in c.faults.Where(x => x.Def != null && (x.Def.FoundBy & InspectMethod.RoadTest) != 0 && !spottedFaults.Contains(x)))
+            {
+                if (Random.value >= Buyers.SpotChance(Persona, f.severity) * 1.5f) continue;
+                spottedFaults.Add(f);
+                noticed.Add(f.Def.Symptom.ToLowerInvariant());
+                if (rideAlong) { f.known = true; f.foundBy = (int)InspectMethod.RoadTest; }
+                if (!Disclosed) maxWillingToPay -= CarRecords.RepairEstimate(c, f);
+            }
+            if (noticed.Count == 0) { maxWillingToPay = Mathf.RoundToInt(maxWillingToPay * 1.03f); patience += 1; }
+            if (rideAlong) patience += 1;
+            maxWillingToPay = Mathf.Max(100, maxWillingToPay);
+            CustomerOffer = Mathf.Min(CustomerOffer, maxWillingToPay);
+            return noticed.Count == 0 ? "Lovely drive. I can see myself in this." : $"Hmm. I noticed {string.Join(" and ", noticed)}.";
+        }
 
         public NegotiationResult Propose(int playerOffer, out string reply)
         {

@@ -41,6 +41,7 @@ namespace CarSales
         public HistoryRecord history = new HistoryRecord();
         public List<FaultInstance> faults = new List<FaultInstance>();
         public VehicleKnowledge knowledge = new VehicleKnowledge();
+        public ListingInfo listing = new ListingInfo();   // phase 7b listing editor
 
         /// <summary>Display name of the car model (not saved).</summary>
         public string Name => CarSalesServices.Database && CarSalesServices.Database.Get(carId) ? CarSalesServices.Database.Get(carId).displayName : carId;

@@ -104,5 +104,36 @@ namespace CarSales.EditorTools
             PointLight(g, new Vector3(0f, 3.6f, 4.5f), 10f, 1.4f, new Color(1f, 0.97f, 0.9f));
             AddMapPlace(g.gameObject, "Parts Direct", "P", UIFactory.Warn, new Vector3(0f, 0.1f, -3f));
         }
+    
+        /// <summary>Phase 7b: a cul-de-sac of six houses where private sellers show their cars on the driveway.</summary>
+        static void BuildMapleClose(Transform g, Mats m)
+        {
+            Solid(g, "Road", new Vector3(0f, 0.012f, 9f), new Vector3(7f, 0.024f, 80f), m.asphalt);   // joins the main road without overlapping it
+            Solid(g, "TurningCircle", new Vector3(0f, 0.013f, 50f), new Vector3(16f, 0.026f, 12f), m.asphalt);
+            SignText(g, new Vector3(5f, 2.4f, -34f), "MAPLE CLOSE", 5f, Color.white, new Vector2(4f, 0.6f));
+            Solid(g, "SignPost", new Vector3(5f, 1.1f, -33.9f), new Vector3(0.12f, 2.2f, 0.12f), m.metal);
+            int n = 0;
+            foreach (float side in new[] { -1f, 1f })
+                foreach (float z in new[] { 2f, 20f, 38f })
+                {
+                    n++;
+                    var mat = m.buildings[n % m.buildings.Length];
+                    Solid(g, "Lawn", new Vector3(side * 14f, 0.01f, z), new Vector3(16f, 0.02f, 14f), m.ground);
+                    Solid(g, "House", new Vector3(side * 18f, 3f, z), new Vector3(8f, 6f, 9f), mat);
+                    var roof = Deco(g, "Roof", PrimitiveType.Cube, new Vector3(side * 18f, 6.2f, z), new Vector3(8.6f, 3.2f, 3.2f), m.flagRed);
+                    roof.transform.localRotation = Quaternion.Euler(45f, 90f, 0f);
+                    Deco(g, "Door", PrimitiveType.Cube, new Vector3(side * 13.97f, 1.1f, z + 2f), new Vector3(0.06f, 2.2f, 1.1f), m.desk);
+                    Deco(g, "Window", PrimitiveType.Cube, new Vector3(side * 13.97f, 2.2f, z - 2f), new Vector3(0.06f, 1.2f, 1.8f), m.windowGlass);
+                    Solid(g, "Driveway", new Vector3(side * 7.5f, 0.015f, z), new Vector3(8f, 0.03f, 4.5f), m.concrete);
+                    var spot = Child($"SellerSpot_{n}", g, new Vector3(side * 7.5f, 0.05f, z));
+                    spot.localRotation = Quaternion.Euler(0f, side > 0 ? -90f : 90f, 0f);
+                    var sellerPoint = Child("SellerPoint", spot, new Vector3(-1.8f, 0f, 0.5f));
+                    var ss = spot.gameObject.AddComponent<SellerSpot>();
+                    ss.address = "Maple Close";
+                    ss.sellerPoint = sellerPoint;
+                    SignText(g, new Vector3(side * 13.9f, 2.6f, z + 3.2f), n.ToString(), 3f, Color.white, new Vector2(0.6f, 0.6f), side > 0 ? -90f : 90f);
+                }
+            AddMapPlace(g.gameObject, "Maple Close", "M", UIFactory.Home, new Vector3(0f, 0.1f, -30f));
+        }
     }
 }

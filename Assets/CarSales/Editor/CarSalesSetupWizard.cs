@@ -670,6 +670,7 @@ namespace CarSales.EditorTools
             systems.AddComponent<MarketManager>();
             systems.AddComponent<StaffManager>();
             systems.AddComponent<CrmManager>();
+            systems.AddComponent<SourcingManager>();
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();

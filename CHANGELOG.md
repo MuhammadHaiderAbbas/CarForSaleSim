@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.0-dev — Phase 7b "Sourcing & selling"
+- **Private sellers**: classified ads, viewings at houses on Maple Close, questions (they may lie), inspection,
+  a drive round the block, haggling, logbook handover.
+- **Listing editor**: photos from six angles, honest highlights, a price helper against market and rivals, online
+  adverts that bring enquiries - customers who come to view a specific car.
+- **Customers** walk round the car, ask questions you answer honestly or not, and take **test drives** (with you or alone).
+- **Paperwork & handover** with a **warranty** add-on (and later claims).
+- New staff roles: **receptionist** and **manager**.
+- 6 new tests (249 total).
+
 ## v5.0-dev — Phase 7a "Market, customers, staff"
 - **Living market**: prices drift daily, seasons (sports cars in summer, SUVs in winter), demand and supply.
 - **Competitor dealers** you can compare your prices with, and weekly **trade batches** from other dealers.

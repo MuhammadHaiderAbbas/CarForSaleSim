@@ -60,7 +60,7 @@ namespace CarSales
             UIFactory.LE(gridRt, h: 190);
             driveButton = UIFactory.Btn(gridRt, "Drive (F)", UIFactory.Special, () => CarSalesServices.TestDrive.StartDrive(car), 54f, 17f);
             UIFactory.Btn(gridRt, "Inspect", UIFactory.Neutral, () => CarSalesServices.UI.inspection.Show(car.Data, car), 54f, 17f);
-            priceButton = UIFactory.Btn(gridRt, "Set Price", UIFactory.Good, () => CarSalesServices.UI.priceUI.Show(car), out priceLabel, 54f, 16f);
+            priceButton = UIFactory.Btn(gridRt, "Sell / listing", UIFactory.Good, () => CarSalesServices.UI.listingEditor.Show(car), out priceLabel, 54f, 16f);
             repairButton = UIFactory.Btn(gridRt, "Repair", UIFactory.Warn, () => Service(ServiceType.Workshop), out repairLabel, 54f, 15f);
             washButton = UIFactory.Btn(gridRt, "Wash", UIFactory.Accent, () => Service(ServiceType.CarWash), out washLabel, 54f, 15f);
             refuelButton = UIFactory.Btn(gridRt, "Refuel", UIFactory.Gold, () => Service(ServiceType.FuelStation), out refuelLabel, 54f, 15f);
@@ -122,7 +122,7 @@ namespace CarSales
             driveButton.interactable = CarSalesServices.TestDrive && !CarSalesServices.TestDrive.IsDriving && d.fuel > 0.5f;
             bool atSpot = d.location == CarLocation.Spot;
             priceButton.interactable = !d.personal && atSpot;
-            priceLabel.text = d.personal ? "Personal car" : atSpot ? "Set Price" : "Park at your\ndealership to sell";
+            priceLabel.text = d.personal ? "Personal car" : atSpot ? (d.state == CarState.Listed ? "Edit listing" : "Sell / listing") : "Park at your\ndealership to sell";
             repairLabel.text = IsAt(ServiceType.Workshop) ? "Repair\n(at workshop)" : TowLabel("Workshop", ServiceType.Workshop);
             washLabel.text = IsAt(ServiceType.CarWash) ? "Wash\n(at car wash)" : TowLabel("Car Wash", ServiceType.CarWash);
             refuelLabel.text = IsAt(ServiceType.FuelStation) ? $"Refuel\n{UIFactory.Money(CarSalesServices.Vehicles.RefuelCost(d))}" : TowLabel("Fuel Station", ServiceType.FuelStation);

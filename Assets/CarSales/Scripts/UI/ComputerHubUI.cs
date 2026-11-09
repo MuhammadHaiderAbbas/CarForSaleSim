@@ -141,7 +141,7 @@ namespace CarSales
             Tile("Customers", "C", UIFactory.Personal, () => ShowPage(Customers));
             Tile("Staff", "T", UIFactory.Good, () => ShowPage(Staff));
             Tile("Market", "V", UIFactory.Info, () => ShowPage(MarketApp));
-            Soon("Listings", "K", 7);
+            Tile("Classifieds", "K", UIFactory.Gold, () => { ShowPage(MarketApp); MarketApp.ShowTab(3); });
         }
 
         void Tile(string label, string glyph, Color color, UnityAction onClick, ComputerPage page = null, bool soon = false)

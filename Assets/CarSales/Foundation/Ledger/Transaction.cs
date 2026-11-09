@@ -38,6 +38,7 @@ namespace CarSales.Foundation
         Vat = 26,           // VAT on auction fees
         Deposits = 27,      // refundable auction deposits
         FinanceCommission = 28,
+        Warranty = 29,      // warranties sold (+) and claims paid (-)
     }
 
     public static class TxCategories
@@ -76,6 +77,7 @@ namespace CarSales.Foundation
                 case TxCategory.Vat: return "VAT";
                 case TxCategory.Deposits: return "Deposits";
                 case TxCategory.FinanceCommission: return "Finance commission";
+                case TxCategory.Warranty: return "Warranties";
                 default: return "Other";
             }
         }

@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-6 are merged; Phase 7a code is written (see [Phase 7 status](#phase-7-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-6 and 7a are merged; Phase 7b code is written (see [Phase 7 status](#phase-7-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1065,9 +1065,22 @@ a mechanic and a salesperson can each do their part of this without the player.
 | Reviews & CRM | Every sale: 1-5 stars (condition, price vs value, honesty, haggling, harshness) → reputation. Hiding known faults → a complaint 2-6 days later (-2 rep each). Customers app: records (type, visits, purchases, spent, satisfaction) and reviews. Save module `crm`. |
 | Staff | `Sim/Staff/Staff.cs` + `StaffManager`: weekly candidates (3-6), skills 25-90, wages by role and skill (ledger *Wages*, weekly), morale from pay, sick days, experience raises skill. **Salesperson**: takes customers who wait 10 s, discloses known faults, closes above your minimum margin. **Mechanic**: works the workshop board (speed by skill; replaces the phase 5b mechanic). **Detailer**: cleans the dirtiest cars on your lots. **Driver**: brings paid auction cars to your dealership. Staff app (Team, Recruitment, Rules). Save module `staff`. |
 
-**Phase 7b (next):** private sellers (ads, appointments at houses, seller NPCs), listing editor (photos, description,
-price helper, online leads), customer inspection animations and Q&A, customer test drives on a route, paperwork and
-handover, warranties, receptionist and manager roles.
+**Phase 7b: code complete** (249 EditMode tests, compile-checked; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Private sellers | `Sim/Customers/Sourcing.cs` + `SourcingManager`: 2-3 classified ads a day (10-25% under market, honesty 0-1, hidden floor), Market app → *Classifieds* (desktop tile). Book a viewing (next hour, 09:00-19:00); the seller waits two hours with the car on a driveway at **Maple Close** (6 houses, built by the wizard; falls back to near the Used Car Market). Talk to them (E): five questions (honest or lying answers), inspect (all on-the-lot methods), *around the block* (road test at 60% skill), history check, haggle (found faults lower their floor), pay; logbook and keys handed over (or not). Save module `sourcing`. |
+| Listing editor | Car menu → *Sell / listing* (also the vehicle file): up to 6 photos from different angles (`ThumbnailService.Get(car, angle)`), highlights that must be true (FSH, long MOT, low mileage, one owner, valeted 90%+, warranty, known faults listed), price slider with market value, cheapest rival and the usual range, *advertise online*. Quality 0-1 → enquiries per day. |
+| Leads | Online adverts bring enquiries each morning (message: who and when); that customer comes to view that car with a head start on interest. |
+| Customers | Walk round the car before deciding (tyres, inside, bonnet). In negotiation they ask 1-3 questions (problems, service history, MOT, mileage, accidents): answer honestly or dodge - a dodge about bad news counts as hiding it (review/complaint later). **Test drive**: alone or riding along (needs a valid MOT, key, fuel); road-test faults may be noticed; a clean drive raises their interest. |
+| Paperwork & handover | After the price: invoice, logbook transfer, service records, keys, MOT - completeness changes the review (-0.75 to +0.5 stars). Offer a **3-month warranty** (4% of the price, $150-$900; buyers decide by type): income in *Warranties*, claims later cost the repair of the car's real faults. |
+| Staff | **Receptionist**: 30% more enquiries, customers arrive 20% more often. **Manager**: +10% morale and +10% work speed for everyone. |
+
+**Phase 7b play-test checklist:**
+1. Build Everything (adds Maple Close). Computer → *Classifieds*: book a viewing, GPS there, talk to the seller, ask "any problems?", inspect, drive round the block, haggle, buy.
+2. Car menu → *Sell / listing*: take 6 photos, tick highlights, set the price, advertise online. Next morning: an enquiry message; the customer comes for that car.
+3. Talk to a customer: answer their questions, let them test drive (ride along), agree a price, then do the handover and offer a warranty.
+4. Hire a receptionist and a manager; watch more customers arrive.
 
 **Phase 7a play-test checklist:**
 1. List a few cars, open the shop. Talk to customers: the prompt shows their type (e.g. savvy haggler).

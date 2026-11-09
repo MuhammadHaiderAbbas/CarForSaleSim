@@ -55,7 +55,7 @@ namespace CarSales
 
         /// <summary>Finishes a sale: money in, the trade-in onto your lot, finance commission, review, market demand.</summary>
         public static void CompleteSale(CustomerAI customer, int price, int marketValue, int disclosed, int hiddenKnown, int rounds, string soldBy,
-                                        CarInstance tradeIn, int tradeInCredit, bool finance)
+                                        CarInstance tradeIn, int tradeInCredit, bool finance, float reviewBonus = 0f)
         {
             var display = customer.TargetCar;
             var car = display.Data;
@@ -77,7 +77,7 @@ namespace CarSales
                 CarSalesServices.UI.Notify($"Finance arranged: the lender paid in full, you earned {UIFactory.Money(commission)} commission.");
             }
             if (CarSalesServices.Market) CarSalesServices.Market.RegisterSale(def);
-            int stars = CarSalesServices.Crm ? CarSalesServices.Crm.RecordSale(customer.Profile, car, price, marketValue, disclosed, hiddenKnown, rounds, soldBy) : 3;
+            int stars = CarSalesServices.Crm ? CarSalesServices.Crm.RecordSale(customer.Profile, car, price, marketValue, disclosed, hiddenKnown, rounds, soldBy, reviewBonus) : 3;
             CarSalesServices.UI.Toast(ToastType.Success, soldBy != null ? $"{soldBy} sold a car" : "Review",
                 $"{customer.Profile.customerName} bought the {car.Name} for {UIFactory.Money(price)} and left a {stars}-star review.");
             customer.EndNegotiation(true);
