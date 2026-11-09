@@ -114,6 +114,13 @@ namespace CarSales
             set { PlayerPrefs.SetInt("CarSales.Difficulty", Mathf.Clamp(value, 0, 4)); PlayerPrefs.Save(); }
         }
 
+        /// <summary>Phase 11: walk around in third person (your character visible). V switches; remembered.</summary>
+        public static bool ThirdPerson
+        {
+            get => PlayerPrefs.GetInt("CarSales.ThirdPerson", 0) == 1;
+            set => SetFlag("CarSales.ThirdPerson", value);
+        }
+
         /// <summary>Phase 8b: small frame-time overlay (top right).</summary>
         public static bool ShowPerformance
         {

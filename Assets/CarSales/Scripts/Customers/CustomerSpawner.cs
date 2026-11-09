@@ -67,6 +67,7 @@ namespace CarSales
                 if (CarSalesServices.World) mult /= Mathf.Max(0.2f, CarSalesServices.World.Footfall);   // phase 8: weather, weekends, holidays, events
                 if (CarSalesServices.Business) mult /= Mathf.Max(0.2f, CarSalesServices.Business.FootfallFactor);   // phase 9: marketing, reviews
                 if (CarSalesServices.Business) mult /= Mathf.Max(0.2f, CarSalesServices.Business.Balance.footfallMultiplier);   // phase 10: difficulty
+                if (CarSalesServices.Buildings) mult /= CarSalesServices.Buildings.FootfallFactor(Dealer.dealershipId);   // phase 11b: building level
                 yield return new WaitForSeconds(Random.Range(spawnInterval.x, spawnInterval.y) * mult);
             }
         }
@@ -96,7 +97,7 @@ namespace CarSales
                 return;
             }
             var customer = Instantiate(customerPrefab, hit.position, point.rotation);
-            var look = AssetRegistry.RandomCustomerModel();
+            var look = CharacterSpawn.PrefabFor(CarSales.Studio.CharacterUse.Customer);   // phase 11: Character Setup cast first
             if (look) customer.UseAppearance(look);
             var profile = GenerateProfile();
             // Phase 7b: someone who booked a viewing from your online advert.
@@ -121,6 +122,7 @@ namespace CarSales
         {
             float rep = CarSalesServices.Economy.Reputation / 100f;
             float budgetMult = (CarSalesServices.Upgrades ? CarSalesServices.Upgrades.BudgetMultiplier : 1f) * Dealer.budgetMultiplier;
+            if (CarSalesServices.Buildings) budgetMult *= CarSalesServices.Buildings.BudgetFactor(Dealer.dealershipId);   // phase 11b
             var persona = CarSales.Sim.Buyers.Pick(personaRng, Dealer.budgetMultiplier);
             var biz = CarSalesServices.Business;
             if (biz)

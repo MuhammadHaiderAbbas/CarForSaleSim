@@ -187,21 +187,49 @@ namespace CarSales.Sim
         }
 
         // ------------------------------------------------------------------ AI BIDDERS (§8.3)
-        static readonly string[] FirstNames = { "Dan", "Priya", "Mike", "Joe", "Kenji", "Rosa", "Vlad", "Amir", "Sophie", "Tom", "Leila", "Gareth", "Ines", "Olu" };
-        static readonly string[] Firms = { "Motors", "Trade Cars", "Autos", "Car Sales", "Exports", "Breakers", "Garage", "Group" };
+        static readonly string[] FirstNames = { "Dan", "Priya", "Mike", "Joe", "Kenji", "Rosa", "Vlad", "Amir", "Sophie", "Tom", "Leila", "Gareth", "Ines", "Olu",
+                                                "Hannah", "Marco", "Aisha", "Callum", "Yusuf", "Freya", "Tariq", "Nadia", "Ben", "Chloe", "Ravi", "Megan", "Luis", "Zara" };
+        static readonly string[] Surnames = { "Hart", "Okafor", "Patel", "Brennan", "Kowalski", "Singh", "Murphy", "Tanaka", "Evans", "Haddad", "Clarke", "Moreno", "Novak", "Ward" };
+        static readonly string[] Places = { "Northgate", "Riverside", "Eastfield", "Kingsway", "Westmoor", "Harbour", "Hillcrest", "Oakley" };
+
+        /// <summary>Business names that fit what the bidder does (a breaker is "...'s Breakers", not "...'s Motors").</summary>
+        static string FirmName(BidderArchetype a, string first, Random rng)
+        {
+            string place = Places[rng.Next(Places.Length)];
+            switch (a)
+            {
+                case BidderArchetype.Exporter: return rng.Next(2) == 0 ? $"{first}'s Exports" : $"{place} Export Ltd";
+                case BidderArchetype.Breaker: return rng.Next(2) == 0 ? $"{first}'s Breakers" : $"{place} Salvage";
+                case BidderArchetype.Mechanic: return rng.Next(2) == 0 ? $"{first}'s Garage" : $"{place} Motor Repairs";
+                case BidderArchetype.FranchiseDealer: return $"{place} {(rng.Next(2) == 0 ? "Motors" : "Autos")}";
+                case BidderArchetype.DealerGroup: return $"{place} Motor Group";
+                default: return rng.Next(2) == 0 ? $"{first}'s Trade Cars" : $"{first}'s Car Sales";
+            }
+        }
 
         public static List<AuctionBidder> GenerateBidders(int count, Random rng)
         {
             var list = new List<AuctionBidder>();
+            var used = new HashSet<string>();
+            var usedFirst = new HashSet<string>();
             var types = (BidderArchetype[])Enum.GetValues(typeof(BidderArchetype));
             for (int i = 0; i < count; i++)
             {
                 var a = types[rng.Next(types.Length)];
-                string first = FirstNames[rng.Next(FirstNames.Length)];
+                // Every bidder in a sale has a different name (people get a surname, firms a fitting business name).
+                string name = null, first = FirstNames[rng.Next(FirstNames.Length)];
+                for (int tries = 0; tries < 20 && (name == null || used.Contains(name) || usedFirst.Contains(first)); tries++)
+                {
+                    first = FirstNames[rng.Next(FirstNames.Length)];
+                    name = a == BidderArchetype.PrivateBuyer ? $"{first} {Surnames[rng.Next(Surnames.Length)]}" : FirmName(a, first, rng);
+                }
+                if (used.Contains(name)) name += " " + (i + 1);
+                used.Add(name);
+                usedFirst.Add(first);
                 var b = new AuctionBidder
                 {
                     id = "ai" + i, archetype = (int)a,
-                    name = a == BidderArchetype.PrivateBuyer ? first : $"{first}'s {Firms[rng.Next(Firms.Length)]}",
+                    name = name,
                     budget = a == BidderArchetype.DealerGroup ? 120000 : a == BidderArchetype.PrivateBuyer ? 15000 : 50000,
                     margin = a == BidderArchetype.PrivateBuyer ? 0.02f : a == BidderArchetype.DealerGroup ? 0.08f : a == BidderArchetype.Breaker ? 0.3f : 0.15f,
                     optimism = a == BidderArchetype.PrivateBuyer ? 1.08f : a == BidderArchetype.Mechanic ? 1.02f : 0.97f + (float)rng.NextDouble() * 0.06f,

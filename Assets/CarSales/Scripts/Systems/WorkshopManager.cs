@@ -235,7 +235,8 @@ namespace CarSales
             Mathf.RoundToInt(WorkshopCatalog.PartPrice(part, tier, s, c != null ? BasePrice(c) : 20000) * RepairCostFactor);
 
         /// <summary>Phase 10 difficulty: parts and garage labour cost more on harder settings.</summary>
-        public static float RepairCostFactor => CarSalesServices.Business ? CarSalesServices.Business.Balance.repairCostMultiplier : 1f;
+        public static float RepairCostFactor => (CarSalesServices.Business ? CarSalesServices.Business.Balance.repairCostMultiplier : 1f) *
+                                                (CarSalesServices.Buildings ? CarSalesServices.Buildings.RepairCostFactor : 1f);   // phase 11b: service centre upgrades
 
         /// <summary>Town-garage labour for a job (difficulty applied).</summary>
         public static int LabourCost(RepairJobDef job) => Mathf.RoundToInt(WorkshopCatalog.LabourCost(job) * RepairCostFactor);
@@ -435,6 +436,7 @@ namespace CarSales
             if ((!state.mechanicHired && !staffMech) || !WorkStation.Exists(StationType.Mechanical)) return;
             float mechSkill = staffMech ? staff.MechanicSkill / 100f : BoardLogic.MechanicSkill;
             float hours = BoardLogic.WorkingHours(fromHour, toHour) * (staffMech ? StaffRules.MechanicSpeed(staff.MechanicSkill) * staff.MechanicCount * staff.Productivity : 1f);
+            if (CarSalesServices.Buildings) hours *= CarSalesServices.Buildings.JobSpeedFactor;   // phase 11b: a bigger service centre works faster
             while (hours > 0f)
             {
                 var card = state.board.Find(b => b.byMechanic && !b.done);

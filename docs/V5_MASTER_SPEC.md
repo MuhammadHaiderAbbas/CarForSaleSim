@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-9 are merged; Phase 10 code is written (see [Phase 10 status](#phase-10-status)). The release-candidate checks (2-week run in Unity, §11 budgets) are still to be done in the Editor.
+**Status:** Draft 1. Phases 1-10 are merged; Phase 11 (characters & building levels) code is written (see [Phase 11 status](#phase-11-status)). The release-candidate checks (2-week run in Unity, §11 budgets) are still to be done in the Editor.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1198,6 +1198,35 @@ have to be measured on your hardware (Settings → Display → frame-rate overla
 6. Settings → General → Difficulty: HARD, New Game: less starting money ($30,000); repairs cost more.
 7. Tools → Car Sales → Simulation Configurator → Run sandbox. Build → Windows (Development): the game runs from Builds/.
 8. Turn on the frame-rate overlay in the busiest spot (dealership + traffic + rain) and compare with §11.
+
+### Phase 11 — Characters & building levels (L, added after Phase 10)
+Requested after the release-candidate work: real animated characters (Mixamo) for the player and every kind of AI,
+and buildings you upgrade through three visibly different levels.
+**Done when:** Character Setup builds a player + AI cast from one Mixamo character and the listed animations, and every
+owned building can be taken from level 1 to 3 with its look replaced each time.
+
+#### Phase 11 status
+**Code complete** (325 EditMode tests passing, compile-checked; not run in Unity). Fixes first: the MOT lists each part
+once, and auction bidders always have different, fitting names.
+
+| Item | Built |
+|---|---|
+| Character Setup | *Tools → Car Sales → Character Setup*: main character (Mixamo FBX, With Skin), 16 animation slots with the exact Mixamo search for each (Idle, Walk, Run, Talking required; Wave, Point, Look around, Kneel, Raise hand, Clap, Happy, Angry, Thinking, Sitting, Typing, On the phone optional). Files dropped in `Art/Characters/Animations` are matched by name automatically. **Build** makes the rigs Humanoid, sets loops and bakes root motion in place, builds one shared Animator (Speed blend + actions), your player prefab, the AI cast and `CharacterLibrary`, and adds Mixamo licence records. |
+| Update popup | On editor load, until characters are set up (or you choose *Don't ask again*), a dialog lists what to download from Mixamo and opens Character Setup. Bumping `CharacterSetup.SetupVersion` (new animations) asks again. |
+| AI look-alikes | `VariantGenerator`: from your character (plus any extra Mixamo characters) N variants with different height, build, skin tone, hair/clothes/shoe colours, optional parts (hats, glasses, beards) and body blend shapes; a quarter in staff workwear. Same seed → same cast. **Note:** these share your character's mesh (recoloured/reshaped); new faces need more uploaded characters - the system can't model new people. |
+| Animated AI | Customers (look around, kneel at the tyres, think, wave when interested, talk while negotiating, happy/angry when leaving), pedestrians (walk/run), private sellers (wave, talk), the auction room (seated and standing bidders, auctioneer talks and points, hands go up for room bids, clapping on SOLD; you raise your hand when you bid), visible staff at work (receptionist typing, salespeople talking to customers, manager on the phone, mechanics kneeling at the bays during jobs, detailers at the dirtiest car). Missing clips fall back (`CharacterSetup.Resolve`). |
+| Player character | Your character on the player; first person shows its shadow, **V** (or Settings → General) switches to a third-person shoulder camera with wall collision and longer reach. |
+| Building levels | `Sim/Buildings` + `BuildingManager` (module `buildings`): AUTO WORLD, other dealerships, the service centre, homes and investment properties have levels 1-3. Each level has 3-5 upgrades (AUTO WORLD's are the Upgrades app ones); when the last is bought the game asks to **rebuild** (cost by type/price); builders work overnight (fence, scaffolding, crane, sign) and next morning the building is replaced. Old property developments carry over as levels. |
+| New looks | Build Everything makes Level1/2/3 for every building: dealership → two-storey showroom with canopy and totem → flagship glass box with mezzanine, six platforms and rooftop letters; service centre → brick shed with office → clad workshop with canopy, solar roof and EV chargers; each home (trailer → cabin → family house; house → extended → modern with pool; villa → wing + terrace → mansion); apartments/offices → extended → glass tower; car park → 6 decks → 8 decks with screen facade. World Builder dealerships can use imported buildings for levels 2 and 3. NavMesh is rebuilt after a change. |
+| What levels give | Dealerships: +4/+8 parking spots, more customers and budgets, reputation, staff slots. Service centre: faster jobs, cheaper repairs. Homes: wake earlier, more energy, reputation. Investments: +30%/+60% income plus upgrades. Buildings app on the computer (and Business → Property links to it). |
+
+**Phase 11 play-test checklist:**
+1. Reopen Unity: the character popup appears. Download a Mixamo character + the 4 required animations into the folders, Character Setup → Build.
+2. Play: customers, staff and pedestrians use your character's look-alikes and animate; press V for third person.
+3. Auction hall during a sale: seated/standing bidders, hands up on room bids, clapping on SOLD.
+4. Buildings app: buy the Suburban House's 3 level-1 upgrades → the rebuild question appears → sleep → the house is extended.
+5. Upgrades app: buy one level of each upgrade → AUTO WORLD asks to rebuild → next day the two-storey showroom and 4 new lot spots.
+6. Old save with a developed Office Tower: it starts at the matching building level.
 
 ---
 

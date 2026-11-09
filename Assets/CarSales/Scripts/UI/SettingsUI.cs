@@ -15,7 +15,7 @@ namespace CarSales
     {
         Slider sensitivity, volume;
         TextMeshProUGUI sensitivityLabel, volumeLabel, drivingLabel, gearboxLabel, absLabel, tcsLabel, escLabel, themeLabel, scaleLabel, trafficLabel, perfLabel;
-        TextMeshProUGUI subtitlesLabel, languageLabel, difficultyLabel;
+        TextMeshProUGUI subtitlesLabel, languageLabel, difficultyLabel, viewLabel;
         Slider uiScale;
         readonly Slider[] groupSliders = new Slider[5];
         readonly TextMeshProUGUI[] groupLabels = new TextMeshProUGUI[5];
@@ -71,6 +71,13 @@ namespace CarSales
             sensitivity.minValue = 0.02f; sensitivity.maxValue = 0.5f;
             sensitivity.onValueChanged.AddListener(v => { GameSettings.MouseSensitivity = v; UpdateLabels(); });
             UIFactory.Btn(p, "", UIFactory.AccentDark, () => { GameSettings.Subtitles = !GameSettings.Subtitles; UpdateLabels(); }, out subtitlesLabel, 48f, 18f);
+            UIFactory.Btn(p, "", UIFactory.AccentDark, () =>
+            {
+                GameSettings.ThirdPerson = !GameSettings.ThirdPerson;
+                var me = FindFirstObjectByType<PlayerAvatar>();
+                if (me) me.SetView(GameSettings.ThirdPerson);
+                UpdateLabels();
+            }, out viewLabel, 48f, 18f);
             UIFactory.Btn(p, "", UIFactory.AccentDark, () =>
             {
                 var langs = Loc.Available();
@@ -271,6 +278,7 @@ namespace CarSales
             for (int g = 0; g < groupLabels.Length; g++)
                 if (groupLabels[g]) groupLabels[g].text = $"{Loc.T("settings.group." + g, GroupNames[g])}: {GameSettings.GroupVolume(g) * 100f:0}%";
             subtitlesLabel.text = $"{Loc.T("settings.subtitles", "Subtitles")}: {OnOff(GameSettings.Subtitles)}";
+            viewLabel.text = GameSettings.ThirdPerson ? Loc.T("settings.view.third", "View: THIRD PERSON (V; needs Character Setup)") : Loc.T("settings.view.first", "View: FIRST PERSON (V)");
             languageLabel.text = $"{Loc.T("settings.language", "Language")}: {GameSettings.Language.ToUpper()}";
             difficultyLabel.text = $"{Loc.T("settings.difficulty", "Difficulty (new games)")}: {DifficultyNames[GameSettings.Difficulty]}";
             scaleLabel.text = $"{Loc.T("settings.uiscale", "Interface size")}: {GameSettings.UiScale * 100f:0}%";

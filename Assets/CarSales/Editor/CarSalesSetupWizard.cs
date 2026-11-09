@@ -260,6 +260,7 @@ namespace CarSales.EditorTools
             public Material trunk, leaves, lampGlow, ceilingLight, sofa, pot, bin, cone, flagRed, flagBlue, flagWhite;
             public Material concrete, liftYellow, toolRed, brushBlue, barrel, platform, ringGlow;
             public Material[] buildings; public Material windowsGlow;
+            public Material timber, cladding, brick, darkGlass, solar, water, goldTrim, ledStrip;   // phase 11b building levels
         }
 
         static bool loadMaterialsOnly;
@@ -376,6 +377,14 @@ namespace CarSales.EditorTools
                 platform = M("M_DisplayPlatform", new Color(0.12f, 0.12f, 0.14f), 0.95f),
                 ringGlow = M("M_RingGlow", new Color(0.2f, 0.55f, 1f), 0.5f, true, 3f),
                 windowsGlow = M("M_BuildingWindows", new Color(0.55f, 0.7f, 0.85f), 0.9f, true, 0.8f),
+                timber = M("M_Timber", new Color(0.55f, 0.38f, 0.22f), 0.25f),
+                cladding = M("M_Cladding", new Color(0.18f, 0.2f, 0.24f), 0.55f, metallic: 0.5f),
+                brick = M("M_Brick", new Color(0.55f, 0.27f, 0.2f), 0.15f),
+                darkGlass = Transparent(M("M_DarkGlass", new Color(0.12f, 0.2f, 0.3f), 0.95f), 0.45f),
+                solar = M("M_Solar", new Color(0.05f, 0.08f, 0.2f), 0.9f, metallic: 0.4f),
+                water = M("M_Water", new Color(0.2f, 0.55f, 0.85f), 0.95f),
+                goldTrim = M("M_GoldTrim", new Color(0.85f, 0.65f, 0.25f), 0.7f, metallic: 0.8f),
+                ledStrip = M("M_LedStrip", new Color(0.4f, 0.8f, 1f), 0.5f, true, 3f),
                 buildings = new[]
                 {
                     M("M_BuildingA", new Color(0.55f, 0.58f, 0.62f), 0.3f),
@@ -690,6 +699,7 @@ namespace CarSales.EditorTools
             systems.AddComponent<WorldManager>();
             systems.AddComponent<BusinessManager>();
             systems.AddComponent<AmbienceManager>();
+            systems.AddComponent<BuildingManager>();
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();

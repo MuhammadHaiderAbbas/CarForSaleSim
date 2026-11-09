@@ -50,7 +50,8 @@ namespace CarSales.EditorTools
                     var refs = new TownRefs();
                     bool premium = rec.template == SiteTemplate.PremiumDealership;
                     site = BuildDealershipSite(env, m, refs, displayPrefab, customerPrefab, rec.id, rec.name, rec.price > 0 ? rec.id : "", rec.position,
-                                               false, premium ? 1.5f : 1f, premium, BuildingPrefab(rec.buildingAssetId), computer: true, yaw: rec.yaw);
+                                               false, premium ? 1.5f : 1f, premium, BuildingPrefab(rec.buildingAssetId), computer: true, yaw: rec.yaw,
+                                               buildingL2: BuildingPrefab(rec.buildingAssetIdL2), buildingL3: BuildingPrefab(rec.buildingAssetIdL3));
                     surfaces?.AddRange(refs.surfaces);
                     var interior = BuildingPrefab(rec.interiorAssetId);
                     if (interior) FitBuilding(site.transform, interior, new Vector3(0f, 0.05f, 17f), new Vector3(21f, 4.5f, 11f), turn: false, colliders: false);
@@ -297,7 +298,7 @@ namespace CarSales.EditorTools
         Vector2 scroll;
         string status = "";
         string newName = "Riverside Motors";
-        int buildingIndex, interiorIndex;
+        int buildingIndex, interiorIndex, buildingIndexL2, buildingIndexL3;
         bool drawing, newTrees = true, newLamps = true;
         Vector3? roadStart;
         SiteTemplate template = SiteTemplate.Dealership;
@@ -346,6 +347,13 @@ namespace CarSales.EditorTools
             bool dealer = template == SiteTemplate.Dealership || template == SiteTemplate.PremiumDealership;
             if (dealer || template == SiteTemplate.Building)
                 buildingIndex = EditorGUILayout.Popup("Building", Mathf.Clamp(buildingIndex, 0, names.Length - 1), names);
+            if (dealer)
+            {
+                // Phase 11b: what the dealership becomes after its level 2 and level 3 rebuilds.
+                var upNames = new[] { "Built-in rebuild" }.Concat(buildings.Select(b => b.displayName)).ToArray();
+                buildingIndexL2 = EditorGUILayout.Popup("Level 2 building", Mathf.Clamp(buildingIndexL2, 0, upNames.Length - 1), upNames);
+                buildingIndexL3 = EditorGUILayout.Popup("Level 3 building", Mathf.Clamp(buildingIndexL3, 0, upNames.Length - 1), upNames);
+            }
             var interiors = reg ? reg.records.Where(r => r != null && r.prefab && r.category == CarSales.Studio.AssetCategory.Interior).ToList() : new List<AssetRecord>();
             if (dealer)
                 interiorIndex = EditorGUILayout.Popup("Showroom interior", Mathf.Clamp(interiorIndex, 0, interiors.Count), new[] { "None" }.Concat(interiors.Select(i => i.displayName)).ToArray());
@@ -366,6 +374,8 @@ namespace CarSales.EditorTools
                 {
                     id = id, name = newName, template = template, buildingAssetId = buildingIndex > 0 && buildingIndex <= buildings.Count ? buildings[buildingIndex - 1].id : "",
                     interiorAssetId = interiorIndex > 0 && interiorIndex <= interiors.Count ? interiors[interiorIndex - 1].id : "",
+                    buildingAssetIdL2 = buildingIndexL2 > 0 && buildingIndexL2 <= buildings.Count ? buildings[buildingIndexL2 - 1].id : "",
+                    buildingAssetIdL3 = buildingIndexL3 > 0 && buildingIndexL3 <= buildings.Count ? buildings[buildingIndexL3 - 1].id : "",
                     position = position, yaw = yaw, price = property ? Mathf.Max(0, price) : 0, dailyCost = Mathf.Max(0, dailyCost), function = SiteFunction.Dealership,
                 };
                 status = CarSalesSetupWizard.AddSiteToTown(rec);

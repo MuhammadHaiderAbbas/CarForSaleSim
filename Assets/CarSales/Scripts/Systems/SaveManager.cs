@@ -16,8 +16,8 @@ namespace CarSales
     public class SaveManager : MonoBehaviour
     {
         public const string LegacyFileName = "carsales_save.json";
-        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing", WorldModule = "world", BusinessModule = "business";
-        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1, WorldModuleVersion = 1, BusinessModuleVersion = 1;   // game v6: per-car components
+        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing", WorldModule = "world", BusinessModule = "business", BuildingsModule = "buildings";
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1, WorldModuleVersion = 1, BusinessModuleVersion = 1, BuildingsModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-rc1";
 
         [SerializeField] bool loadOnStart = true;
@@ -86,6 +86,7 @@ namespace CarSales
             if (CarSalesServices.Sourcing) CarSalesServices.Sourcing.ResetState();
             if (CarSalesServices.World) CarSalesServices.World.ResetState();
             if (CarSalesServices.Business) CarSalesServices.Business.ResetState();
+            if (CarSalesServices.Buildings) CarSalesServices.Buildings.ResetState();
             CarSalesServices.DayCycle.StartDay(1, 100f);
 
             var cars = new List<CarInstance>();
@@ -196,6 +197,7 @@ namespace CarSales
             if (CarSalesServices.Sourcing) env.Set(SourcingModule, SourcingModuleVersion, JsonUtility.ToJson(CarSalesServices.Sourcing.State));
             if (CarSalesServices.World) env.Set(WorldModule, WorldModuleVersion, JsonUtility.ToJson(CarSalesServices.World.State));
             if (CarSalesServices.Business) env.Set(BusinessModule, BusinessModuleVersion, JsonUtility.ToJson(CarSalesServices.Business.State));
+            if (CarSalesServices.Buildings) env.Set(BuildingsModule, BuildingsModuleVersion, JsonUtility.ToJson(CarSalesServices.Buildings.State));
             try
             {
                 Store.Write(ActiveSlot, env);
@@ -237,6 +239,7 @@ namespace CarSales
             SourcingState sourcing = null;
             CarSales.Sim.WorldState world = null;
             BusinessState business = null;
+            BuildingsState buildings = null;
             try
             {
                 var game = result.Envelope.Get(GameModule);
@@ -267,6 +270,7 @@ namespace CarSales
                 sourcing = Module<SourcingState>(result.Envelope, SourcingModule, SourcingModuleVersion);
                 world = Module<CarSales.Sim.WorldState>(result.Envelope, WorldModule, WorldModuleVersion);
                 business = Module<BusinessState>(result.Envelope, BusinessModule, BusinessModuleVersion);
+                buildings = Module<BuildingsState>(result.Envelope, BuildingsModule, BuildingsModuleVersion);
             }
             catch (Exception e)
             {
@@ -294,6 +298,7 @@ namespace CarSales
             if (CarSalesServices.Sourcing) CarSalesServices.Sourcing.SetState(sourcing);
             if (CarSalesServices.World) CarSalesServices.World.SetState(world);
             if (CarSalesServices.Business) CarSalesServices.Business.SetState(business);
+            if (CarSalesServices.Buildings) CarSalesServices.Buildings.SetState(buildings);   // after business: old developments become levels
             if (CarSalesServices.Messages) CarSalesServices.Messages.SetMessages(data.messages);
             CarSalesServices.Vehicles.RebuildAll();
             CarSalesServices.Marketplace.SetListings(data.marketListings, data.lotListings);
