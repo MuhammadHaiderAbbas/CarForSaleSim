@@ -399,6 +399,9 @@ namespace CarSales
             return true;
         }
 
+        /// <summary>Phase 7: the single mechanic moves to the staff system.</summary>
+        public void FireMechanicQuietly() { state.mechanicHired = false; }
+
         public void FireMechanic()
         {
             state.mechanicHired = false;
@@ -417,8 +420,11 @@ namespace CarSales
         /// <summary>Your mechanic works through the Ready column during working hours at your mechanical bay.</summary>
         void MechanicWork(float fromHour, float toHour)
         {
-            if (!state.mechanicHired || !WorkStation.Exists(StationType.Mechanical)) return;
-            float hours = BoardLogic.WorkingHours(fromHour, toHour);
+            var staff = CarSalesServices.Staff;
+            bool staffMech = staff && staff.MechanicCount > 0;
+            if ((!state.mechanicHired && !staffMech) || !WorkStation.Exists(StationType.Mechanical)) return;
+            float mechSkill = staffMech ? staff.MechanicSkill / 100f : BoardLogic.MechanicSkill;
+            float hours = BoardLogic.WorkingHours(fromHour, toHour) * (staffMech ? StaffRules.MechanicSpeed(staff.MechanicSkill) * staff.MechanicCount : 1f);
             while (hours > 0f)
             {
                 var card = state.board.Find(b => b.byMechanic && !b.done);
@@ -439,7 +445,8 @@ namespace CarSales
                 var j = WorkshopCatalog.Job(card.job);
                 if (c != null && j != null)
                 {
-                    bool botched = rng.NextDouble() < WorkshopCatalog.DiyFailChance(BoardLogic.MechanicSkill) * HandsOn.RiskFactor;
+                    bool botched = rng.NextDouble() < WorkshopCatalog.DiyFailChance(mechSkill) * HandsOn.RiskFactor;
+                    if (staffMech) staff.MechanicFinishedJob();
                     int fixedFaults = WorkshopCatalog.Apply(j, c.components, c.faults, (PartTier)card.tier, rng, botched);
                     Spend(c, j, (PartTier)card.tier, 0);
                     UI.Success("Your mechanic", $"{j.Name} on the {c.Name} is done{(fixedFaults > 0 ? $" ({fixedFaults} fault(s) fixed)" : "")}{(botched ? " - but it's not perfect" : "")}.");

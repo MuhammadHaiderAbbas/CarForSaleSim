@@ -116,6 +116,21 @@ namespace CarSales
             {
                 if (!IsTargetValid()) { seen.Add(TargetCar); StartCoroutine(BrowseRoutine()); yield break; }
                 t += Time.deltaTime;
+                // Phase 7: a salesperson steps in if you don't come over.
+                if (t >= StaffManager.SalespersonDelay && CarSalesServices.Staff)
+                {
+                    var sp = CarSalesServices.Staff.FreeSalesperson();
+                    if (sp != null)
+                    {
+                        State = CustomerState.Negotiating;
+                        SetBubble("$");
+                        yield return new WaitForSeconds(4f);
+                        if (IsTargetValid()) { CarSalesServices.Staff.HandleCustomer(this, sp); yield break; }
+                        seen.Add(TargetCar);
+                        StartCoroutine(BrowseRoutine());
+                        yield break;
+                    }
+                }
                 yield return null;
             }
             CarSalesServices.Economy.ChangeReputation(-1f); // ignored customer
@@ -149,7 +164,7 @@ namespace CarSales
         public bool CanInteract() => State == CustomerState.Interested && IsTargetValid();
 
         public string GetInteractionText() =>
-            $"[E] Talk to {Profile.customerName} about the {TargetCar.Definition.displayName}";
+            $"[E] Talk to {Profile.customerName} ({CustomerDeal.Persona(Profile).Name.ToLower()}) about the {TargetCar.Definition.displayName}";
 
         public void Interact(GameObject interactor)
         {
@@ -166,31 +181,25 @@ namespace CarSales
         }
 
         // ---------------- DECISIONS ----------------
+        /// <summary>Phase 7: score every unseen listed car for this buyer type and walk to one of the best.</summary>
         CarDisplay PickCar()
         {
             var options = spawner.Dealer.GetListedCars().Where(c => !seen.Contains(c)).ToList();
             if (options.Count == 0) return null;
-            var preferred = options.Where(c => c.Definition.category == Profile.preferredCategory).ToList();
-            if (preferred.Count > 0 && Random.value < 0.7f) options = preferred;
-            return options[Random.Range(0, options.Count)];
+            var scored = options.Select(c => (car: c, score: CustomerDeal.Score(Profile, c))).OrderByDescending(x => x.score).Take(3).ToList();
+            float total = scored.Sum(x => x.score * x.score) + 0.0001f;
+            float r = Random.value * total;
+            foreach (var x in scored) { r -= x.score * x.score; if (r <= 0f) return x.car; }
+            return scored[0].car;
         }
 
         bool WantsCar(CarDisplay car)
         {
-            var d = car.Data;
-            if (d.listedPrice > Profile.budget * 1.15f) return false;
-
-            int value = Mathf.Max(1, CarValueCalculator.MarketValue(d));
-            float ratio = d.listedPrice / (float)value;
-
-            float interest = 0.7f;
-            interest -= Mathf.Max(0f, ratio - 1f) * 2f;                               // overpriced
-            if (car.Definition.category == Profile.preferredCategory) interest += 0.25f;
+            float score = CustomerDeal.Score(Profile, car);
+            if (score <= 0f) return false;
+            float interest = score * 1.3f - 0.15f;
             interest += (CarSalesServices.Economy.Reputation - 50f) / 200f;           // dealer reputation
-            if (d.condition < Profile.minCondition) interest -= 0.5f;
-            if (d.cleanliness < 40f) interest -= 0.15f;
             if (CarSalesServices.Upgrades) interest += CarSalesServices.Upgrades.ShowroomInterestBonus;
-
             return Random.value < Mathf.Clamp01(interest);
         }
 

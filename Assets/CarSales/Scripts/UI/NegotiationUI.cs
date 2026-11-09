@@ -1,3 +1,4 @@
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +11,8 @@ namespace CarSales
         NegotiationSession session;
         bool finished;
         RawImage photo;
-        TextMeshProUGUI headerText, carText, offerText, moodText;
+        TextMeshProUGUI headerText, carText, offerText, moodText, dealText;
+        Button discloseButton, tradeButton, financeButton;
         UIFactory.Bar patienceBar;
         RectTransform chat;
         ScrollRect chatScroll;
@@ -35,6 +37,14 @@ namespace CarSales
             chat = UIFactory.ScrollList(chatBg.transform, 10f, "Chat");
             chatScroll = chat.GetComponentInParent<ScrollRect>();
 
+            // Phase 7: disclosure, trade-in, finance
+            var extras = UIFactory.HRow(body, 44, 10, "Extras");
+            discloseButton = UIFactory.Btn(extras, "Disclose faults", UIFactory.Warn, Disclose, 42f, 14f);
+            tradeButton = UIFactory.Btn(extras, "Trade-in", UIFactory.CardLight, ToggleTradeIn, 42f, 14f);
+            financeButton = UIFactory.Btn(extras, "Finance", UIFactory.CardLight, ToggleFinance, 42f, 14f);
+            dealText = UIFactory.Text(body, "", 15, UIFactory.TextDim, TextAlignmentOptions.Center);
+            UIFactory.LE(dealText, h: 22);
+
             offerText = UIFactory.Text(body, "", 28, UIFactory.Gold, TextAlignmentOptions.Center, true);
             UIFactory.LE(offerText, h: 40);
 
@@ -48,7 +58,7 @@ namespace CarSales
             Nudge(inputRow, "+1000", 1000);
 
             var row = UIFactory.HRow(body, 58, 12);
-            UIFactory.Btn(row, "Accept Their Offer", UIFactory.Good, () => { if (session == null) return; session.AcceptCustomerOffer(); Finish(true); }, 56f);
+            UIFactory.Btn(row, "Accept Their Offer", UIFactory.Good, () => { if (session == null) return; session.AcceptCustomerOffer(); TryClose(); }, 56f);
             UIFactory.Btn(row, "Counter-Offer", UIFactory.Accent, Counter, 56f);
             UIFactory.Btn(row, "Walk Away", UIFactory.Bad, () => { if (session != null) Finish(false); }, 56f);
         }
@@ -71,9 +81,14 @@ namespace CarSales
             UIFactory.ClearChildren(chat);
             var def = session.Car.Definition;
             UIFactory.SetCarPicture(photo, session.Car.Data);
-            headerText.text = $"{customer.Profile.customerName}  wants your {def.brand} {def.displayName}";
+            headerText.text = $"{customer.Profile.customerName}  wants your {def.brand} {def.displayName}\n<size=60%><color={UIFactory.Hex(UIFactory.TextDim)}>{session.Persona.Name}</color></size>";
             carText.text = $"Listed at {UIFactory.Money(session.Car.Data.listedPrice)}   |   Market value {UIFactory.Money(session.MarketValue)}   |   " +
                            $"Your cost {UIFactory.Money(session.Car.Data.purchasePrice + session.Car.Data.repairSpent)}";
+            if (session.Spotted.Count > 0)
+                Bubble($"I had a good look. I noticed: {string.Join(", ", session.Spotted).ToLowerInvariant()}. That needs sorting.", false);
+            if (session.TradeIn != null)
+                Bubble($"I'd like to part-exchange my {session.TradeIn.Name} ({session.TradeIn.mileage:N0} km). I think it's worth {UIFactory.Money(session.TradeInCredit)}.", false);
+            if (customer.Profile.wantsFinance) Bubble("I'd need finance on this.", false);
             Bubble($"Hi! I really like this {def.displayName}. Would you take {UIFactory.Money(session.CustomerOffer)}?", false);
             input.text = session.Car.Data.listedPrice.ToString();
             UpdateState();
@@ -88,7 +103,7 @@ namespace CarSales
             Bubble(reply, false);
             switch (result)
             {
-                case NegotiationResult.Accepted: Finish(true); break;
+                case NegotiationResult.Accepted: TryClose(); break;
                 case NegotiationResult.WalkedAway:
                     CarSalesServices.Economy.ChangeReputation(-2f);
                     CarSalesServices.UI.Error($"{session.Customer.Profile.customerName} walked away. (-2 reputation)");
@@ -98,6 +113,47 @@ namespace CarSales
             }
         }
 
+        void Disclose()
+        {
+            if (session == null || session.Disclosed) return;
+            var known = CarRecords.KnownFaults(session.Car.Data).Select(f => f.Def.Name).ToList();
+            if (known.Count == 0) { CarSalesServices.UI.Notify("You don't know of any faults on this car."); return; }
+            session.Disclose();
+            Bubble($"To be straight with you: {string.Join(", ", known).ToLowerInvariant()}.", true);
+            Bubble("Thanks for being honest. I'll take that into account.", false);
+            UpdateState();
+        }
+
+        void ToggleTradeIn()
+        {
+            if (session?.TradeIn == null) return;
+            session.SetTradeIn(!session.IncludeTradeIn);
+            Bubble(session.IncludeTradeIn ? $"I'll take your {session.TradeIn.Name} at {UIFactory.Money(session.TradeInCredit)}." : "Let's leave the trade-in out.", true);
+            UpdateState();
+        }
+
+        void ToggleFinance()
+        {
+            if (session == null) return;
+            session.SetFinance(!session.UseFinance);
+            Bubble(session.UseFinance ? "We can arrange finance for you." : "Let's keep this cash.", true);
+            UpdateState();
+        }
+
+        /// <summary>A price is agreed: check the finance, then finish the sale.</summary>
+        void TryClose()
+        {
+            int price = session.FinalPrice;
+            if (!session.CheckFinance(price, out string msg))
+            {
+                Bubble(msg + " I can't afford it at that price without it.", false);
+                UpdateState();
+                return;
+            }
+            if (session.UseFinance) Bubble(msg, false);
+            Finish(true);
+        }
+
         void UpdateState()
         {
             offerText.text = $"Their offer: {UIFactory.Money(session.CustomerOffer)}";
@@ -105,6 +161,21 @@ namespace CarSales
             patienceBar.Set(p);
             patienceBar.SetColor(p > 0.6f ? UIFactory.Good : p > 0.3f ? UIFactory.Warn : UIFactory.Bad);
             moodText.text = "Patience: " + (p > 0.6f ? "Relaxed" : p > 0.3f ? "Getting impatient" : "About to leave!");
+            int known = CarRecords.KnownFaults(session.Car.Data).Count();
+            discloseButton.GetComponentInChildren<TextMeshProUGUI>().text = session.Disclosed ? "Faults disclosed" : $"Disclose {known} known fault{(known == 1 ? "" : "s")}";
+            discloseButton.interactable = !session.Disclosed && known > 0;
+            tradeButton.gameObject.SetActive(session.TradeIn != null);
+            if (session.TradeIn != null)
+            {
+                int ours = Mathf.RoundToInt(CarValueCalculator.MarketValue(session.TradeIn) * 0.75f);
+                tradeButton.GetComponentInChildren<TextMeshProUGUI>().text = (session.IncludeTradeIn ? "Trade-in ON: " : "Trade-in: ") + $"{session.TradeIn.Name} ({UIFactory.Money(session.TradeInCredit)}, trade value ~{UIFactory.Money(ours)})";
+                UIFactory.SetButtonColor(tradeButton, session.IncludeTradeIn ? UIFactory.Accent : UIFactory.CardLight);
+            }
+            financeButton.GetComponentInChildren<TextMeshProUGUI>().text = session.UseFinance ? $"Finance ON (+{Sim.Buyers.FinanceCommissionRate * 100f:0}% commission)" : "Offer finance";
+            UIFactory.SetButtonColor(financeButton, session.UseFinance ? UIFactory.Accent : UIFactory.CardLight);
+            int credit = session.IncludeTradeIn ? session.TradeInCredit : 0;
+            dealText.text = credit > 0 ? $"At their offer you'd receive {UIFactory.Money(session.CustomerOffer - credit)} cash + their car" :
+                            session.HiddenKnownFaults > 0 ? $"<color={UIFactory.Hex(UIFactory.Warn)}>You know of {session.HiddenKnownFaults} fault(s) you haven't mentioned - they may complain later.</color>" : "";
         }
 
         void Bubble(string text, bool fromPlayer)
@@ -130,8 +201,10 @@ namespace CarSales
             finished = true;
             var s = session;
             session = null;
-            if (sold) CarSalesServices.Vehicles.CompleteSale(s.Car, s.FinalPrice);
-            if (s.Customer) s.Customer.EndNegotiation(sold);
+            if (sold && s.Customer)
+                CustomerDeal.CompleteSale(s.Customer, s.FinalPrice, s.MarketValue, s.DisclosedFaults, s.HiddenKnownFaults, s.Rounds, null,
+                                          s.IncludeTradeIn ? s.TradeIn : null, s.IncludeTradeIn ? s.TradeInCredit : 0, s.UseFinance && s.FinanceApproved);
+            else if (s.Customer) s.Customer.EndNegotiation(false);
             CarSalesServices.UI.Close();
         }
 

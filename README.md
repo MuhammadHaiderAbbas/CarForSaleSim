@@ -35,7 +35,9 @@ lift, history check), **paperwork and history** (logbook, keys, MOT, service boo
 **hands-on** inspections and repairs (hold E on markers), a **Workshop Board**, a hireable **mechanic** and the
 **Parts Direct** counter in town. Phase 6 rebuilds the **auctions**: a calendar of hall, online and salvage
 sales, a walk-in sale hall where you raise your paddle (E), a viewing yard, AI bidders with personalities, proxy
-bids, invoices with fees and VAT, and collection from the car park.
+bids, invoices with fees and VAT, and collection from the car park. Phase 7a adds a **living market** with competitors and trade batches, **nine
+kinds of buyer**, negotiation with **trade-ins, finance and fault disclosure**, **reviews and a CRM**, and **staff**
+(salespeople, mechanics, detailers, drivers) who work without you.
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

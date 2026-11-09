@@ -16,8 +16,8 @@ namespace CarSales
     public class SaveManager : MonoBehaviour
     {
         public const string LegacyFileName = "carsales_save.json";
-        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction";
-        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1;   // game v6: per-car components
+        public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff";
+        public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1;   // game v6: per-car components
         public const string GameVersion = "5.0-dev";
 
         [SerializeField] bool loadOnStart = true;
@@ -78,6 +78,9 @@ namespace CarSales
             if (CarSalesServices.Progress) CarSalesServices.Progress.ResetProgress();
             if (CarSalesServices.Workshop) CarSalesServices.Workshop.ResetState();
             if (CarSalesServices.Auction) CarSalesServices.Auction.ResetState();
+            if (CarSalesServices.Market) CarSalesServices.Market.ResetState();
+            if (CarSalesServices.Crm) CarSalesServices.Crm.ResetState();
+            if (CarSalesServices.Staff) CarSalesServices.Staff.ResetState();
             CarSalesServices.DayCycle.StartDay(1, 100f);
 
             var cars = new List<CarInstance>();
@@ -182,6 +185,9 @@ namespace CarSales
             env.Set(LedgerModule, LedgerModuleVersion, JsonUtility.ToJson(eco.Ledger.State));
             if (CarSalesServices.Workshop) env.Set(WorkshopModule, WorkshopModuleVersion, JsonUtility.ToJson(CarSalesServices.Workshop.GetState()));
             if (CarSalesServices.Auction) env.Set(AuctionModule, AuctionModuleVersion, JsonUtility.ToJson(CarSalesServices.Auction.GetState()));
+            if (CarSalesServices.Market) env.Set(MarketModule, MarketModuleVersion, JsonUtility.ToJson(CarSalesServices.Market.State));
+            if (CarSalesServices.Crm) env.Set(CrmModule, CrmModuleVersion, JsonUtility.ToJson(CarSalesServices.Crm.State));
+            if (CarSalesServices.Staff) env.Set(StaffModule, StaffModuleVersion, JsonUtility.ToJson(CarSalesServices.Staff.State));
             try
             {
                 Store.Write(ActiveSlot, env);
@@ -194,6 +200,14 @@ namespace CarSales
                 Debug.LogException(e);
                 CarSalesServices.UI.Error($"Saving failed: {e.Message}");
             }
+        }
+
+        static T Module<T>(SaveEnvelope env, string name, int version) where T : class
+        {
+            var m = env.Get(name);
+            if (m == null) return null;
+            Migrations.Migrate(m, version);
+            return JsonUtility.FromJson<T>(m.Data);
         }
 
         public bool LoadGame()
@@ -209,6 +223,9 @@ namespace CarSales
             LedgerState ledger = null;
             WorkshopState workshop = null;
             AuctionState auction = null;
+            CarSales.Sim.MarketState market = null;
+            CrmState crm = null;
+            StaffState staff = null;
             try
             {
                 var game = result.Envelope.Get(GameModule);
@@ -233,6 +250,9 @@ namespace CarSales
                     Migrations.Migrate(au, AuctionModuleVersion);
                     auction = JsonUtility.FromJson<AuctionState>(au.Data);
                 }
+                market = Module<CarSales.Sim.MarketState>(result.Envelope, MarketModule, MarketModuleVersion);
+                crm = Module<CrmState>(result.Envelope, CrmModule, CrmModuleVersion);
+                staff = Module<StaffState>(result.Envelope, StaffModule, StaffModuleVersion);
             }
             catch (Exception e)
             {
@@ -254,6 +274,9 @@ namespace CarSales
             foreach (var c in data.ownedCars) c.inspected = true;
             CarSalesServices.Inventory.SetCars(data.ownedCars);
             if (CarSalesServices.Workshop) CarSalesServices.Workshop.SetState(workshop);
+            if (CarSalesServices.Market) CarSalesServices.Market.SetState(market);
+            if (CarSalesServices.Crm) CarSalesServices.Crm.SetState(crm);
+            if (CarSalesServices.Staff) CarSalesServices.Staff.SetState(staff);   // after the workshop: takes over its mechanic
             if (CarSalesServices.Messages) CarSalesServices.Messages.SetMessages(data.messages);
             CarSalesServices.Vehicles.RebuildAll();
             CarSalesServices.Marketplace.SetListings(data.marketListings, data.lotListings);

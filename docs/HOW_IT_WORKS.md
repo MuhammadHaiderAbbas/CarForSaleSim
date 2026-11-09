@@ -421,3 +421,12 @@ Won cars appear in the auction car park — drive or tow them home.
 - **World:** `AuctionHall` (box, stage, screen), `AuctionYard` (bays; rebuilt when the yard lots change),
   `CarDisplay.InitializeForAuction` (lot number tag; E opens the lot). Overlay: `AuctionHallHUD`. Terminal: `AuctionUI`.
 
+## 18. Market, customers, staff (Phase 7a)
+- **Rules** (tested, `Sim/`): `MarketModel` (index, seasons, demand, supply, competitors, batches), `Buyers` (personas,
+  `Score`, `MaxPrice`, `OpeningOffer`, trade-in, finance, reviews, fault spotting), `StaffRules` (wages, candidates,
+  salesperson deal, mechanic speed, detailing, morale).
+- **Runtime:** `MarketManager` (multiplier used by `CarValueCalculator`), `CrmManager` (records, reviews, complaints),
+  `StaffManager` (team, wages on `WeekEnded`, detailers/drivers on the clock, salespeople via `CustomerAI`),
+  `CustomerDeal` (quote + finishing a sale, shared by `NegotiationSession` and salespeople).
+- All three managers are added by `CarSalesBootstrap` if missing and saved as modules `market`, `crm`, `staff`.
+

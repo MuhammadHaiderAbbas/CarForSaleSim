@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-5 are merged; Phase 6 code is written (see [Phase 6 status](#phase-6-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-6 are merged; Phase 7a code is written (see [Phase 7 status](#phase-7-status)); everything else is still a plan.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1051,6 +1051,31 @@ invoice (fees + VAT in the ledger), and collect the car (drive/tow), and lose lo
 **Done when:** a full cycle works without debug tools: source → inspect → transport → repair/MOT/detail →
 photograph & list → customer inspects + test drives → negotiate (trade-in/finance) → paperwork → handover → review;
 a mechanic and a salesperson can each do their part of this without the player.
+
+#### Phase 7 status
+**Phase 7a: code complete** (243 EditMode tests, compile-checked; not run in Unity):
+
+| Item | Built |
+|---|---|
+| Market | `Sim/Market/MarketModel.cs` + `MarketManager`: price index per model and body type (mean-reverting ±0.5%/day, 0.8-1.25), seasons (sports +8% summer, SUV/pickup +5% winter), demand dips 2% per sale and recovers, supply from your own listings (±5%). Applied in `CarValueCalculator.MarketValue`. Save module `market`. |
+| Competitors | Downtown Motors (+10%), Luxury Lane (+18%, better cars), Cheap Wheels (+2%, rough cars): daily stock; Market app compares each of your listed cars with the cheapest rival. |
+| Dealer trade | A wholesale batch of 3-6 cars every Monday (15-30% under market, take it all), bought to free spots. |
+| Buyers | 9 buyer types (§6.10) with budgets, body-type tastes, weights, knowledge, haggling, patience, finance and trade-in chances, review harshness. Customers score every listed car (§8.4) and pick among the best. Happy past customers come back. |
+| Negotiation 2.0 | Opening offer and hidden limit from the buyer type and how much they like the car; knowledgeable buyers notice faults you didn't mention (limit drops, patience drops); **Disclose faults** (they price them in, review you better, no complaint); **trade-in** (their car onto your lot at their asking credit; they're 3% keener); **finance** (lender approval from credit score and deposit; 3% commission, ledger *Finance commission*; declined = budget only). |
+| Reviews & CRM | Every sale: 1-5 stars (condition, price vs value, honesty, haggling, harshness) → reputation. Hiding known faults → a complaint 2-6 days later (-2 rep each). Customers app: records (type, visits, purchases, spent, satisfaction) and reviews. Save module `crm`. |
+| Staff | `Sim/Staff/Staff.cs` + `StaffManager`: weekly candidates (3-6), skills 25-90, wages by role and skill (ledger *Wages*, weekly), morale from pay, sick days, experience raises skill. **Salesperson**: takes customers who wait 10 s, discloses known faults, closes above your minimum margin. **Mechanic**: works the workshop board (speed by skill; replaces the phase 5b mechanic). **Detailer**: cleans the dirtiest cars on your lots. **Driver**: brings paid auction cars to your dealership. Staff app (Team, Recruitment, Rules). Save module `staff`. |
+
+**Phase 7b (next):** private sellers (ads, appointments at houses, seller NPCs), listing editor (photos, description,
+price helper, online leads), customer inspection animations and Q&A, customer test drives on a route, paperwork and
+handover, warranties, receptionist and manager roles.
+
+**Phase 7a play-test checklist:**
+1. List a few cars, open the shop. Talk to customers: the prompt shows their type (e.g. savvy haggler).
+2. Negotiate with a customer who brings a trade-in and wants finance: try *Disclose*, trade-in on/off, finance.
+3. After the sale: Customers app → Reviews. Sell a car with known faults without disclosing: a complaint arrives later.
+4. Staff app: hire a salesperson and a mechanic; ignore a customer for 10 s - the salesperson sells; plan a board job - the mechanic does it.
+5. Market app: price trend, body-type factors, competitor comparison; buy a Monday trade batch.
+6. Week end: wages in Accounts.
 
 ### Phase 8 — World Builder, open world, world simulation (XL)
 1. World Builder layouts/sites/validation; convert the v4 town to `Layout_DefaultTown`.

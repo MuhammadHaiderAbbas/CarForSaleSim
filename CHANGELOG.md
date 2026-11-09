@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.0-dev — Phase 7a "Market, customers, staff"
+- **Living market**: prices drift daily, seasons (sports cars in summer, SUVs in winter), demand and supply.
+- **Competitor dealers** you can compare your prices with, and weekly **trade batches** from other dealers.
+- **Nine kinds of buyer** who judge each car on price, condition, mileage, age, history, economy and paperwork.
+- **Negotiation 2.0**: buyers spot faults, you can disclose them, **trade-ins** and **finance** (with commission).
+- **Reviews** after every sale (honesty matters - hidden faults bring complaints) and a **Customers** app (CRM).
+- **Staff**: hire salespeople, mechanics, detailers and drivers; weekly wages, skills, morale, sick days.
+  Salespeople close deals with customers you don't reach; mechanics work the workshop board.
+- New apps: Market, Customers, Staff.
+- 11 new tests (243 total).
+
 ## v5.0-dev — Phase 6 "Auctions"
 - **Auction calendar** with five sale types: dealer, fleet, salvage, repossession (hall) and timed online sales.
 - **Walk-in sale hall**: lots roll onto the stage, the auctioneer calls *going once, going twice, sold*, and you bid by

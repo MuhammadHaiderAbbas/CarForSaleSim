@@ -24,6 +24,9 @@ namespace CarSales
         public RealEstateUI RealEstate { get; private set; }
         public AccountsPageUI Accounts { get; private set; }
         public WorkshopPageUI Workshop { get; private set; }
+        public MarketPageUI MarketApp { get; private set; }
+        public CrmPageUI Customers { get; private set; }
+        public StaffPageUI Staff { get; private set; }
 
         TextMeshProUGUI moneyText, titleText, clockText, taskClock, taskApp, todayText, goalText, mailText, unreadBadge;
         RectTransform content, appWindow, desktop;
@@ -59,6 +62,9 @@ namespace CarSales
             Stats = AddPage<StatsUI>("Statistics");
             Accounts = AddPage<AccountsPageUI>("Accounts");
             Workshop = AddPage<WorkshopPageUI>("Workshop");
+            MarketApp = AddPage<MarketPageUI>("Market & competitors");
+            Customers = AddPage<CrmPageUI>("Customers");
+            Staff = AddPage<StaffPageUI>("Staff");
 
             BuildIcons();
         }
@@ -132,10 +138,10 @@ namespace CarSales
             Tile("Statistics", "#", UIFactory.AccentDark, () => ShowPage(Stats), Stats);
             Tile("Settings", "*", UIFactory.Neutral, () => CarSalesServices.UI.settings.Show());
             Tile("Workshop", "W", UIFactory.Warn, () => ShowPage(Workshop));
-            Soon("Customers", "C", 7);
-            Soon("Staff", "T", 7);
-            Soon("Marketing", "K", 7);
-            Soon("Competitors", "V", 7);
+            Tile("Customers", "C", UIFactory.Personal, () => ShowPage(Customers));
+            Tile("Staff", "T", UIFactory.Good, () => ShowPage(Staff));
+            Tile("Market", "V", UIFactory.Info, () => ShowPage(MarketApp));
+            Soon("Listings", "K", 7);
         }
 
         void Tile(string label, string glyph, Color color, UnityAction onClick, ComputerPage page = null, bool soon = false)

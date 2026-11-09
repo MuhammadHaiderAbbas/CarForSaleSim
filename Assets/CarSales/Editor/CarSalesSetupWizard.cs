@@ -667,6 +667,9 @@ namespace CarSales.EditorTools
             systems.AddComponent<TowService>();
             systems.AddComponent<AuctionManager>();
             systems.AddComponent<WorkshopManager>();
+            systems.AddComponent<MarketManager>();
+            systems.AddComponent<StaffManager>();
+            systems.AddComponent<CrmManager>();
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();

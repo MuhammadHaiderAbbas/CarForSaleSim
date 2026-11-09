@@ -237,23 +237,24 @@ namespace CarSales
             Refresh();
         }
 
-        void ToggleMechanic()
-        {
-            if (WS.MechanicHired) UIFactory.Confirm("Let the mechanic go", "Their current job goes back on the board and the parts back on the shelf.", "Let go", UIFactory.Bad, () => WS.FireMechanic());
-            else UIFactory.Confirm("Hire a mechanic", $"{UIFactory.Money(BoardLogic.MechanicWage)} a day, paid every morning. They work {BoardLogic.WorkStart:00}:00-{BoardLogic.WorkEnd:00}:00 on the Ready column " +
-                                   "at your service centre (no labour bills), with a good but not perfect hand.", "Hire", UIFactory.Good, () => WS.HireMechanic());
-        }
+        /// <summary>Phase 7: mechanics are hired in the Staff app.</summary>
+        void ToggleMechanic() => CarSalesServices.UI.computerHub.ShowPage(CarSalesServices.UI.computerHub.Staff);
 
         void RenderBoard()
         {
             bool centre = WorkStation.Exists(StationType.Mechanical);
             var working = WS.Board.FirstOrDefault(b => b.byMechanic && !b.done);
-            staffText.text = WS.MechanicHired
+            var staffMgr = CarSalesServices.Staff;
+            int mechs = staffMgr ? staffMgr.MechanicCount : 0;
+            staffText.text = mechs > 0
+                ? $"<b>{mechs} mechanic{(mechs == 1 ? "" : "s")} at work</b> (best skill {staffMgr.MechanicSkill})  -  " + (working != null ? $"working on {WorkshopCatalog.Job(working.job)?.Name} ({working.hoursLeft:0.0} h left)" : "waiting for a Ready job")
+                  + (centre ? "" : $"\n<color={UIFactory.Hex(UIFactory.Warn)}>No service centre in this town yet: run Build Everything.</color>")
+                : WS.MechanicHired
                 ? $"<b>Mechanic</b>  -  {UIFactory.Money(BoardLogic.MechanicWage)}/day  -  " + (working != null ? $"working on {WorkshopCatalog.Job(working.job)?.Name} ({working.hoursLeft:0.0} h left)" : "waiting for a Ready job")
                   + (centre ? "" : $"\n<color={UIFactory.Hex(UIFactory.Warn)}>No service centre in this town yet: run Build Everything.</color>")
                 : "<b>No mechanic</b>  -  do the jobs by hand at your bays, send them to the town garage, or hire a mechanic.";
-            hireButton.GetComponentInChildren<TextMeshProUGUI>().text = WS.MechanicHired ? "Let go" : $"Hire ({UIFactory.Money(BoardLogic.MechanicWage)}/day)";
-            UIFactory.SetButtonColor(hireButton, WS.MechanicHired ? UIFactory.Neutral : UIFactory.Good);
+            hireButton.GetComponentInChildren<TextMeshProUGUI>().text = "Staff app";
+            UIFactory.SetButtonColor(hireButton, UIFactory.Accent);
 
             foreach (var c in columns) UIFactory.ClearChildren(c);
             var cards = WS.Board.Where(b => boardFilterCar == null || b.carId == boardFilterCar).ToList();

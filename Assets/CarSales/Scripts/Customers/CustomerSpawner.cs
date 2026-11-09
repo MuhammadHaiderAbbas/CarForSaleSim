@@ -95,19 +95,39 @@ namespace CarSales
             CarSalesServices.PlaySfx(Sfx.DoorChime, 0.5f);
         }
 
+        static readonly System.Random personaRng = new System.Random();
+
+        /// <summary>Phase 7: a customer is one of nine buyer types (budget, tastes, haggling, patience, finance, trade-in).</summary>
         CustomerProfile GenerateProfile()
         {
             float rep = CarSalesServices.Economy.Reputation / 100f;
             float budgetMult = (CarSalesServices.Upgrades ? CarSalesServices.Upgrades.BudgetMultiplier : 1f) * Dealer.budgetMultiplier;
-            return new CustomerProfile
+            var persona = CarSales.Sim.Buyers.Pick(personaRng, Dealer.budgetMultiplier);
+            int best = 0;
+            for (int i = 1; i < persona.CategoryLike.Length; i++) if (persona.CategoryLike[i] > persona.CategoryLike[best]) best = i;
+            var p = new CustomerProfile
             {
                 customerName = customerNames[Random.Range(0, customerNames.Length)],
-                budget = Mathf.RoundToInt(Random.Range(8000, 60000) * (0.8f + rep * 0.6f) * budgetMult),
-                preferredCategory = (CarCategory)Random.Range(0, Enum.GetValues(typeof(CarCategory)).Length),
-                patience = Random.Range(1, 5),
-                greed = Random.Range(0.1f, 0.9f),
-                minCondition = Random.Range(30f, 80f)
+                budget = Mathf.RoundToInt(Random.Range(persona.BudgetMin, persona.BudgetMax) * (0.8f + rep * 0.4f) * budgetMult),
+                preferredCategory = (CarCategory)best,
+                patience = persona.Patience,
+                greed = persona.Haggling,
+                minCondition = 30f + persona.WCondition * 120f,
+                persona = (int)persona.Id,
+                wantsFinance = Random.value < persona.FinanceChance,
+                creditScore = Random.Range(420, 840),
             };
+            // A happy customer from the records comes back now and then.
+            var back = CarSalesServices.Crm ? CarSalesServices.Crm.PickReturning(personaRng) : null;
+            if (back != null) { p.customerName = back.name; p.recordId = back.id; p.persona = back.persona; p.budget = Mathf.RoundToInt(p.budget * 1.2f); }
+            if (Random.value < persona.TradeInChance)
+            {
+                p.tradeIn = CustomerDeal.MakeTradeIn(p.budget);
+                if (p.tradeIn != null)
+                    p.tradeInWants = CarSales.Sim.Buyers.TradeInExpectation(Mathf.RoundToInt(CarValueCalculator.MarketValue(p.tradeIn) * 0.75f), personaRng);
+            }
+            if (CarSalesServices.Crm) CarSalesServices.Crm.RecordVisit(p);
+            return p;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

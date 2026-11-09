@@ -37,6 +37,7 @@ namespace CarSales.Foundation
         Wages = 25,
         Vat = 26,           // VAT on auction fees
         Deposits = 27,      // refundable auction deposits
+        FinanceCommission = 28,
     }
 
     public static class TxCategories
@@ -74,6 +75,7 @@ namespace CarSales.Foundation
                 case TxCategory.Wages: return "Wages";
                 case TxCategory.Vat: return "VAT";
                 case TxCategory.Deposits: return "Deposits";
+                case TxCategory.FinanceCommission: return "Finance commission";
                 default: return "Other";
             }
         }

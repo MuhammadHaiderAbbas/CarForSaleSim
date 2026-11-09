@@ -29,6 +29,8 @@ namespace CarSales
             float mileageMult   = Mathf.Clamp(1f - car.mileage / 300000f, 0.5f, 1f);
             // Phase 5: faults, paperwork and history. A buyer who hasn't checked (useReported) only sees what's known.
             float records = CarRecords.ValueMultiplier(car, knownOnly: useReported);
+            // Phase 7: today's market (price index, season, demand, supply).
+            if (CarSalesServices.Market) records *= CarSalesServices.Market.Multiplier(def);
             return Mathf.RoundToInt(def.basePrice * conditionMult * cleanMult * mileageMult * def.popularity * records);
         }
 
