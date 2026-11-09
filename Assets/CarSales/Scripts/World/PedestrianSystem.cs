@@ -76,14 +76,10 @@ namespace CarSales
         void Spawn(float x, float z)
         {
             var root = new GameObject("Pedestrian").transform;
-            var look = AssetRegistry.RandomCustomerModel();
-            if (look)
-            {
-                var v = Instantiate(look, root);
-                foreach (var c in v.GetComponentsInChildren<Collider>()) Destroy(c);
-                var anim = v.GetComponentInChildren<Animator>();
-                if (anim) { anim.applyRootMotion = false; anim.SetFloat("Speed", 1.3f); }
-            }
+            float speed = Random.Range(1.1f, 1.6f);
+            if (Random.value < 0.08f) speed = Random.Range(2.8f, 3.6f);   // phase 11: someone in a hurry (runs if there's a run clip)
+            var character = CharacterSpawn.Attach(root, CarSales.Studio.CharacterUse.Pedestrian);
+            if (character) character.SetSpeed(speed);
             else
             {
                 var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -98,7 +94,7 @@ namespace CarSales
                 mpb.SetColor("_BaseColor", col); mpb.SetColor("_Color", col);
                 r.SetPropertyBlock(mpb);
             }
-            walkers.Add(new Walker { t = root, x = x, z = z, dir = Random.value < 0.5f ? -1f : 1f, speed = Random.Range(1.1f, 1.6f) });
+            walkers.Add(new Walker { t = root, x = x, z = z, dir = Random.value < 0.5f ? -1f : 1f, speed = speed });
         }
     }
 }

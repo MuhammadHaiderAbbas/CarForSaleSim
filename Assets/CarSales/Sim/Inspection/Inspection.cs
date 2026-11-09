@@ -145,36 +145,51 @@ namespace CarSales.Sim
     {
         public const int Fee = 55;
 
-        static void Check(List<ComponentState> comps, ComponentId id, float failBelow, float adviseBelow, string fail, string advise, MotRecord rec)
+        // Which component produced which line, so a fault on the same part doesn't repeat it (e.g. "Shock absorber
+        // leaking excessively" and "Shock absorber leaking").
+        static void Check(List<ComponentState> comps, ComponentId id, float failBelow, float adviseBelow, string fail, string advise, MotRecord rec,
+                          Dictionary<ComponentId, (bool fail, string line)> reported)
         {
             var c = ComponentSet.Find(comps, id);
             if (c == null) return;
-            if (c.health < failBelow) rec.fails.Add(fail);
-            else if (c.health < adviseBelow) rec.advisories.Add(advise);
+            if (c.health < failBelow) { rec.fails.Add(fail); reported[id] = (true, fail); }
+            else if (c.health < adviseBelow) { rec.advisories.Add(advise); reported[id] = (false, advise); }
         }
 
         public static MotRecord Run(List<ComponentState> comps, List<FaultInstance> faults, int mileage, int day, int year)
         {
             var rec = new MotRecord { day = day, year = year, mileage = mileage };
+            var reported = new Dictionary<ComponentId, (bool fail, string line)>();
             foreach (var t in new[] { (ComponentId.TyreFrontLeft, "front left"), (ComponentId.TyreFrontRight, "front right"), (ComponentId.TyreRearLeft, "rear left"), (ComponentId.TyreRearRight, "rear right") })
-                Check(comps, t.Item1, 20f, 37.5f, $"Tyre tread below 1.6 mm ({t.Item2})", $"Tyre close to the legal limit ({t.Item2})", rec);
-            Check(comps, ComponentId.BrakePadsFront, 20f, 35f, "Front brake pads below 1.5 mm", "Front brake pads wearing thin", rec);
-            Check(comps, ComponentId.BrakePadsRear, 20f, 35f, "Rear brake pads below 1.5 mm", "Rear brake pads wearing thin", rec);
-            Check(comps, ComponentId.BrakeDiscs, 25f, 40f, "Brake discs excessively worn", "Brake discs worn or scored", rec);
-            Check(comps, ComponentId.Lights, 40f, 55f, "Headlamp aim / lamp not working", "Lamp lens slightly damaged", rec);
-            Check(comps, ComponentId.ShockAbsorbers, 25f, 40f, "Shock absorber leaking excessively", "Shock absorber has a light misting of oil", rec);
-            Check(comps, ComponentId.BushesAndArms, 25f, 40f, "Suspension arm bush excessively worn", "Suspension bush deteriorating", rec);
-            Check(comps, ComponentId.SteeringRack, 30f, 45f, "Steering rack excessive play", "Steering rack gaiter split", rec);
-            Check(comps, ComponentId.Exhaust, 30f, 45f, "Exhaust emissions above the limit", "Exhaust has a minor leak", rec);
-            Check(comps, ComponentId.Glass, 30f, 50f, "Windscreen damage in the driver's view", "Windscreen chip outside the driver's view", rec);
+                Check(comps, t.Item1, 20f, 37.5f, $"Tyre tread below 1.6 mm ({t.Item2})", $"Tyre close to the legal limit ({t.Item2})", rec, reported);
+            Check(comps, ComponentId.BrakePadsFront, 20f, 35f, "Front brake pads below 1.5 mm", "Front brake pads wearing thin", rec, reported);
+            Check(comps, ComponentId.BrakePadsRear, 20f, 35f, "Rear brake pads below 1.5 mm", "Rear brake pads wearing thin", rec, reported);
+            Check(comps, ComponentId.BrakeDiscs, 25f, 40f, "Brake discs excessively worn", "Brake discs worn or scored", rec, reported);
+            Check(comps, ComponentId.Lights, 40f, 55f, "Headlamp aim / lamp not working", "Lamp lens slightly damaged", rec, reported);
+            Check(comps, ComponentId.ShockAbsorbers, 25f, 40f, "Shock absorber leaking excessively", "Shock absorber has a light misting of oil", rec, reported);
+            Check(comps, ComponentId.BushesAndArms, 25f, 40f, "Suspension arm bush excessively worn", "Suspension bush deteriorating", rec, reported);
+            Check(comps, ComponentId.SteeringRack, 30f, 45f, "Steering rack excessive play", "Steering rack gaiter split", rec, reported);
+            Check(comps, ComponentId.Exhaust, 30f, 45f, "Exhaust emissions above the limit", "Exhaust has a minor leak", rec, reported);
+            Check(comps, ComponentId.Glass, 30f, 50f, "Windscreen damage in the driver's view", "Windscreen chip outside the driver's view", rec, reported);
             if (faults != null)
                 foreach (var f in faults)
                 {
                     var def = f.Def;
                     if (def == null) continue;
-                    if (def.FailsMot(f.severity)) { if (!rec.fails.Contains(def.Name)) rec.fails.Add(def.Name); }
-                    else if (def.AdvisesMot(f.severity)) { if (!rec.advisories.Contains(def.Name)) rec.advisories.Add(def.Name); }
-                    else continue;
+                    bool fails = def.FailsMot(f.severity), advises = !fails && def.AdvisesMot(f.severity);
+                    if (!fails && !advises) continue;
+                    if (reported.TryGetValue(def.Component, out var already))
+                    {
+                        // The part was already listed: only a fault that fails where the part was just an advisory changes the line.
+                        if (fails && !already.fail)
+                        {
+                            rec.advisories.Remove(already.line);
+                            if (!rec.fails.Contains(def.Name)) rec.fails.Add(def.Name);
+                            reported[def.Component] = (true, def.Name);
+                        }
+                    }
+                    else if (fails) { if (!rec.fails.Contains(def.Name)) rec.fails.Add(def.Name); reported[def.Component] = (true, def.Name); }
+                    else { if (!rec.advisories.Contains(def.Name)) rec.advisories.Add(def.Name); reported[def.Component] = (false, def.Name); }
                     if (!f.known) { f.known = true; f.foundBy = (int)InspectMethod.Lift; }
                 }
             rec.passed = rec.fails.Count == 0;

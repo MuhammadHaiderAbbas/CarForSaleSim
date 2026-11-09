@@ -114,6 +114,7 @@ namespace CarSales
             fallback["CameraView"] = Button("CameraView", "<Keyboard>/c", "<Gamepad>/rightStickPress");
             fallback["GearUp"] = Button("GearUp", "<Keyboard>/leftShift", "<Gamepad>/rightShoulder");
             fallback["GearDown"] = Button("GearDown", "<Keyboard>/leftCtrl", "<Gamepad>/leftShoulder");
+            fallback["ToggleView"] = Button("ToggleView", "<Keyboard>/v", "<Gamepad>/dpad/right");   // phase 11: first / third person
             if (Asset == null) LoadOverrides();
         }
 

@@ -74,5 +74,7 @@
   "settings.title": "Settings",
   "settings.traffic": "Traffic & people",
   "settings.uiscale": "Interface size",
+  "settings.view.first": "View: FIRST PERSON (V)",
+  "settings.view.third": "View: THIRD PERSON (V; needs Character Setup)",
   "settings.volume": "Master volume"
 }

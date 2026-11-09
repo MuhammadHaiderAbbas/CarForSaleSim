@@ -96,7 +96,7 @@ namespace CarSales
                 return;
             }
             var customer = Instantiate(customerPrefab, hit.position, point.rotation);
-            var look = AssetRegistry.RandomCustomerModel();
+            var look = CharacterSpawn.PrefabFor(CarSales.Studio.CharacterUse.Customer);   // phase 11: Character Setup cast first
             if (look) customer.UseAppearance(look);
             var profile = GenerateProfile();
             // Phase 7b: someone who booked a viewing from your online advert.

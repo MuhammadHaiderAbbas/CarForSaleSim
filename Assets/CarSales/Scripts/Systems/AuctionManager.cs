@@ -568,6 +568,14 @@ namespace CarSales
         public enum Call { Opening, None, GoingOnce, GoingTwice, Sold }
         public Call LiveCall { get; private set; }
         public AuctionLot LiveLot => live;
+
+        /// <summary>Phase 11: what happens in the sale hall, for the animated room (AuctionCrowd).</summary>
+        public enum HallEvent { NewLot, RoomBid, PlayerBid, Sold, Unsold }
+        public static event Action<HallEvent> OnHallEvent;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetHallEvents() => OnHallEvent = null;
+
         string liveMessage = "";
         /// <summary>The auctioneer's last call (also shown as a subtitle when you're in the hall).</summary>
         public string LiveMessage
@@ -648,6 +656,7 @@ namespace CarSales
             aiTimer = Random.Range(1.5f, 2.5f);
             var car = CarOf(lot);
             LiveMessage = $"Lot {lot.lotNo}: {car?.Name}. Who'll start me at {UIFactory.Money(lot.startPrice)}?";
+            OnHallEvent?.Invoke(HallEvent.NewLot);
             var hall = AuctionHall.Instance;
             if (hall && car != null) stageCar = hall.ShowOnStage(car, lot.lotNo);
             CarSalesServices.PlaySfx(Sfx.Click, 0.4f);
@@ -664,6 +673,7 @@ namespace CarSales
             var b = Bidder(bidder);
             LiveMessage = bidder == AuctionRules.PlayerId ? $"{UIFactory.Money(next)} - the bid's with you, paddle {Account("hall")?.buyerNo}!"
                                                           : $"{UIFactory.Money(next)} from {(b != null ? b.name : "the room")}!";
+            OnHallEvent?.Invoke(bidder == AuctionRules.PlayerId ? HallEvent.PlayerBid : HallEvent.RoomBid);
             Changed();
         }
 
@@ -676,6 +686,8 @@ namespace CarSales
             int next = AuctionRules.NextBid(live);
             if (!CarSalesServices.Economy.CanAfford(next)) { UI.Error("You can't afford that bid."); return; }
             CarSalesServices.PlaySfx(Sfx.Click);
+            var me = FindFirstObjectByType<PlayerAvatar>();
+            if (me) me.Gesture(CarSales.Studio.CharacterAnim.RaiseHand);   // phase 11: you raise your paddle
             PlaceLiveBid(AuctionRules.PlayerId);
         }
 
@@ -687,6 +699,7 @@ namespace CarSales
             LiveMessage = st == LotStatus.Unsold ? $"No bids - lot {lot.lotNo} withdrawn." :
                           st == LotStatus.Provisional ? $"{UIFactory.Money(lot.hammer)} - provisional, the reserve wasn't met." :
                           $"SOLD for {UIFactory.Money(lot.hammer)} to {(lot.buyer == AuctionRules.PlayerId ? "you" : BidderName(lot.buyer))}!";
+            OnHallEvent?.Invoke(st == LotStatus.Unsold ? HallEvent.Unsold : HallEvent.Sold);
             Settle(lot, e, st);
             EndLive(keepMessage: true);
             pauseTimer = 2.5f;

@@ -12,6 +12,8 @@ namespace CarSales
         [SerializeField] InputActionReference interactAction;
 
         public string CurrentPrompt { get; private set; } = "";
+        /// <summary>Phase 11: extra reach while the camera is behind you (third-person view).</summary>
+        public float ReachBonus { get; set; }
         /// <summary>The interactable the player is looking at (null if none).</summary>
         public IInteractable CurrentTarget => current;
         IInteractable current;
@@ -35,7 +37,7 @@ namespace CarSales
                             (CarSalesServices.TestDrive && CarSalesServices.TestDrive.BlocksInteraction);
             if (!menuOpen && cam &&
                 Physics.Raycast(cam.transform.position, cam.transform.forward, out var hit,
-                                distance, interactMask, QueryTriggerInteraction.Collide))
+                                distance + ReachBonus, interactMask, QueryTriggerInteraction.Collide))
             {
                 var target = hit.collider.GetComponentInParent<IInteractable>();
                 if (target != null && target.CanInteract()) current = target;

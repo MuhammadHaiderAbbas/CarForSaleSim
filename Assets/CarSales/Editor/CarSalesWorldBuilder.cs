@@ -634,7 +634,7 @@ namespace CarSales.EditorTools
                 foreach (float x in new[] { -6f, 6f })
                 {
                     Solid(g, "Bench", new Vector3(x, 0.45f, 3.5f + row * 1.7f), new Vector3(8f, 0.1f, 0.5f), m.desk);
-                    Deco(g, "BenchBack", PrimitiveType.Cube, new Vector3(x, 0.8f, 3.75f + row * 1.7f), new Vector3(8f, 0.5f, 0.06f), m.desk);
+                    Deco(g, "BenchBack", PrimitiveType.Cube, new Vector3(x, 0.8f, 3.25f + row * 1.7f), new Vector3(8f, 0.5f, 0.06f), m.desk);
                 }
             Solid(g, "Stage", new Vector3(0f, 0.12f, 12.6f), new Vector3(10f, 0.2f, 5f), m.platform);
             Deco(g, "StageRing", PrimitiveType.Cube, new Vector3(0f, 0.23f, 10.05f), new Vector3(10f, 0.02f, 0.1f), m.ringGlow);

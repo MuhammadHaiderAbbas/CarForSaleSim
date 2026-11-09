@@ -16,7 +16,11 @@ namespace CarSales
         public TMP_Text screen;
         [SerializeField] CarDisplay displayPrefab;
 
-        void OnEnable() => Instance = this;
+        void OnEnable()
+        {
+            Instance = this;
+            if (!GetComponent<AuctionCrowd>()) gameObject.AddComponent<AuctionCrowd>();   // phase 11: animated room
+        }
         void OnDisable() { if (Instance == this) Instance = null; }
 
         public bool Contains(Vector3 world)

@@ -177,14 +177,8 @@ namespace CarSales
             if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
             if (m.HasProperty("_Color")) m.SetColor("_Color", c);
             r.sharedMaterial = m;
-            var look = AssetRegistry.RandomCustomerModel();
-            if (look)
-            {
-                r.enabled = false;
-                var v = Instantiate(look, npc.transform);
-                v.transform.localPosition = Vector3.down;
-                foreach (var col in v.GetComponentsInChildren<Collider>()) Destroy(col);
-            }
+            var body = CharacterSpawn.Attach(npc.transform, CarSales.Studio.CharacterUse.Seller, Vector3.down);   // phase 11
+            if (body) r.enabled = false;
             var s = npc.AddComponent<SellerNpc>();
             s.adId = ad.id; s.sellerName = ad.seller; s.car = shownCar;
             shownSeller = npc;

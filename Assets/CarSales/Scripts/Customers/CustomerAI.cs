@@ -44,6 +44,9 @@ namespace CarSales
             UIFactory.SetLayer(look, gameObject.layer);
             animator = look.GetComponentInChildren<Animator>();
             if (animator) animator.applyRootMotion = false;
+            var lib = CharacterLibrary.Load();
+            if (animator && lib && lib.controller && !animator.runtimeAnimatorController) animator.runtimeAnimatorController = lib.controller;
+            body = CharacterAnimator.On(look);
             bodyRenderer = null;   // keep the character's own clothes
         }
 
@@ -67,10 +70,16 @@ namespace CarSales
 
         MinimapMarker marker;
 
+        CharacterAnimator body;   // phase 11: gestures (null with the capsule look)
+
         void Update()
         {
             if (animator) animator.SetFloat("Speed", agent.velocity.magnitude);
         }
+
+        void Gesture(CarSales.Studio.CharacterAnim a) { if (body) body.Play(a); }
+        void Hold(CarSales.Studio.CharacterAnim a) { if (body) body.Loop(a); }
+        void Release() { if (body) body.StopLoop(); }
 
         // ---------------- STATES ----------------
         IEnumerator BrowseRoutine()
@@ -88,7 +97,9 @@ namespace CarSales
 
                 Face(TargetCar.transform.position);
                 SetBubble("...");
+                Hold(CarSales.Studio.CharacterAnim.LookAround);
                 yield return new WaitForSeconds(Random.Range(browseTime.x, browseTime.y) * 0.5f);
+                Release();
                 // Phase 7b: walk round the car - tyres, inside, under the bonnet.
                 yield return InspectAround();
                 if (!IsTargetValid()) { TargetCar = null; continue; }
@@ -109,6 +120,7 @@ namespace CarSales
             State = CustomerState.Interested;
             agent.ResetPath();
             SetBubble("!");
+            Gesture(CarSales.Studio.CharacterAnim.Wave);
             CarSalesServices.PlaySfx(Sfx.Notify);
             if (marker) marker.SetColor(UIFactory.Gold);
             CarSalesServices.UI.Toast(ToastType.Info, "Customer interested!",
@@ -127,7 +139,9 @@ namespace CarSales
                     {
                         State = CustomerState.Negotiating;
                         SetBubble("$");
+                        Hold(CarSales.Studio.CharacterAnim.Talking);
                         yield return new WaitForSeconds(4f);
+                        Release();
                         if (IsTargetValid()) { CarSalesServices.Staff.HandleCustomer(this, sp); yield break; }
                         seen.Add(TargetCar);
                         StartCoroutine(BrowseRoutine());
@@ -138,6 +152,8 @@ namespace CarSales
             }
             CarSalesServices.Economy.ChangeReputation(-1f); // ignored customer
             SetBubble(":(");
+            Gesture(CarSales.Studio.CharacterAnim.Angry);
+            yield return new WaitForSeconds(1.5f);
             Leave();
         }
 
@@ -151,6 +167,7 @@ namespace CarSales
         IEnumerator LeaveRoutine()
         {
             State = CustomerState.Leaving;
+            Release();
             if (marker) marker.SetColor(new Color(1f, 1f, 1f, 0.35f));
             TargetCar = null;
             var exit = spawner ? spawner.Dealer.exitPoint : null;
@@ -174,12 +191,22 @@ namespace CarSales
             StopAllCoroutines();
             State = CustomerState.Negotiating;
             Face(interactor.transform.position);
+            Hold(CarSales.Studio.CharacterAnim.Talking);
             CarSalesServices.UI.negotiation.Show(this);
         }
 
         public void EndNegotiation(bool bought)
         {
             SetBubble(bought ? ":)" : ">:(");
+            Release();
+            StopAllCoroutines();
+            StartCoroutine(ReactThenLeave(bought));
+        }
+
+        IEnumerator ReactThenLeave(bool bought)
+        {
+            Gesture(bought ? CarSales.Studio.CharacterAnim.Cheer : CarSales.Studio.CharacterAnim.Angry);
+            yield return new WaitForSeconds(body ? 2f : 0f);
             Leave();
         }
 
@@ -230,7 +257,9 @@ namespace CarSales
                 if (!TargetCar) yield break;
                 Face(t.position);
                 SetBubble(lines[k]);
+                Hold(k == 0 ? CarSales.Studio.CharacterAnim.Kneel : k == 2 ? CarSales.Studio.CharacterAnim.Thinking : CarSales.Studio.CharacterAnim.LookAround);
                 yield return new WaitForSeconds(Random.Range(1.5f, 3f));
+                Release();
             }
             SetBubble("");
         }
