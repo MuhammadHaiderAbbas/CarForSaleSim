@@ -74,7 +74,7 @@ namespace CarSales.Sim
         public static int CreditRating(float reputation, int daysOverdrawnLast30, int netWorth) =>
             Math.Max(0, Math.Min(100, (int)(reputation * 0.6f + Math.Min(30f, netWorth / 10000f) - daysOverdrawnLast30 * 1.5f + 10f)));
 
-        /// <summary>Overdraft you may use: $100 per rating point (max $10,000).</summary>
+        /// <summary>Overdraft you may use: £100 per rating point (max £10,000).</summary>
         public static int OverdraftLimit(int rating) => Math.Min(10000, rating * 100);
 
         public const float OverdraftDailyRate = 0.0006f;   // about 22% a year
@@ -149,7 +149,7 @@ namespace CarSales.Sim
             if (!(i.carsSold >= 10 && i.reputation >= 55f)) return (1, "Sell 10 cars and reach reputation 55");
             if (!(i.carsSold >= 30 && i.reputation >= 60f && i.staff >= 1)) return (2, "Sell 30 cars, reputation 60, hire someone");
             if (!(i.carsSold >= 60 && i.workshopJobs >= 5)) return (3, "Sell 60 cars and finish 5 workshop jobs");
-            if (!(i.carsSold >= 120 && i.reputation >= 75f && i.netWorth >= 250000)) return (4, "Sell 120 cars, reputation 75, net worth $250,000");
+            if (!(i.carsSold >= 120 && i.reputation >= 75f && i.netWorth >= 250000)) return (4, "Sell 120 cars, reputation 75, net worth £250,000");
             if (!(i.dealerships >= 2)) return (5, "Own a second dealership");
             return (6, "Top level reached");
         }

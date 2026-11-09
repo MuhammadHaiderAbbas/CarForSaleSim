@@ -13,7 +13,7 @@ namespace CarSales
     {
         [SerializeField] CarDisplay carDisplayPrefab;
         public CarDisplay DisplayPrefab => carDisplayPrefab;
-        [SerializeField] float fuelPricePerPercent = 0.9f;   // a full tank (100%) = $90
+        [SerializeField] float fuelPricePerPercent = 0.9f;   // a full tank (100%) = £90
 
         readonly Dictionary<string, CarDisplay> displays = new Dictionary<string, CarDisplay>();
         public IEnumerable<CarDisplay> All => displays.Values.Where(d => d);

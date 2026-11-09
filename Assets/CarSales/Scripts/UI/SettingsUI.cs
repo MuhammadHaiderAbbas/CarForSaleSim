@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CarSales.Foundation;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -29,67 +30,132 @@ namespace CarSales
         public static readonly string[] GroupNames = { "Music", "Sound effects", "Ambience", "Vehicles", "Interface" };
         public static readonly string[] DifficultyNames = { "EASY", "NORMAL", "HARD", "REALISTIC", "CUSTOM" };
 
+        UIFactory.TabBar nav;
+        TextMeshProUGUI invertLabel, hintsLabel, autoSaveLabel, qualityLabel, vsyncLabel, fullscreenLabel, resolutionLabel, frameCapLabel;
+
+        /// <summary>
+        /// Phase 12 V2 (UI board): icon navigation down the left - Gameplay, Graphics, Audio, Controls, Language - the
+        /// page on the right, and Reset to Default / Apply along the bottom.
+        /// </summary>
         public override void Build()
         {
-            var body = UIFactory.Window(Root, Loc.T("settings.title", "Settings"), new Vector2(760f, 920f), Back);
+            var body = UIFactory.Window(Root, Loc.T("settings.title", "Settings"), new Vector2(980f, 860f), Back);
             UIFactory.Vertical(body, 0, 12f);
-            string[] tabNames =
+            var columns = UIFactory.HRow(body, 0f, 18f);
+            UIFactory.LE(columns, flexH: 1);
+            columns.GetComponent<HorizontalLayoutGroup>().childForceExpandHeight = true;
+            var left = UIFactory.VCol(columns, 6f, "Nav", 210f, 0f);
+            var right = UIFactory.VCol(columns, 10f, "Pages");
+            UIFactory.LE(right, flexH: 1);
+
+            var items = new (UIIcon icon, string name)[]
             {
-                Loc.T("settings.tab.general", "General"), Loc.T("settings.tab.display", "Display"), Loc.T("settings.tab.audio", "Audio"),
-                Loc.T("settings.tab.driving", "Driving"), Loc.T("settings.tab.controls", "Controls")
+                (UIIcon.VideogameAsset, Loc.T("settings.tab.gameplay", "Gameplay")), (UIIcon.Monitor, Loc.T("settings.tab.graphics", "Graphics")),
+                (UIIcon.VolumeUp, Loc.T("settings.tab.audio", "Audio")), (UIIcon.Keyboard, Loc.T("settings.tab.controls", "Controls")),
+                (UIIcon.Language, Loc.T("settings.tab.language", "Language")),
             };
-            var tabs = UIFactory.Tabs(body, tabNames, ShowPage, 44f, 0f, 16f);
-            for (int i = 0; i < tabNames.Length; i++)
+            nav = new UIFactory.TabBar();
+            for (int i = 0; i < items.Length; i++)
             {
-                var page = UIFactory.VCol(body, 10f, "Page" + i);
+                int index = i;
+                var b = UIFactory.IconBtn(left, items[i].icon, items[i].name, UIFactory.CardLight, () => nav.Select(index), out var lbl, 50f, 18f);
+                nav.buttons.Add(b); nav.labels.Add(lbl);
+            }
+            nav.OnChanged += ShowPage;
+            UIFactory.Spacer(left);
+
+            for (int i = 0; i < items.Length; i++)
+            {
+                var page = UIFactory.VCol(right, 10f, "Page" + i);
                 UIFactory.LE(page, flexH: 1);
                 pages.Add(page);
             }
-
-            BuildGeneral(pages[0]);
+            BuildGameplay(pages[0]);
             BuildDisplay(pages[1]);
             BuildAudio(pages[2]);
-            BuildDriving(pages[3]);
-            BuildControls(pages[4]);
+            BuildControlsPage(pages[3]);
+            BuildLanguage(pages[4]);
 
-            UIFactory.Btn(body, Loc.T("common.back", "Back"), UIFactory.Neutral, Back, 52f);
-            tabs.Select(0);
+            var bottom = UIFactory.HRow(body, 50f, 12f);
+            UIFactory.Spacer(bottom, 0f, 1f);
+            var reset = UIFactory.Btn(bottom, Loc.T("settings.reset", "Reset to Default"), UIFactory.CardLight, () =>
+            {
+                CancelRebind();
+                GameSettings.ResetToDefaults();
+                OnEnable();
+            }, 50f, 18f);
+            UIFactory.LE(reset, h: 50, w: 220, flexW: 0);
+            var apply = UIFactory.Btn(bottom, Loc.T("settings.apply", "Apply"), UIFactory.Accent, Back, 50f, 18f);
+            UIFactory.LE(apply, h: 50, w: 180, flexW: 0);
+            nav.Select(0);
+        }
+
+        /// <summary>A setting row: name on the left, a value button on the right (the board's toggles and drop-downs).</summary>
+        TextMeshProUGUI SettingRow(Transform p, string name, UnityEngine.Events.UnityAction onClick, float w = 230f)
+        {
+            var row = UIFactory.HRow(p, 50f, 12f);
+            var t = UIFactory.Text(row, name, 19, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            UIFactory.LE(t, flexW: 1);
+            var b = UIFactory.Btn(row, "", UIFactory.CardLight, () => { onClick(); UpdateLabels(); }, out var lbl, 44f, 17f);
+            UIFactory.LE(b, h: 44, w: w, flexW: 0);
+            return lbl;
+        }
+
+        // Fonts may lack symbol glyphs, so the switch is shown in words and colour.
+        static string Toggle(bool on) => on ? $"<color={UIFactory.Hex(UIFactory.Good)}>" + Loc.T("common.on", "ON") + "</color>" : Loc.T("common.off", "OFF");
+
+        void BuildGameplay(Transform p)
+        {
+            UIFactory.SectionTitle(p, Loc.T("settings.gameplay", "Gameplay Settings"));
+            difficultyLabel = SettingRow(p, Loc.T("settings.difficulty", "Difficulty (new games)"), () => GameSettings.Difficulty = (GameSettings.Difficulty + 1) % (BalanceSettings.HasCustom ? 5 : 4));
+            invertLabel = SettingRow(p, Loc.T("settings.invert", "Invert Y Axis"), () => GameSettings.InvertY = !GameSettings.InvertY);
+            hintsLabel = SettingRow(p, Loc.T("settings.hints", "Show Hints"), () => GameSettings.ShowHints = !GameSettings.ShowHints);
+            autoSaveLabel = SettingRow(p, Loc.T("settings.autosave", "Auto Save"), () => GameSettings.AutoSave = !GameSettings.AutoSave);
+            subtitlesLabel = SettingRow(p, Loc.T("settings.subtitles", "Subtitles"), () => GameSettings.Subtitles = !GameSettings.Subtitles);
+            viewLabel = SettingRow(p, Loc.T("settings.view", "Camera view (V)"), () =>
+            {
+                GameSettings.ThirdPerson = !GameSettings.ThirdPerson;
+                var me = FindFirstObjectByType<PlayerAvatar>();
+                if (me) me.SetView(GameSettings.ThirdPerson);
+            });
+            sensitivityLabel = UIFactory.Text(p, "", 19, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            sensitivity = UIFactory.MakeSlider(p, UIFactory.Accent, 30f);
+            sensitivity.minValue = 0.02f; sensitivity.maxValue = 0.5f;
+            sensitivity.onValueChanged.AddListener(v => { GameSettings.MouseSensitivity = v; UpdateLabels(); });
+            var note = UIFactory.Text(p, Loc.T("settings.difficulty.note", "Difficulty applies when you start a new game (starting money, customer budgets, repair costs, footfall). Language applies to screens opened after the change."), 15, UIFactory.TextDim);
+            note.textWrappingMode = TextWrappingModes.Normal;
+            UIFactory.LE(note, h: 48);
+            UIFactory.Spacer(p);
+        }
+
+        void BuildLanguage(Transform p)
+        {
+            UIFactory.SectionTitle(p, Loc.T("settings.tab.language", "Language"));
+            languageLabel = SettingRow(p, Loc.T("settings.language", "Language"), () =>
+            {
+                var langs = Loc.Available();
+                int i = System.Array.IndexOf(langs, GameSettings.Language);
+                GameSettings.Language = langs[(i + 1) % langs.Length];
+            });
+            var note = UIFactory.Text(p, Loc.T("settings.language.note", "Add a translation by putting a file such as de.json next to Resources/Localization/en.json."), 15, UIFactory.TextDim);
+            note.textWrappingMode = TextWrappingModes.Normal;
+            UIFactory.LE(note, h: 44);
+            UIFactory.Spacer(p);
+        }
+
+        void BuildControlsPage(Transform p)
+        {
+            UIFactory.SectionTitle(p, Loc.T("settings.tab.driving", "Driving"));
+            BuildDriving(p);
+            UIFactory.SectionTitle(p, Loc.T("settings.keys", "Key bindings"));
+            BuildControls(p);
         }
 
         void ShowPage(int index)
         {
             CancelRebind();
             for (int i = 0; i < pages.Count; i++) pages[i].gameObject.SetActive(i == index);
-            if (index == 4) RefreshControls();
-        }
-
-        // ------------------------------------------------------------------ GENERAL
-        void BuildGeneral(Transform p)
-        {
-            sensitivityLabel = UIFactory.Text(p, "", 21, UIFactory.TextMain, TextAlignmentOptions.Left, true);
-            sensitivity = UIFactory.MakeSlider(p, UIFactory.Accent, 32f);
-            sensitivity.minValue = 0.02f; sensitivity.maxValue = 0.5f;
-            sensitivity.onValueChanged.AddListener(v => { GameSettings.MouseSensitivity = v; UpdateLabels(); });
-            UIFactory.Btn(p, "", UIFactory.AccentDark, () => { GameSettings.Subtitles = !GameSettings.Subtitles; UpdateLabels(); }, out subtitlesLabel, 48f, 18f);
-            UIFactory.Btn(p, "", UIFactory.AccentDark, () =>
-            {
-                GameSettings.ThirdPerson = !GameSettings.ThirdPerson;
-                var me = FindFirstObjectByType<PlayerAvatar>();
-                if (me) me.SetView(GameSettings.ThirdPerson);
-                UpdateLabels();
-            }, out viewLabel, 48f, 18f);
-            UIFactory.Btn(p, "", UIFactory.AccentDark, () =>
-            {
-                var langs = Loc.Available();
-                int i = System.Array.IndexOf(langs, GameSettings.Language);
-                GameSettings.Language = langs[(i + 1) % langs.Length];
-                UpdateLabels();
-            }, out languageLabel, 48f, 18f);
-            UIFactory.Btn(p, "", UIFactory.AccentDark, () => { GameSettings.Difficulty = (GameSettings.Difficulty + 1) % (BalanceSettings.HasCustom ? 5 : 4); UpdateLabels(); }, out difficultyLabel, 48f, 18f);
-            var note = UIFactory.Text(p, Loc.T("settings.difficulty.note", "Difficulty applies when you start a new game (starting money, customer budgets, repair costs, footfall). Language applies to screens opened after the change."), 15, UIFactory.TextDim);
-            note.textWrappingMode = TextWrappingModes.Normal;
-            UIFactory.LE(note, h: 48);
-            UIFactory.Spacer(p);
+            if (index == 3) RefreshControls();
         }
 
         // ------------------------------------------------------------------ DISPLAY
@@ -99,6 +165,29 @@ namespace CarSales
             uiScale = UIFactory.MakeSlider(p, UIFactory.Accent, 28f);
             uiScale.minValue = 0.8f; uiScale.maxValue = 1.3f;
             uiScale.onValueChanged.AddListener(v => { GameSettings.UiScale = Mathf.Round(v * 20f) / 20f; UpdateLabels(); });
+            qualityLabel = SettingRow(p, Loc.T("settings.quality", "Quality"), () =>
+            {
+                int n = QualitySettings.names.Length;
+                int cur = GameSettings.QualityLevel < 0 ? QualitySettings.GetQualityLevel() : GameSettings.QualityLevel;
+                GameSettings.QualityLevel = n == 0 ? -1 : (cur + 1) % n;
+            });
+            resolutionLabel = SettingRow(p, Loc.T("settings.resolution", "Resolution"), () =>
+            {
+                var res = Screen.resolutions;
+                if (res.Length == 0) return;
+                int i = System.Array.FindIndex(res, r => r.width == Screen.width && r.height == Screen.height);
+                var next = res[(i + 1) % res.Length];
+                Screen.SetResolution(next.width, next.height, Screen.fullScreenMode);
+            });
+            fullscreenLabel = SettingRow(p, Loc.T("settings.fullscreen", "Display mode"), () =>
+                Screen.fullScreenMode = Screen.fullScreenMode == FullScreenMode.Windowed ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed);
+            vsyncLabel = SettingRow(p, Loc.T("settings.vsync", "V-Sync"), () => GameSettings.VSync = !GameSettings.VSync);
+            frameCapLabel = SettingRow(p, Loc.T("settings.framecap", "Frame-rate limit"), () =>
+            {
+                int[] caps = { 0, 30, 60, 120, 144 };
+                int i = System.Array.IndexOf(caps, GameSettings.FrameCap);
+                GameSettings.FrameCap = caps[(i + 1) % caps.Length];
+            });
             UIFactory.Btn(p, "", UIFactory.AccentDark, () =>
             {
                 GameSettings.Theme = (UIThemeChoice)(((int)GameSettings.Theme + 1) % 5);
@@ -277,10 +366,19 @@ namespace CarSales
             if (!drivingLabel) return;
             for (int g = 0; g < groupLabels.Length; g++)
                 if (groupLabels[g]) groupLabels[g].text = $"{Loc.T("settings.group." + g, GroupNames[g])}: {GameSettings.GroupVolume(g) * 100f:0}%";
-            subtitlesLabel.text = $"{Loc.T("settings.subtitles", "Subtitles")}: {OnOff(GameSettings.Subtitles)}";
-            viewLabel.text = GameSettings.ThirdPerson ? Loc.T("settings.view.third", "View: THIRD PERSON (V; needs Character Setup)") : Loc.T("settings.view.first", "View: FIRST PERSON (V)");
-            languageLabel.text = $"{Loc.T("settings.language", "Language")}: {GameSettings.Language.ToUpper()}";
-            difficultyLabel.text = $"{Loc.T("settings.difficulty", "Difficulty (new games)")}: {DifficultyNames[GameSettings.Difficulty]}";
+            subtitlesLabel.text = Toggle(GameSettings.Subtitles);
+            invertLabel.text = Toggle(GameSettings.InvertY);
+            hintsLabel.text = Toggle(GameSettings.ShowHints);
+            autoSaveLabel.text = Toggle(GameSettings.AutoSave);
+            vsyncLabel.text = Toggle(GameSettings.VSync);
+            int q = GameSettings.QualityLevel < 0 ? QualitySettings.GetQualityLevel() : GameSettings.QualityLevel;
+            qualityLabel.text = QualitySettings.names.Length > q && q >= 0 ? QualitySettings.names[q] : "-";
+            resolutionLabel.text = $"{Screen.width} × {Screen.height}";
+            fullscreenLabel.text = Screen.fullScreenMode == FullScreenMode.Windowed ? Loc.T("settings.windowed", "Windowed") : Loc.T("settings.fullscreen.on", "Full screen");
+            frameCapLabel.text = GameSettings.FrameCap <= 0 ? Loc.T("settings.unlimited", "Unlimited") : GameSettings.FrameCap + " fps";
+            viewLabel.text = GameSettings.ThirdPerson ? Loc.T("settings.view.third", "Third person") : Loc.T("settings.view.first", "First person");
+            languageLabel.text = GameSettings.Language.ToUpper();
+            difficultyLabel.text = DifficultyNames[GameSettings.Difficulty];
             scaleLabel.text = $"{Loc.T("settings.uiscale", "Interface size")}: {GameSettings.UiScale * 100f:0}%";
             string theme = GameSettings.Theme == UIThemeChoice.ColourBlind ? "COLOUR-BLIND SAFE" : GameSettings.Theme.ToString().ToUpper();
             themeLabel.text = $"{Loc.T("settings.theme", "Theme")}: {theme}  ({Loc.T("settings.theme.note", "applies after loading / main menu")})" +

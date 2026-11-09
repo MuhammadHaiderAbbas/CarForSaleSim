@@ -30,7 +30,7 @@ namespace CarSales
             {
                 case SiteFunction.Dealership:
                     props.RegisterProperty(new PropertyInfo { id = siteId, displayName = displayName, type = PropertyType.Dealership, price = price, dailyCost = dailyCost,
-                                                              description = $"Dealership you built with the World Builder. Rent ${dailyCost:N0}/day." });
+                                                              description = $"Dealership you built with the World Builder. Rent £{dailyCost:N0}/day." });
                     break;
                 case SiteFunction.House:
                     props.RegisterProperty(new PropertyInfo { id = siteId, displayName = displayName, type = PropertyType.Home, price = price, wakeHour = 7f, dailyReputation = 0.3f,
@@ -38,7 +38,7 @@ namespace CarSales
                     break;
                 case SiteFunction.Investment:
                     props.RegisterProperty(new PropertyInfo { id = siteId, displayName = displayName, type = PropertyType.Investment, price = price, dailyIncome = dailyCost,
-                                                              description = $"Rental building you placed with the World Builder. Earns ${dailyCost:N0} a day." });
+                                                              description = $"Rental building you placed with the World Builder. Earns £{dailyCost:N0} a day." });
                     break;
             }
         }

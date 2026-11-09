@@ -518,7 +518,7 @@ namespace CarSales.EditorTools
             // Price pylon
             Solid(g, "Pylon", new Vector3(-11f, 3f, -1f), new Vector3(1.6f, 6f, 0.5f), m.signBoard);
             SignText(g, new Vector3(-11f, 4.6f, -1.27f), "FUEL", 6f, new Color(1f, 0.85f, 0.2f), new Vector2(1.5f, 0.8f));
-            SignText(g, new Vector3(-11f, 3.4f, -1.27f), "$0.90 / %", 4f, Color.white, new Vector2(1.5f, 0.6f));
+            SignText(g, new Vector3(-11f, 3.4f, -1.27f), "£0.90 / %", 4f, Color.white, new Vector2(1.5f, 0.6f));
 
             var zone = AddZone(g, ServiceType.FuelStation, "Fuel Station", new Vector3(0f, 2f, 6f), new Vector3(19f, 4f, 11f),
                                new Vector3(0f, 0.05f, 6f), new Vector3(-6.2f, 0.05f, 6f), new Vector3(6.2f, 0.05f, 6f));

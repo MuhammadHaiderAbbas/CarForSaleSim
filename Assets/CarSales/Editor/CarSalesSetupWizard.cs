@@ -89,7 +89,7 @@ namespace CarSales.EditorTools
                     "Done!\n\nGame scene: " + ScenePath + "\nMain menu: " + MenuScenePath +
                     "\nTest track: " + TestTrackScenePath +
                     "\n\nPress PLAY here to jump straight in, or open the MainMenu scene for the full flow.\n\n" +
-                    "E interact | F drive | Tab inventory | M map | P phone | Esc menu\nSleep at home to end the day.\nF1 +$10,000 (debug) | F5/F9 save/load | F12 delete save",
+                    "E interact | F drive | Tab inventory | M map | P phone | Esc menu\nSleep at home to end the day.\nF1 +£10,000 (debug) | F5/F9 save/load | F12 delete save",
                     "Let's go");
             }
             catch (System.Exception e)
@@ -535,7 +535,7 @@ namespace CarSales.EditorTools
 
             var visualRoot = Child("VisualRoot", root.transform, Vector3.zero);
             var browse = Child("BrowsePoint", root.transform, new Vector3(0f, 0f, 3.6f));
-            var tag = Text3D("PriceTag", root.transform, new Vector3(0f, 2.5f, 0f), "$0", 6f, new Color(1f, 0.85f, 0.2f));
+            var tag = Text3D("PriceTag", root.transform, new Vector3(0f, 2.5f, 0f), "£0", 6f, new Color(1f, 0.85f, 0.2f));
             tag.gameObject.AddComponent<Billboard>();
             tag.gameObject.SetActive(false);
 

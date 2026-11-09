@@ -12,7 +12,7 @@ namespace CarSales
     /// </summary>
     public class PhoneUI : UIPanel, IBackHandler
     {
-        enum App { Home, Tow, Taxi, Bank, Messages }
+        enum App { Home, Tow, Taxi, Bank, Messages, Notifications, Missions }
 
         App app;
         CarDisplay selected;
@@ -102,6 +102,8 @@ namespace CarSales
                 case App.Taxi: BuildTaxi(); break;
                 case App.Bank: BuildBank(); break;
                 case App.Messages: BuildMessages(); break;
+                case App.Notifications: BuildNotifications(); break;
+                case App.Missions: BuildMissions(); break;
                 default: BuildHome(); break;
             }
         }
@@ -133,23 +135,61 @@ namespace CarSales
             g.spacing = new Vector2(8f, 8f);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = 3;
-            UIFactory.LE(grid, h: 4 * 104f + 3 * 8f);
+            UIFactory.LE(grid, h: 5 * 104f + 4 * 8f);
             var ui = CarSalesServices.UI;
             int unread = msgs ? msgs.UnreadCount : 0;
-            AppIcon(grid, "Messages" + (unread > 0 ? $" ({unread})" : ""), "M", UIFactory.Accent, () => Open(App.Messages));
-            AppIcon(grid, "Bank", "$", UIFactory.Good, () => Open(App.Bank));
-            AppIcon(grid, "Tow truck", "T", UIFactory.Warn, () => Open(App.Tow));
-            AppIcon(grid, "Taxi", "Tx", UIFactory.Gold, () => Open(App.Taxi));
-            AppIcon(grid, "Map", "Mp", UIFactory.Info, () => ui.map.Show());
-            AppIcon(grid, "My cars", "C", UIFactory.Special, () => ui.inventory.Show());
-            AppIcon(grid, "Market", "Mk", UIFactory.AccentDark, () => ui.marketplace.Show());
-            AppIcon(grid, "Real estate", "H", UIFactory.Home, () => ui.realEstate.Show());
-            AppIcon(grid, "Auctions", "A", UIFactory.Bad, () => ui.auction.Show());
-            AppIcon(grid, "Workshop", "W", UIFactory.Warn, () => ui.computerHub.Workshop.ShowBoard());
-            AppIcon(grid, "Settings", "S", UIFactory.Neutral, () => ui.settings.Show());
+            // Phase 12 V2 (UI board): the six main apps first, as coloured icon tiles.
+            AppIcon(grid, "Dealership", UIIcon.Storefront, UIFactory.Accent, () => ui.computerHub.Show());
+            AppIcon(grid, "Auction", UIIcon.Gavel, UIFactory.Bad, () => ui.auction.Show());
+            AppIcon(grid, "Messages" + (unread > 0 ? $" ({unread})" : ""), UIIcon.Mail, UIFactory.Good, () => Open(App.Messages));
+            AppIcon(grid, "Map", UIIcon.Map, UIFactory.Good, () => ui.map.Show());
+            AppIcon(grid, "Bank", UIIcon.AccountBalance, UIFactory.Neutral, () => Open(App.Bank));
+            AppIcon(grid, "Settings", UIIcon.Settings, UIFactory.Neutral, () => ui.settings.Show());
+            AppIcon(grid, "Notifications" + (NotificationLog.Unseen > 0 ? $" ({NotificationLog.Unseen})" : ""), UIIcon.Notifications, UIFactory.Warn, () => Open(App.Notifications));
+            AppIcon(grid, "Missions", UIIcon.EmojiEvents, UIFactory.Gold, () => Open(App.Missions));
+            AppIcon(grid, "My cars", UIIcon.DirectionsCar, UIFactory.Special, () => ui.inventory.Show());
+            AppIcon(grid, "Market", UIIcon.ShoppingCart, UIFactory.AccentDark, () => ui.marketplace.Show());
+            AppIcon(grid, "Tow truck", UIIcon.LocalShipping, UIFactory.Warn, () => Open(App.Tow));
+            AppIcon(grid, "Taxi", UIIcon.DirectionsCar, UIFactory.Gold, () => Open(App.Taxi));
+            AppIcon(grid, "Real estate", UIIcon.Apartment, UIFactory.Home, () => ui.realEstate.Show());
+            AppIcon(grid, "Workshop", UIIcon.Build, UIFactory.Warn, () => ui.computerHub.Workshop.ShowBoard());
         }
 
-        void AppIcon(Transform grid, string label, string glyph, Color color, UnityEngine.Events.UnityAction onClick)
+        // ------------------------------------------------------------------ NOTIFICATIONS (phase 12)
+        void BuildNotifications()
+        {
+            NotificationLog.MarkSeen();
+            if (NotificationLog.Entries.Count == 0) { Line("Nothing new.", 16, UIFactory.TextDim, 40f, TextAlignmentOptions.Center); return; }
+            foreach (var e in NotificationLog.Entries.Take(20))
+            {
+                var cardImg = UIFactory.Panel(screen, "Notification", UIFactory.CardBg, 1.8f);
+                UIFactory.LE(cardImg, h: 64);
+                var card = cardImg.transform;
+                var row = UIFactory.Horizontal(cardImg, 8, 10f);
+                row.childForceExpandWidth = false; row.childAlignment = TextAnchor.MiddleLeft;
+                var (icon, col) = e.type == ToastType.Success ? (UIIcon.CheckCircle, UIFactory.Good) : e.type == ToastType.Warning ? (UIIcon.Warning, UIFactory.Warn) : (UIIcon.Info, UIFactory.Accent);
+                UIFactory.IconImage(card, icon, col, 30f);
+                var t = UIFactory.Text(card, $"<b>{e.title ?? ""}</b>{(string.IsNullOrEmpty(e.title) ? "" : "\n")}<size=85%>{e.message}</size>", 14, UIFactory.TextMain, TextAlignmentOptions.Left);
+                t.textWrappingMode = TextWrappingModes.Normal;
+                UIFactory.LE(t, flexW: 1);
+                var ago = UIFactory.Text(card, NotificationLog.Ago(e), 12, UIFactory.TextDim, TextAlignmentOptions.TopRight);
+                UIFactory.LE(ago, w: 64, flexW: 0);
+            }
+            var clear = UIFactory.Btn(screen, "Clear All", UIFactory.CardLight, () => { NotificationLog.Clear(); Open(App.Notifications); }, 44f, 16f);
+            UIFactory.LE(clear, h: 44);
+        }
+
+        // ------------------------------------------------------------------ MISSIONS (phase 12)
+        void BuildMissions()
+        {
+            var p = CarSalesServices.Progress;
+            Line("MAIN QUEST", 14, UIFactory.Accent, 24f);
+            Line(p ? p.CurrentObjectiveText : "No goals.", 18, UIFactory.TextMain, 90f);
+            Line($"Goal {(p ? Mathf.Min(p.ObjectiveIndex + 1, p.ObjectiveCount) : 0)} of {(p ? p.ObjectiveCount : 0)}", 14, UIFactory.TextDim, 24f);
+            Line("Goals pay a cash reward when done. The current goal is also shown on the HUD (top left).", 14, UIFactory.TextDim, 60f);
+        }
+
+        void AppIcon(Transform grid, string label, UIIcon iconId, Color color, UnityEngine.Events.UnityAction onClick)
         {
             var cell = UIFactory.Rect("App_" + label, grid);
             var img = cell.gameObject.AddComponent<Image>();
@@ -159,8 +199,11 @@ namespace CarSales
             btn.onClick.AddListener(onClick);
             btn.onClick.AddListener(() => CarSalesServices.PlaySfx(Sfx.Click, 0.5f));
             UIFactory.Vertical(cell, 4, 4f, TextAnchor.UpperCenter).childForceExpandWidth = false;
-            var icon = UIFactory.Icon(cell, color, glyph, 58f);
-            icon.raycastTarget = false;
+            var tile = UIFactory.Panel(cell, "Tile", color, 1.6f);
+            UIFactory.LE(tile, h: 58, w: 58, flexW: 0);
+            tile.raycastTarget = false;
+            var icon = UIFactory.IconImage(tile.transform, iconId, UIFactory.ContrastText(color), 34f);
+            UIFactory.Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(34f, 34f));
             var t = UIFactory.Text(cell, label, 14, UIFactory.TextMain, TextAlignmentOptions.Center);
             UIFactory.LE(t, h: 34, w: 114);
         }

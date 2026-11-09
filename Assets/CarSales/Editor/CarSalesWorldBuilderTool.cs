@@ -343,7 +343,7 @@ namespace CarSales.EditorTools
                 foreach (var r in layout.sites.ToList())
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        EditorGUILayout.LabelField($"{r.name}  ({r.template}, {(r.price > 0 ? $"${r.price:N0}" : "owned")}, at {r.position.x:0}, {r.position.z:0})");
+                        EditorGUILayout.LabelField($"{r.name}  ({r.template}, {(r.price > 0 ? $"£{r.price:N0}" : "owned")}, at {r.position.x:0}, {r.position.z:0})");
                         if (GUILayout.Button("Rebuild", GUILayout.Width(70))) status = CarSalesSetupWizard.AddSiteToTown(r);
                         if (GUILayout.Button("Remove", GUILayout.Width(70)) && EditorUtility.DisplayDialog("World Builder", $"Remove {r.name} from the town?", "Remove", "Cancel"))
                             status = CarSalesSetupWizard.RemoveSite(r.id);

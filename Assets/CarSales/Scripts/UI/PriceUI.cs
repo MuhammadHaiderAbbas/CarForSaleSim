@@ -21,7 +21,7 @@ namespace CarSales
             photo = UIFactory.CarPicture(top, 170f, 270f);
             var col = UIFactory.VCol(top, 4f);
             nameText = UIFactory.Text(col, "", 26, UIFactory.TextMain, TextAlignmentOptions.Left, true);
-            priceText = UIFactory.Text(col, "$0", 56, UIFactory.Gold, TextAlignmentOptions.Left, true);
+            priceText = UIFactory.Text(col, "£0", 56, UIFactory.Gold, TextAlignmentOptions.Left, true);
             markupText = UIFactory.Text(col, "", 20, UIFactory.TextMain, TextAlignmentOptions.Left, true);
 
             slider = UIFactory.MakeSlider(body, UIFactory.Gold, 34f);

@@ -23,16 +23,16 @@ namespace CarSales
             new PropertyInfo { id = "autoworld", displayName = "AUTO WORLD", type = PropertyType.Dealership, ownedAtStart = true,
                 description = "Your first dealership: showroom, office and lot." },
             new PropertyInfo { id = "dealer_downtown", displayName = "Downtown Motors", type = PropertyType.Dealership, price = 150000, dailyCost = 700,
-                description = "Second dealership with 10 more parking spots and its own customers. Rent $700/day." },
+                description = "Second dealership with 10 more parking spots and its own customers. Rent £700/day." },
             new PropertyInfo { id = "dealer_luxury", displayName = "Luxury Lane", type = PropertyType.Dealership, price = 450000, dailyCost = 1800,
-                description = "Premium dealership. Customers have 60% bigger budgets. Rent $1,800/day." },
+                description = "Premium dealership. Customers have 60% bigger budgets. Rent £1,800/day." },
 
             new PropertyInfo { id = "prop_apartments", displayName = "Rental Apartments", type = PropertyType.Investment, price = 60000, dailyIncome = 450,
-                description = "Small apartment block. Tenants pay $450 per day." },
+                description = "Small apartment block. Tenants pay £450 per day." },
             new PropertyInfo { id = "prop_parking", displayName = "Parking Garage", type = PropertyType.Investment, price = 140000, dailyIncome = 1100,
-                description = "Multi-storey car park. Earns $1,100 per day." },
+                description = "Multi-storey car park. Earns £1,100 per day." },
             new PropertyInfo { id = "prop_office", displayName = "Office Tower", type = PropertyType.Investment, price = 500000, dailyIncome = 4200,
-                description = "Downtown office tower. Earns $4,200 per day." },
+                description = "Downtown office tower. Earns £4,200 per day." },
         };
 
         readonly HashSet<string> owned = new HashSet<string>();

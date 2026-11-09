@@ -417,7 +417,7 @@ namespace CarSales
                 UIFactory.LE(b, h: 44, w: 170, flexW: 0);
             }
             var fees = UIFactory.Text(accountsList,
-                $"Buyer's premium: under $1,000: $150  -  $1,000-2,999: $250  -  $3,000-4,999: $350  -  $5,000-9,999: $450  -  $10,000-19,999: $600  -  $20,000+: $750 + 1%.\n" +
+                $"Buyer's premium: under £1,000: £150  -  £1,000-2,999: £250  -  £3,000-4,999: £350  -  £5,000-9,999: £450  -  £10,000-19,999: £600  -  £20,000+: £750 + 1%.\n" +
                 $"Online sales add a {UIFactory.Money(AuctionRules.InternetFee)} internet fee. VAT 20% is charged on fees (not on the car). Pay within {AuctionRules.PaymentDays} days " +
                 $"({UIFactory.Money(AuctionRules.LateFeePerDay)}/day late; cancelled after {AuctionRules.CancelAfterDays}). Storage is free for {AuctionRules.FreeStorageDays} days, then {UIFactory.Money(AuctionRules.StoragePerDay)}/day.",
                 14, UIFactory.TextDim, TextAlignmentOptions.TopLeft);

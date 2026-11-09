@@ -144,7 +144,7 @@ namespace CarSales
             {
                 case ServiceType.Workshop: CarSalesServices.UI.garage.Show(car); break;
                 case ServiceType.CarWash: CarSalesServices.UI.carWash.Show(car); break;
-                case ServiceType.FuelStation: CarSalesServices.Vehicles.Refuel(car); Refresh(); break;
+                case ServiceType.FuelStation: FuelStationUI.Show(car); break;   // phase 12: the V2 fuel screen
             }
         }
 

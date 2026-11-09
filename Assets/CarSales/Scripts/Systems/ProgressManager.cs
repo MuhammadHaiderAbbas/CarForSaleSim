@@ -42,16 +42,16 @@ namespace CarSales
                 new Objective("Sell your first car", () => Stats.carsSold >= 1, 1000),
                 new Objective("Buy a car from the computer marketplace", () => Stats.carsBought >= 1, 0),
                 new Objective("Buy 3 cars (online, at the Used Car Market or the Auction Center)", () => Stats.carsBought >= 3, 1500),
-                new Objective("Make $15,000 total profit", () => Stats.totalProfit >= 15000, 2000),
+                new Objective("Make £15,000 total profit", () => Stats.totalProfit >= 15000, 2000),
                 new Objective("Buy your first upgrade (computer > Upgrades)", () => Stats.upgradesBought >= 1, 1000),
                 new Objective("Sell 10 cars", () => Stats.carsSold >= 10, 5000),
                 new Objective("Reach 75 reputation", () => eco().Reputation >= 75f, 5000),
                 new Objective("Buy a property: a better home, an investment or a dealership (computer > Real Estate)",
                               () => CarSalesServices.Properties && CarSalesServices.Properties.GetOwned().Count > 2, 3000),
-                new Objective("Reach $250,000 net worth", () => NetWorth >= 250000, 10000),
+                new Objective("Reach £250,000 net worth", () => NetWorth >= 250000, 10000),
                 new Objective("Own a second dealership", () => DealershipManager.Owned.Count() >= 2, 15000),
                 new Objective("Sell 50 cars", () => Stats.carsSold >= 50, 20000),
-                new Objective($"Reach ${winNetWorth:N0} net worth - WIN THE GAME", () => NetWorth >= winNetWorth, 0),
+                new Objective($"Reach £{winNetWorth:N0} net worth - WIN THE GAME", () => NetWorth >= winNetWorth, 0),
             };
         }
 
@@ -66,7 +66,7 @@ namespace CarSales
         public string CurrentObjectiveText =>
             ObjectiveIndex < objectives.Count
                 ? $"GOAL {ObjectiveIndex + 1}/{objectives.Count}: {objectives[ObjectiveIndex].text}" +
-                  (objectives[ObjectiveIndex].reward > 0 ? $"  (reward ${objectives[ObjectiveIndex].reward:N0})" : "")
+                  (objectives[ObjectiveIndex].reward > 0 ? $"  (reward £{objectives[ObjectiveIndex].reward:N0})" : "")
                 : "All goals complete - keep growing your empire!";
 
         /// <summary>Money + value of owned cars - loan.</summary>
@@ -100,9 +100,9 @@ namespace CarSales
                 ObjectiveIndex++;
                 changed = true;
                 if (o.reward > 0) CarSalesServices.Economy.AddMoney(o.reward, TxCategory.Rewards, "Goal: " + o.text);
-                CarSalesServices.UI.Success("Goal complete!", o.text + (o.reward > 0 ? $"  (+${o.reward:N0})" : ""));
+                CarSalesServices.UI.Success("Goal complete!", o.text + (o.reward > 0 ? $"  (+£{o.reward:N0})" : ""));
                 if (CarSalesServices.Messages)
-                    CarSalesServices.Messages.Add(MessageType.Goal, "Goal complete", o.text + (o.reward > 0 ? $"\nReward: ${o.reward:N0}" : ""));
+                    CarSalesServices.Messages.Add(MessageType.Goal, "Goal complete", o.text + (o.reward > 0 ? $"\nReward: £{o.reward:N0}" : ""));
                 CarSalesServices.PlaySfx(Sfx.Success);
             }
             if (changed) OnObjectiveChanged?.Invoke();

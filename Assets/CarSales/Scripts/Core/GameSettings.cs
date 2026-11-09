@@ -121,6 +121,62 @@ namespace CarSales
             set => SetFlag("CarSales.ThirdPerson", value);
         }
 
+        // ------------------------------------------------------------------ PHASE 12 (V2 settings screen)
+        /// <summary>Invert the mouse / stick Y axis when looking around.</summary>
+        public static bool InvertY { get => PlayerPrefs.GetInt("CarSales.InvertY", 0) == 1; set => SetFlag("CarSales.InvertY", value); }
+
+        /// <summary>The controls list on the HUD (H also toggles it).</summary>
+        public static bool ShowHints
+        {
+            get => PlayerPrefs.GetInt("CarSales.HudHints", 0) == 1;
+            set { SetFlag("CarSales.HudHints", value); OnHintsChanged?.Invoke(value); }
+        }
+        public static event System.Action<bool> OnHintsChanged;
+
+        /// <summary>Save automatically every morning (after sleeping). Default on.</summary>
+        public static bool AutoSave { get => PlayerPrefs.GetInt("CarSales.AutoSave", 1) == 1; set => SetFlag("CarSales.AutoSave", value); }
+
+        /// <summary>Graphics quality preset (index into QualitySettings.names; -1 = Unity's default).</summary>
+        public static int QualityLevel
+        {
+            get => PlayerPrefs.GetInt("CarSales.Quality", -1);
+            set { PlayerPrefs.SetInt("CarSales.Quality", value); PlayerPrefs.Save(); ApplyGraphics(); }
+        }
+
+        public static bool VSync { get => PlayerPrefs.GetInt("CarSales.VSync", 1) == 1; set { SetFlag("CarSales.VSync", value); ApplyGraphics(); } }
+
+        /// <summary>Frame-rate cap: 0 = unlimited, otherwise frames per second (ignored with V-Sync on).</summary>
+        public static int FrameCap
+        {
+            get => PlayerPrefs.GetInt("CarSales.FrameCap", 0);
+            set { PlayerPrefs.SetInt("CarSales.FrameCap", Mathf.Max(0, value)); PlayerPrefs.Save(); ApplyGraphics(); }
+        }
+
+        public static void ApplyGraphics()
+        {
+            int q = QualityLevel;
+            if (q >= 0 && q < QualitySettings.names.Length && QualitySettings.GetQualityLevel() != q) QualitySettings.SetQualityLevel(q, true);
+            QualitySettings.vSyncCount = VSync ? 1 : 0;
+            Application.targetFrameRate = VSync || FrameCap <= 0 ? -1 : FrameCap;
+        }
+
+        /// <summary>Settings → Reset to Default: every option back to its first-run value (saves and key bindings untouched).</summary>
+        public static void ResetToDefaults()
+        {
+            foreach (var key in new[] { SensitivityKey, VolumeKey, DrivingKey, AbsKey, TcsKey, EscKey, ManualKey, ThemeKey, UiScaleKey, "CarSales.Traffic", "CarSales.Subtitles",
+                                        "CarSales.Language", "CarSales.Difficulty", "CarSales.ShowPerf", "CarSales.ThirdPerson", "CarSales.InvertY", "CarSales.HudHints",
+                                        "CarSales.AutoSave", "CarSales.Quality", "CarSales.VSync", "CarSales.FrameCap" })
+                PlayerPrefs.DeleteKey(key);
+            for (int g = 0; g < 5; g++) PlayerPrefs.DeleteKey("CarSales.Vol" + g);
+            PlayerPrefs.Save();
+            loaded = false;
+            Apply();
+            ApplyGraphics();
+            UITheme.Reload();
+            OnUiScaleChanged?.Invoke(UiScale);
+            OnHintsChanged?.Invoke(ShowHints);
+        }
+
         /// <summary>Phase 8b: small frame-time overlay (top right).</summary>
         public static bool ShowPerformance
         {
@@ -131,7 +187,7 @@ namespace CarSales
         static bool Flag(string key) => PlayerPrefs.GetInt(key, 1) == 1;
         static void SetFlag(string key, bool on) { PlayerPrefs.SetInt(key, on ? 1 : 0); PlayerPrefs.Save(); }
 
-        public static void Apply() => AudioListener.volume = Volume;
+        public static void Apply() { AudioListener.volume = Volume; ApplyGraphics(); }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => loaded = false;

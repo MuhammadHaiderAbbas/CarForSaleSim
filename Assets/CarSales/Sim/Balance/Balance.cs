@@ -112,7 +112,7 @@ namespace CarSales.Sim
         public string Summary()
         {
             var ci = CultureInfo.InvariantCulture;
-            return string.Format(ci, "{0} - {1} days: bought {2}, sold {3} ({4:0}% of {5} customers). Revenue ${6:N0}, stock ${7:N0}, repairs ${8:N0}, overheads ${9:N0}. Net ${10:N0}. Cash ${11:N0} (lowest ${12:N0}).",
+            return string.Format(ci, "{0} - {1} days: bought {2}, sold {3} ({4:0}% of {5} customers). Revenue £{6:N0}, stock £{7:N0}, repairs £{8:N0}, overheads £{9:N0}. Net £{10:N0}. Cash £{11:N0} (lowest £{12:N0}).",
                 config.name, days, carsBought, carsSold, ConversionRate * 100f, customers, revenue, stockCost, repairCost, overheads, NetProfit, endCash, minCash);
         }
     }

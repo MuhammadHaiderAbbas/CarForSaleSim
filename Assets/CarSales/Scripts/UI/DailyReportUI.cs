@@ -68,7 +68,7 @@ namespace CarSales
                              "\n<size=85%>Full details: computer > Bank > Account statement</size>";
             worth.text = p ? UIFactory.Money(p.NetWorth) : "-";
             warning.text = p && p.DaysInDebt > 0
-                ? $"IN DEBT: day {p.DaysInDebt}/{p.BankruptcyDays}. Get above $0 or you go bankrupt! (Sell cars, Quick Sell, or take a loan.)"
+                ? $"IN DEBT: day {p.DaysInDebt}/{p.BankruptcyDays}. Get above £0 or you go bankrupt! (Sell cars, Quick Sell, or take a loan.)"
                 : "";
         }
     }

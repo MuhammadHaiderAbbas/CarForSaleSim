@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 namespace CarSales
 {
-    /// <summary>Developer shortcuts (F1 +$10k, F5 save, F9 load, F12 delete save). Remove before shipping.</summary>
+    /// <summary>Developer shortcuts (F1 +£10k, F5 save, F9 load, F12 delete save). Remove before shipping.</summary>
     public class DebugCheats : MonoBehaviour
     {
         void Update()

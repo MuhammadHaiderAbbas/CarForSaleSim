@@ -150,6 +150,32 @@ namespace CarSales
             Tile(Loc.T("app.classifieds", "Classifieds"), "K", UIFactory.Gold, () => { ShowPage(MarketApp); MarketApp.ShowTab(3); });
         }
 
+        static CarSales.Foundation.UIIcon TileIcon(string glyph)
+        {
+            switch (glyph)
+            {
+                case "D": return CarSales.Foundation.UIIcon.BarChart;
+                case "S": return CarSales.Foundation.UIIcon.DirectionsCar;
+                case "M": return CarSales.Foundation.UIIcon.ShoppingCart;
+                case "A": return CarSales.Foundation.UIIcon.Gavel;
+                case "@": return CarSales.Foundation.UIIcon.Mail;
+                case "B": return CarSales.Foundation.UIIcon.AccountBalance;
+                case "%": return CarSales.Foundation.UIIcon.ReceiptLong;
+                case "R": return CarSales.Foundation.UIIcon.Apartment;
+                case "+": return CarSales.Foundation.UIIcon.Upgrade;
+                case "#": return CarSales.Foundation.UIIcon.TrendingUp;
+                case "*": return CarSales.Foundation.UIIcon.Settings;
+                case "W": return CarSales.Foundation.UIIcon.Build;
+                case "C": return CarSales.Foundation.UIIcon.Groups;
+                case "T": return CarSales.Foundation.UIIcon.Engineering;
+                case "V": return CarSales.Foundation.UIIcon.Storefront;
+                case "L": return CarSales.Foundation.UIIcon.Campaign;
+                case "^": return CarSales.Foundation.UIIcon.Construction;
+                case "K": return CarSales.Foundation.UIIcon.LocalOffer;
+                default: return CarSales.Foundation.UIIcon.None;
+            }
+        }
+
         void Tile(string label, string glyph, Color color, UnityAction onClick, ComputerPage page = null, bool soon = false)
         {
             var bg = UIFactory.Panel(iconGrid, "App_" + label, UIFactory.WithAlpha(UIFactory.CardBg, 0.6f), 1.6f);
@@ -164,8 +190,18 @@ namespace CarSales
             var icon = UIFactory.Panel(bg.transform, "Icon", soon ? UIFactory.WithAlpha(color, 0.35f) : color, 1.2f);
             icon.rectTransform.sizeDelta = new Vector2(72f, 72f);
             UIFactory.LE(icon, h: 72, w: 72, flexW: 0);
-            var g = UIFactory.Text(icon.transform, glyph, 34, UIFactory.ContrastText(color), TextAlignmentOptions.Center, true);
-            UIFactory.Stretch(g.rectTransform);
+            // Phase 12 V2: a Material icon on the tile (the glyph letter only if there's no icon for it).
+            var iconId = TileIcon(glyph);
+            if (iconId != CarSales.Foundation.UIIcon.None)
+            {
+                var gi = UIFactory.IconImage(icon.transform, iconId, UIFactory.ContrastText(color), 42f);
+                UIFactory.Place(gi.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(42f, 42f));
+            }
+            else
+            {
+                var g = UIFactory.Text(icon.transform, glyph, 34, UIFactory.ContrastText(color), TextAlignmentOptions.Center, true);
+                UIFactory.Stretch(g.rectTransform);
+            }
             var t = UIFactory.Text(bg.transform, label, 17, soon ? UIFactory.TextDim : UIFactory.TextMain, TextAlignmentOptions.Center, true);
             t.rectTransform.sizeDelta = new Vector2(160f, 24f);
             UIFactory.LE(t, h: 24, w: 160);
@@ -202,7 +238,7 @@ namespace CarSales
             UIFactory.LE(taskApp, flexW: 1);
             unreadBadge = UIFactory.Text(rt, "", 17, UIFactory.Gold, TextAlignmentOptions.Right, true);
             UIFactory.LE(unreadBadge, w: 200, flexW: 0);
-            moneyText = UIFactory.Text(rt, "$0", 24, UIFactory.Good, TextAlignmentOptions.Right, true);
+            moneyText = UIFactory.Text(rt, "£0", 24, UIFactory.Good, TextAlignmentOptions.Right, true);
             UIFactory.LE(moneyText, w: 220, flexW: 0);
             taskClock = UIFactory.Text(rt, "", 18, UIFactory.TextDim, TextAlignmentOptions.Right, true);
             UIFactory.LE(taskClock, w: 150, flexW: 0);

@@ -197,7 +197,7 @@ namespace CarSales.EditorTools
                     Solid(bench, "BenchSeat", new Vector3(0f, 0.45f, 0f), new Vector3(1.8f, 0.08f, 0.5f), m.desk);
                     Deco(bench, "BenchBack", PrimitiveType.Cube, new Vector3(0f, 0.78f, 0.25f), new Vector3(1.8f, 0.45f, 0.06f), m.desk);
                 }
-                AddMapPlace(g.gameObject, "Public Park", "P", new Color(0.3f, 0.75f, 0.35f), new Vector3(c.x, 0.1f, z.Z0 - 3f));
+                AddMapPlace(g.gameObject, "Public Park", "G", new Color(0.3f, 0.75f, 0.35f), new Vector3(c.x, 0.1f, z.Z0 - 3f));
             }
 
             // 10 Town centre: terraced shops facing Dealer Road and the High Street, between the investment buildings.

@@ -58,6 +58,7 @@ namespace CarSales.EditorTools
                 return report;
             }
             File.WriteAllText(Path.Combine(folder, "CREDITS.txt"), CreditsUI.Text());
+            if (File.Exists("THIRD_PARTY_NOTICES.txt")) File.Copy("THIRD_PARTY_NOTICES.txt", Path.Combine(folder, "THIRD_PARTY_NOTICES.txt"), true);
             File.WriteAllText(Path.Combine(folder, "build_info.txt"), BuildInfo(development, scenes, summary));
             string msg = $"Built {(development ? "development" : "release")} game in {summary.totalTime.TotalSeconds:0}s " +
                          $"({summary.totalSize / (1024f * 1024f):0} MB): {folder}";

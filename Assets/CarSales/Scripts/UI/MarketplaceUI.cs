@@ -165,7 +165,7 @@ namespace CarSales
 
             bool mech = CarSalesServices.Upgrades && CarSalesServices.Upgrades.AccurateInspections;
             info.text = $"{shown.Count} of {all.Count} cars  -  new cars arrive every morning  -  " +
-                        (mech ? $"<color={UIFactory.Hex(UIFactory.Good)}>Mechanic: true condition shown</color>" : $"Inspections cost ${CarValueCalculator.InspectionFee}. Sellers may exaggerate!");
+                        (mech ? $"<color={UIFactory.Hex(UIFactory.Good)}>Mechanic: true condition shown</color>" : $"Inspections cost £{CarValueCalculator.InspectionFee}. Sellers may exaggerate!");
         }
 
         void FillTable(List<CarInstance> cars)

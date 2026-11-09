@@ -23,7 +23,7 @@ namespace CarSales
         public void MarkPrivateAd(string adId, int asking)
         {
             PrivateAdId = adId;
-            if (priceTag) priceTag.text = $"${asking:N0} ono";
+            if (priceTag) priceTag.text = $"£{asking:N0} ono";
             var rb = GetComponent<Rigidbody>();
             if (rb) rb.isKinematic = true;
         }
@@ -38,7 +38,7 @@ namespace CarSales
             if (priceTag)
             {
                 priceTag.gameObject.SetActive(true);
-                priceTag.text = $"${listing.purchasePrice:N0}";
+                priceTag.text = $"£{listing.purchasePrice:N0}";
             }
         }
 
@@ -81,7 +81,7 @@ namespace CarSales
             if (priceTag)
             {
                 priceTag.gameObject.SetActive(listed);
-                if (listed) priceTag.text = $"${Data.listedPrice:N0}";
+                if (listed) priceTag.text = $"£{Data.listedPrice:N0}";
             }
         }
 
@@ -105,12 +105,12 @@ namespace CarSales
             {
                 var lot = CarSalesServices.Auction ? CarSalesServices.Auction.Lot(AuctionLotId) : null;
                 return lot == null ? $"{Definition.displayName}" :
-                    $"[E] Lot {lot.lotNo}: {Definition.year} {Definition.brand} {Definition.displayName}  |  grade {lot.report.grade}  |  guide ${lot.estimate:N0}";
+                    $"[E] Lot {lot.lotNo}: {Definition.year} {Definition.brand} {Definition.displayName}  |  grade {lot.report.grade}  |  guide £{lot.estimate:N0}";
             }
             if (!string.IsNullOrEmpty(PrivateAdId))
-                return $"[E] Private sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  ${Data.purchasePrice:N0} ono";
+                return $"[E] Private sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  £{Data.purchasePrice:N0} ono";
             if (IsForSaleListing)
-                return $"[E] For sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  ${Data.purchasePrice:N0}  |  free inspection on site";
+                return $"[E] For sale: {Definition.year} {Definition.brand} {Definition.displayName}  |  £{Data.purchasePrice:N0}  |  free inspection on site";
             string name = $"{Definition.year} {Definition.brand} {Definition.displayName}";
             if (Data.personal) return $"[E] Your car: {name}  |  Fuel {Data.fuel:0}%   [F] Drive";
             return $"[E] {name}  |  Condition {Data.condition:0}%  |  Fuel {Data.fuel:0}%  |  {Data.state}   [F] Drive";

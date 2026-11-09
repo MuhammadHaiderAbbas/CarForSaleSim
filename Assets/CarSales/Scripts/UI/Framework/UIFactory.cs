@@ -53,6 +53,8 @@ namespace CarSales
         /// <summary>Readable text colour on top of <paramref name="background"/> (dark text on light buttons).</summary>
         public static Color ContrastText(Color background)
         {
+            // A see-through colour (ghost buttons) shows the window behind it: use the theme's text colour.
+            if (background.a < 0.5f) return TextMain;
             float lum = 0.2126f * background.r + 0.7152f * background.g + 0.0722f * background.b;
             return lum > 0.62f ? new Color(0.08f, 0.1f, 0.16f) : Color.white;
         }
@@ -325,6 +327,17 @@ namespace CarSales
             if (label) label.color = ContrastText(c);
         }
 
+        /// <summary>Phase 12: a coloured circle with a Material icon (map markers, list rows).</summary>
+        public static Image IconBadge(Transform parent, Color color, CarSales.Foundation.UIIcon icon, float size)
+        {
+            var bg = SpriteImage(parent, "Badge", Circle, color, size);
+            LE(bg, h: size, w: size, flexW: 0);
+            var ic = IconImage(bg.transform, icon, ContrastText(color), size * 0.62f);
+            ic.GetComponent<LayoutElement>().ignoreLayout = true;
+            Place(ic.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size * 0.62f, size * 0.62f));
+            return bg;
+        }
+
         public static Image Icon(Transform parent, Color color, string glyph, float size, bool useCheck = false)
         {
             var bg = SpriteImage(parent, "Icon", Circle, color, size);
@@ -529,14 +542,19 @@ namespace CarSales
             line.rectTransform.anchoredPosition = new Vector2(0f, -60f);
             line.rectTransform.sizeDelta = new Vector2(0f, 2f);
 
+            // Phase 12 V2: an icon before the title (chosen from the title) and a close cross.
+            var titleIcon = IconImage(head.transform, UIIcons.ForTitle(title), Accent, 30f);
+            Place(titleIcon.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(22f, 0f), new Vector2(30f, 30f));
             titleText = Text(head.transform, title, 25, TextMain, TextAlignmentOptions.Left, true, "Title");
             Stretch(titleText.rectTransform);
-            titleText.rectTransform.offsetMin = new Vector2(24f, 0f);
+            titleText.rectTransform.offsetMin = new Vector2(64f, 0f);
 
             if (onClose != null)
             {
-                var close = Btn(head.transform, "X", Ghost, onClose, 38f, 18f);
+                var close = Btn(head.transform, "", Ghost, onClose, 38f, 18f);
                 Place((RectTransform)close.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(40f, 38f));
+                var x = IconImage(close.transform, CarSales.Foundation.UIIcon.Close, TextMain, 22f);
+                Place(x.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(22f, 22f));
             }
 
             var body = Rect("Body", win.transform);
@@ -550,6 +568,38 @@ namespace CarSales
         public static RectTransform Window(RectTransform panelRoot, string title, Vector2 size, UnityAction onClose)
             => Window(panelRoot, title, size, onClose, out _, out _);
 
+        // ------------------------------------------------------------------ ICONS (phase 12)
+        /// <summary>An icon image (Material Icons, tinted).</summary>
+        public static Image IconImage(Transform parent, CarSales.Foundation.UIIcon icon, Color color, float size)
+        {
+            var img = new GameObject("Icon_" + icon, typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            img.transform.SetParent(parent, false);
+            img.sprite = UIIcons.Get(icon);
+            img.color = color;
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            img.rectTransform.sizeDelta = new Vector2(size, size);
+            var le = img.gameObject.AddComponent<LayoutElement>();
+            le.minWidth = le.preferredWidth = size; le.minHeight = le.preferredHeight = size; le.flexibleWidth = 0f;
+            return img;
+        }
+
+        /// <summary>A button with an icon on the left of its label (the board's menu buttons).</summary>
+        public static Button IconBtn(Transform parent, CarSales.Foundation.UIIcon icon, string label, Color color, UnityAction onClick, out TextMeshProUGUI labelText,
+                                     float height = 50f, float fontSize = 19f, bool leftAligned = true)
+        {
+            var b = Btn(parent, label, color, onClick, out labelText, height, fontSize);
+            var ic = IconImage(b.transform, icon, ContrastText(color), height * 0.48f);
+            ic.GetComponent<LayoutElement>().ignoreLayout = true;
+            Place(ic.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(16f, 0f), new Vector2(height * 0.48f, height * 0.48f));
+            labelText.rectTransform.offsetMin = new Vector2(16f + height * 0.48f + 12f, labelText.rectTransform.offsetMin.y);
+            if (leftAligned) labelText.alignment = TextAlignmentOptions.Left;
+            return b;
+        }
+
+        public static Button IconBtn(Transform parent, CarSales.Foundation.UIIcon icon, string label, Color color, UnityAction onClick, float height = 50f, float fontSize = 19f)
+            => IconBtn(parent, icon, label, color, onClick, out _, height, fontSize);
+
         public static void SetLayer(GameObject go, int layer)
         {
             go.layer = layer;
@@ -561,7 +611,9 @@ namespace CarSales
             for (int i = t.childCount - 1; i >= 0; i--) Object.Destroy(t.GetChild(i).gameObject);
         }
 
-        public static string Money(int amount) => amount < 0 ? $"-${-amount:N0}" : $"${amount:N0}";
+        /// <summary>Phase 12: the game is set in the UK, so money is in pounds.</summary>
+        public const string Currency = "£";
+        public static string Money(int amount) => amount < 0 ? $"-£{-amount:N0}" : $"£{amount:N0}";
 
         public static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
     }

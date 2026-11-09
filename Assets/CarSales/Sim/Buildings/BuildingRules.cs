@@ -60,7 +60,7 @@ namespace CarSales.Sim
         public int LinkedLevel;
         public BuildingEffects Effect;
         public bool IsLinked => LinkedUpgrade >= 0;
-        public int PriceFor(int propertyPrice) => Cost > 0 ? Cost : Math.Max(MinCost, (int)Math.Round(propertyPrice * CostShare / 100.0 / 100.0) * 100);   // share %, rounded to $100
+        public int PriceFor(int propertyPrice) => Cost > 0 ? Cost : Math.Max(MinCost, (int)Math.Round(propertyPrice * CostShare / 100.0 / 100.0) * 100);   // share %, rounded to £100
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ namespace CarSales.Sim
             if (level >= MaxLevel) return "Fully upgraded.";
             var left = Remaining(k, level, done);
             if (left.Count > 0) return $"Buy {left.Count} more upgrade{(left.Count == 1 ? "" : "s")}, then rebuild to level {level + 1}.";
-            return $"All upgrades done: rebuild into a {LevelName(k, level + 1).ToLowerInvariant()} for ${RebuildCost(k, level + 1, propertyPrice):N0}.";
+            return $"All upgrades done: rebuild into a {LevelName(k, level + 1).ToLowerInvariant()} for £{RebuildCost(k, level + 1, propertyPrice):N0}.";
         }
 
         /// <summary>Old saves: a developed investment property (Phase 9, 0-3) starts at the matching building level.</summary>

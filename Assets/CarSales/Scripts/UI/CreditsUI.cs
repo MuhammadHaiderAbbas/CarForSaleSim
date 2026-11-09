@@ -23,7 +23,8 @@ namespace CarSales
             if (!string.IsNullOrEmpty(company) && company != "DefaultCompany") sb.Append("by ").Append(company).Append('\n');
             sb.Append("Version ").Append(Application.version).Append("\n\n");
             sb.Append("Made with Unity (Universal Render Pipeline), TextMesh Pro, the Input System and AI Navigation.\n");
-            sb.Append("Sounds and ambience generated in code unless replaced in the Audio Library.\n\n");
+            sb.Append("Sounds and ambience generated in code unless replaced in the Audio Library.\n");
+            sb.Append("Interface icons: Material Icons by Google, Apache License 2.0 (see THIRD_PARTY_NOTICES.txt).\n\n");
             var reg = AssetRegistry.Load();
             if (reg) sb.Append(reg.CreditsText(GameName));
             else sb.Append("No third-party assets.\n");

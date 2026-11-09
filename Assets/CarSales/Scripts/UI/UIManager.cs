@@ -268,6 +268,7 @@ namespace CarSales
         public void Toast(ToastType type, string title, string message)
         {
             Debug.Log($"[CarSales] {title} {message}");
+            NotificationLog.Add(type, title, message);   // phase 12: Notifications app
             if (type == ToastType.Warning) CarSalesServices.PlaySfx(Sfx.Error, 0.6f);
             if (!toastArea) return;
             NotificationToast.Create(toastArea, type, title, message);

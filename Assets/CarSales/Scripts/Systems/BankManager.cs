@@ -28,7 +28,7 @@ namespace CarSales
             CarSalesServices.Economy.AddMoney(amount, TxCategory.LoanDrawdown, "Loan");
             OnLoanChanged?.Invoke();
             CarSalesServices.PlaySfx(Sfx.Coin);
-            message = $"Borrowed ${amount:N0}. Interest: {dailyInterest * 100f:0.#}% per day.";
+            message = $"Borrowed £{amount:N0}. Interest: {dailyInterest * 100f:0.#}% per day.";
             return true;
         }
 
@@ -40,7 +40,7 @@ namespace CarSales
             Loan -= amount;
             OnLoanChanged?.Invoke();
             CarSalesServices.PlaySfx(Sfx.Purchase);
-            message = Loan == 0 ? "Loan fully repaid!" : $"Repaid ${amount:N0}. Remaining loan: ${Loan:N0}.";
+            message = Loan == 0 ? "Loan fully repaid!" : $"Repaid £{amount:N0}. Remaining loan: £{Loan:N0}.";
             return true;
         }
 

@@ -52,31 +52,41 @@ namespace CarSales
 
         void Build()
         {
-            var panel = UIFactory.Panel(transform, "MainPanel", UIFactory.MenuBg, 1f);
+            // Phase 12 V2 (UI board): a dark band down the left over the showroom scene, the logo, a list of icon
+            // menu items (Continue highlighted) and the strapline at the bottom.
+            var panel = UIFactory.Panel(transform, "MainPanel", UIFactory.MenuBg, 0f);
             mainPanel = panel.gameObject;
-            UIFactory.Place(panel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(90f, 0f), new Vector2(600f, 840f));
-            var outline = panel.gameObject.AddComponent<Outline>();
-            outline.effectColor = UIFactory.Line;
-            var v = UIFactory.Vertical(panel, 44, 16f);
+            panel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            panel.rectTransform.anchorMax = new Vector2(0f, 1f);
+            panel.rectTransform.pivot = new Vector2(0f, 0.5f);
+            panel.rectTransform.anchoredPosition = Vector2.zero;
+            panel.rectTransform.sizeDelta = new Vector2(640f, 0f);
+            var edge = UIFactory.Fill(panel.transform, "Edge", UIFactory.Line);
+            edge.rectTransform.anchorMin = new Vector2(1f, 0f); edge.rectTransform.anchorMax = new Vector2(1f, 1f);
+            edge.rectTransform.pivot = new Vector2(1f, 0.5f); edge.rectTransform.sizeDelta = new Vector2(2f, 0f);
+            var v = UIFactory.Vertical(panel, 0, 10f);
+            v.padding = new RectOffset(70, 70, 90, 50);
 
-            var logo = UIFactory.Text(panel.transform, "AUTO WORLD", 66, UIFactory.TextMain, TextAlignmentOptions.Center, true);
-            UIFactory.LE(logo, h: 80);
-            var sub = UIFactory.Text(panel.transform, "USED CARS", 24, UIFactory.Accent, TextAlignmentOptions.Center, true);
-            UIFactory.LE(sub, h: 30);
-            var tag = UIFactory.Text(panel.transform, Loc.T("menu.tagline", "Car For Sale Simulator  -  Buy. Fix. Sell. Build an empire."), 18, UIFactory.TextDim, TextAlignmentOptions.Center);
-            UIFactory.LE(tag, h: 50);
-            UIFactory.Divider(panel.transform);
-            infoText = UIFactory.Text(panel.transform, "", 17, UIFactory.TextDim, TextAlignmentOptions.Center);
-            UIFactory.LE(infoText, h: 30);
+            var logo = UIFactory.Text(panel.transform, "<i>Car For Sale</i>", 76, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            UIFactory.LE(logo, h: 84);
+            var logo2 = UIFactory.Text(panel.transform, $"<b>Simulator</b> <color={UIFactory.Hex(UIFactory.Bad)}>V2</color>", 58, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            UIFactory.LE(logo2, h: 66);
+            var tag = UIFactory.Text(panel.transform, Loc.T("menu.tagline", "Buy  ·  Sell  ·  Manage  ·  Grow"), 22, UIFactory.TextDim, TextAlignmentOptions.Left);
+            UIFactory.LE(tag, h: 40);
+            UIFactory.Spacer(panel.transform, 0f).GetComponent<LayoutElement>().minHeight = 30f;
+            infoText = UIFactory.Text(panel.transform, "", 16, UIFactory.TextDim, TextAlignmentOptions.Left);
+            UIFactory.LE(infoText, h: 28);
 
-            continueButton = UIFactory.Btn(panel.transform, Loc.T("menu.continue", "Continue"), UIFactory.Good, ContinueLatest, 70f, 24f);
-            UIFactory.Btn(panel.transform, Loc.T("menu.new", "New Game"), UIFactory.Accent, () => OpenSlots(true), 70f, 24f);
-            loadButton = UIFactory.Btn(panel.transform, Loc.T("menu.load", "Load Game"), UIFactory.AccentDark, () => OpenSlots(false), 70f, 24f);
-            UIFactory.Btn(panel.transform, Loc.T("menu.settings", "Settings"), UIFactory.Neutral, () => { mainPanel.SetActive(false); settings.Show(); }, 70f, 24f);
-            UIFactory.Btn(panel.transform, Loc.T("menu.credits", "Credits"), UIFactory.Neutral, () => { mainPanel.SetActive(false); CreditsUI.Show(transform, () => mainPanel.SetActive(true)); }, 56f, 20f);
-            UIFactory.Btn(panel.transform, Loc.T("menu.quit", "Quit"), UIFactory.Bad, PauseMenuUI.QuitGame, 70f, 24f);
+            continueButton = UIFactory.IconBtn(panel.transform, UIIcon.PlayArrow, Loc.T("menu.continue", "Continue"), UIFactory.Accent, ContinueLatest, 58f, 22f);
+            UIFactory.IconBtn(panel.transform, UIIcon.Add, Loc.T("menu.new", "New Game"), UIFactory.Ghost, () => OpenSlots(true), 58f, 22f);
+            loadButton = UIFactory.IconBtn(panel.transform, UIIcon.Save, Loc.T("menu.load", "Load Game"), UIFactory.Ghost, () => OpenSlots(false), 58f, 22f);
+            UIFactory.IconBtn(panel.transform, UIIcon.Settings, Loc.T("menu.settings", "Settings"), UIFactory.Ghost, () => { mainPanel.SetActive(false); settings.Show(); }, 58f, 22f);
+            UIFactory.IconBtn(panel.transform, UIIcon.Info, Loc.T("menu.credits", "Credits"), UIFactory.Ghost, () => { mainPanel.SetActive(false); CreditsUI.Show(transform, () => mainPanel.SetActive(true)); }, 58f, 22f);
+            UIFactory.IconBtn(panel.transform, UIIcon.ExitToApp, Loc.T("menu.quit", "Quit"), UIFactory.Ghost, PauseMenuUI.QuitGame, 58f, 22f);
             UIFactory.Spacer(panel.transform);
-            var version = UIFactory.Text(panel.transform, "v" + SaveManager.GameVersion, 14, UIFactory.TextFaint, TextAlignmentOptions.Center);
+            var strap = UIFactory.Text(panel.transform, Loc.T("menu.strap", "Build Your Dream Dealership"), 20, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            UIFactory.LE(strap, h: 30);
+            var version = UIFactory.Text(panel.transform, "v" + SaveManager.GameVersion, 14, UIFactory.TextFaint, TextAlignmentOptions.Left);
             UIFactory.LE(version, h: 20);
 
             var settingsRoot = UIFactory.Rect("Settings", transform);

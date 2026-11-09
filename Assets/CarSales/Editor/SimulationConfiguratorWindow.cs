@@ -92,11 +92,11 @@ namespace CarSales.EditorTools
             {
                 GUILayout.Label(r.config.name, GUILayout.Width(84));
                 GUILayout.Label($"{r.carsSold}/{r.carsBought}", GUILayout.Width(84));
-                GUILayout.Label($"${r.revenue:N0}", GUILayout.Width(84));
-                GUILayout.Label($"${r.NetProfit:N0}", GUILayout.Width(84));
-                GUILayout.Label($"${r.endCash:N0}", GUILayout.Width(84));
-                GUILayout.Label($"${r.minCash:N0}", GUILayout.Width(84));
-                GUILayout.Label($"${a.net:N0}", GUILayout.Width(84));
+                GUILayout.Label($"£{r.revenue:N0}", GUILayout.Width(84));
+                GUILayout.Label($"£{r.NetProfit:N0}", GUILayout.Width(84));
+                GUILayout.Label($"£{r.endCash:N0}", GUILayout.Width(84));
+                GUILayout.Label($"£{r.minCash:N0}", GUILayout.Width(84));
+                GUILayout.Label($"£{a.net:N0}", GUILayout.Width(84));
                 GUILayout.Label($"{a.sold:0.0}", GUILayout.Width(84));
             }
         }

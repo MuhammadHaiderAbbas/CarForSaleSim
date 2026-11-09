@@ -27,6 +27,12 @@ namespace CarSales
             UIFactory.Vertical(body, 0, 12f);
 
             var top = UIFactory.HRow(body, 140, 20, "Top", false);
+            // Phase 12 V2 (UI board): the customer's face next to the car.
+            var face = UIFactory.Panel(top, "Portrait", UIFactory.PictureBg, 1.2f);
+            UIFactory.LE(face, h: 140, w: 140, flexW: 0);
+            portrait = UIFactory.Rect("Face", face.transform).gameObject.AddComponent<RawImage>();
+            UIFactory.Stretch(portrait.rectTransform, 3f);
+            portrait.raycastTarget = false;
             photo = UIFactory.CarPicture(top, 140f, 220f);
             var info = UIFactory.VCol(top, 4f);
             headerText = UIFactory.Text(info, "", 28, UIFactory.TextMain, TextAlignmentOptions.Left, true);
@@ -85,8 +91,14 @@ namespace CarSales
             UIFactory.LE(b, h: 48, w: 90, flexW: 0);
         }
 
+        RawImage portrait;
+        static PortraitCamera portraitCam;
+
         public void Show(CustomerAI customer)
         {
+            if (!portraitCam) portraitCam = PortraitCamera.Create();
+            portraitCam.Follow(customer ? customer.transform : null);
+            if (portrait) { portrait.texture = portraitCam.Texture; portrait.enabled = customer; }
             OpenSelf();
             session = new NegotiationSession(customer, customer.TargetCar);
             finished = false;
@@ -283,6 +295,7 @@ namespace CarSales
 
         void OnDisable()
         {
+            if (portraitCam) portraitCam.Follow(null);   // phase 12: stop the portrait camera
             if (finished || session == null) return;
             finished = true;
             if (session.Customer) session.Customer.EndNegotiation(false);

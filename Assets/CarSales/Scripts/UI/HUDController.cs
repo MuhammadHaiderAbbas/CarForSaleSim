@@ -19,6 +19,8 @@ namespace CarSales
         UIFactory.Bar energyBar, fuelBar;
         Image gpsArrow, gpsPanel, promptPanel, promptCap, shopDot, speedFill, arrow;
         RectTransform driveCluster, hintsPanel, hintToggle;
+        Image weatherIcon;          // phase 12: sun / cloud / rain next to the clock
+        float weatherTimer;
         TextMeshProUGUI unreadText;
         MinimapMarker gpsMarker;
         RawImage minimapImage;
@@ -35,13 +37,15 @@ namespace CarSales
             group.blocksRaycasts = false;
             group.interactable = false;
 
-            // ---- Top-left: clock, shop state, energy, goal
+            // ---- Top-right (phase 12 V2 board): weather, clock, shop state, energy
             var tl = UIFactory.Panel(Root, "Status", UIFactory.HudBg, 1.6f);
-            UIFactory.Place(tl.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(20f, -20f), new Vector2(430f, 96f));
+            UIFactory.Place(tl.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20f, -20f), new Vector2(430f, 96f));
             var tlv = UIFactory.Vertical(tl, 0, 3f);
             tlv.padding = new RectOffset(18, 18, 10, 10);
-            clockText = UIFactory.Text(tl.transform, "Mon  Day 1   08:00", 26, UIFactory.TextMain, TextAlignmentOptions.Left, true);
-            UIFactory.LE(clockText, h: 32);
+            var clockRow = UIFactory.HRow(tl.transform, 32, 10, "Clock", false);
+            weatherIcon = UIFactory.IconImage(clockRow, CarSales.Foundation.UIIcon.WbSunny, UIFactory.Gold, 28f);
+            clockText = UIFactory.Text(clockRow, "Mon  Day 1   08:00", 26, UIFactory.TextMain, TextAlignmentOptions.Left, true);
+            UIFactory.LE(clockText, flexW: 1);
             var shopRow = UIFactory.HRow(tl.transform, 20, 8, "Shop", false);
             shopDot = UIFactory.SpriteImage(shopRow, "Dot", UIFactory.Circle, UIFactory.Good, 10f);
             UIFactory.LE(shopDot, h: 10, w: 10, flexW: 0);
@@ -56,17 +60,21 @@ namespace CarSales
             UIFactory.LE(energyText, w: 110, flexW: 0);
 
             goalText = UIFactory.Text(Root, "", 15, UIFactory.Info, TextAlignmentOptions.TopLeft);
-            UIFactory.Place(goalText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -124f), new Vector2(560f, 48f));
+            UIFactory.Place(goalText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -132f), new Vector2(560f, 48f));
             goalText.gameObject.AddComponent<Shadow>().effectColor = UITheme.Current.shadow;
 
-            // ---- Top-right: cash
-            moneyText = UIFactory.Text(Root, "$0", 36, UIFactory.Good, TextAlignmentOptions.Right, true, "Money");
-            UIFactory.Place(moneyText.rectTransform, Vector2.one, Vector2.one, new Vector2(-26f, -16f), new Vector2(420f, 46f));
-            moneyText.gameObject.AddComponent<Shadow>().effectColor = UITheme.Current.shadow;
-            deltaText = UIFactory.Text(Root, "", 20, UIFactory.Good, TextAlignmentOptions.Right, true, "Delta");
-            UIFactory.Place(deltaText.rectTransform, Vector2.one, Vector2.one, new Vector2(-26f, -86f), new Vector2(300f, 26f));
-            subText = UIFactory.Text(Root, "", 15, UIFactory.TextDim, TextAlignmentOptions.Right, true, "Sub");
-            UIFactory.Place(subText.rectTransform, Vector2.one, Vector2.one, new Vector2(-26f, -62f), new Vector2(420f, 22f));
+            // ---- Top-left (phase 12 V2 board): cash in a pill with a money icon
+            var cash = UIFactory.Panel(Root, "Cash", UIFactory.HudBgStrong, 3f);
+            UIFactory.Place(cash.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(20f, -20f), new Vector2(320f, 58f));
+            var cashIcon = UIFactory.IconImage(cash.transform, CarSales.Foundation.UIIcon.Payments, UIFactory.Good, 34f);
+            UIFactory.Place(cashIcon.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(16f, 0f), new Vector2(34f, 34f));
+            moneyText = UIFactory.Text(cash.transform, "£0", 34, UIFactory.Good, TextAlignmentOptions.Left, true, "Money");
+            UIFactory.Stretch(moneyText.rectTransform);
+            moneyText.rectTransform.offsetMin = new Vector2(62f, 0f);
+            deltaText = UIFactory.Text(Root, "", 20, UIFactory.Good, TextAlignmentOptions.Left, true, "Delta");
+            UIFactory.Place(deltaText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(30f, -82f), new Vector2(300f, 26f));
+            subText = UIFactory.Text(Root, "", 15, UIFactory.TextDim, TextAlignmentOptions.Left, true, "Sub");
+            UIFactory.Place(subText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(28f, -106f), new Vector2(420f, 22f));
             subText.gameObject.AddComponent<Shadow>().effectColor = UITheme.Current.shadow;
 
             // ---- Top-centre: GPS strip
@@ -163,6 +171,7 @@ namespace CarSales
             UIFactory.Place(cross.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(6f, 6f));
 
             hintsOn = PlayerPrefs.GetInt(HintsPref, 0) == 1;   // off by default; shown for the first seconds of a session
+            GameSettings.OnHintsChanged += HintsChanged;   // phase 12: Settings > Gameplay > Show Hints
         }
 
         void Start()
@@ -208,6 +217,7 @@ namespace CarSales
 
         void OnDestroy()
         {
+            GameSettings.OnHintsChanged -= HintsChanged;
             if (CarSalesServices.Economy)
             {
                 CarSalesServices.Economy.OnMoneyChanged -= HandleMoney;
@@ -224,6 +234,8 @@ namespace CarSales
             if (minimapCamera) Destroy(minimapCamera.gameObject);
             if (minimapTexture) { minimapTexture.Release(); Destroy(minimapTexture); }
         }
+
+        void HintsChanged(bool on) { hintsOn = on; hintsAutoHide = 0f; }
 
         void HandleMenu(bool open) { if (group) group.alpha = open ? 0f : 1f; }
 
@@ -242,6 +254,16 @@ namespace CarSales
             }
             if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
             UpdateEnergyAndGps();
+            weatherTimer -= Time.unscaledDeltaTime;
+            if (weatherIcon && weatherTimer <= 0f && CarSalesServices.World)
+            {
+                weatherTimer = 2f;
+                var w = CarSalesServices.World.Weather;
+                bool night = CarSalesServices.DayCycle && (CarSalesServices.DayCycle.HourOfDay < 6f || CarSalesServices.DayCycle.HourOfDay >= 20f);
+                weatherIcon.sprite = UIIcons.Get(CarSales.Sim.WorldSim.IsWet(w) ? CarSales.Foundation.UIIcon.WaterDrop
+                                                 : w == CarSales.Sim.Weather.Clear && !night ? CarSales.Foundation.UIIcon.WbSunny : CarSales.Foundation.UIIcon.Cloud);
+                weatherIcon.color = CarSales.Sim.WorldSim.IsWet(w) ? UIFactory.Info : w == CarSales.Sim.Weather.Clear && !night ? UIFactory.Gold : UIFactory.TextDim;
+            }
             UpdateDriving();
             UpdatePrompt();
             UpdateHints();

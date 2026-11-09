@@ -188,13 +188,13 @@ namespace CarSales
                 patience -= 1;
                 CustomerOffer += Mathf.RoundToInt((playerOffer - CustomerOffer) * Mathf.Lerp(0.6f, 0.25f, greed));
                 CustomerOffer = Mathf.Min(CustomerOffer, maxWillingToPay);
-                reply = $"Hmm, how about ${CustomerOffer:N0}?";
+                reply = $"Hmm, how about £{CustomerOffer:N0}?";
             }
             else
             {
                 patience -= 2;
                 CustomerOffer += Mathf.RoundToInt((maxWillingToPay - CustomerOffer) * 0.15f);
-                reply = Spotted.Count > 0 && !Disclosed ? $"Not with that {Spotted[0].ToLowerInvariant()}. I could do ${CustomerOffer:N0}." : $"That's way too much! I could do ${CustomerOffer:N0}.";
+                reply = Spotted.Count > 0 && !Disclosed ? $"Not with that {Spotted[0].ToLowerInvariant()}. I could do £{CustomerOffer:N0}." : $"That's way too much! I could do £{CustomerOffer:N0}.";
             }
 
             if (patience <= 0)

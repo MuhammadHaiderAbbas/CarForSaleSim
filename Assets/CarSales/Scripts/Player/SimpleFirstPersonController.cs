@@ -45,6 +45,7 @@ namespace CarSales
 
             // Look
             Vector2 lookDelta = look.ReadValue<Vector2>() * GameSettings.MouseSensitivity;
+            if (GameSettings.InvertY) lookDelta.y = -lookDelta.y;   // phase 12 setting
             transform.Rotate(0f, lookDelta.x, 0f);
             pitch = Mathf.Clamp(pitch - lookDelta.y, -85f, 85f);
             if (cameraPivot) cameraPivot.localEulerAngles = new Vector3(pitch, 0f, 0f);

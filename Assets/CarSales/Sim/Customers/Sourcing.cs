@@ -154,7 +154,7 @@ namespace CarSales.Sim
     {
         public const int WarrantyDays = 90;
 
-        /// <summary>3-month warranty price: 4% of the sale price, $150-$900.</summary>
+        /// <summary>3-month warranty price: 4% of the sale price, £150-£900.</summary>
         public static int WarrantyPrice(int salePrice) => Math.Max(150, Math.Min(900, (int)Math.Round(salePrice * 0.04 / 10.0) * 10));
 
         /// <summary>Chance per day that a warranty claim comes in, from the faults the car really has.</summary>

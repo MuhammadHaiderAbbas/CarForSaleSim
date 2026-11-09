@@ -19,7 +19,7 @@ namespace CarSales
             {
                 case ServiceType.Workshop: return "[E] Mechanic - repair a car parked in a service bay";
                 case ServiceType.CarWash: return "[E] Car wash - wash a car parked in the wash bay";
-                case ServiceType.FuelStation: return $"[E] Fuel kiosk - fill up cars at the pumps (${CarSalesServices.Vehicles.FuelPricePerPercent:0.##}/%)";
+                case ServiceType.FuelStation: return $"[E] Fuel kiosk - fill up cars at the pumps (£{CarSalesServices.Vehicles.FuelPricePerPercent:0.##}/%)";
                 case ServiceType.Auction: return "[E] Auction desk: register, catalogue, invoices (sales in the hall behind)";
                 default: return "[E] Service";
             }
@@ -40,7 +40,7 @@ namespace CarSales
             {
                 case ServiceType.Workshop: CarSalesServices.UI.garage.Show(car); break;
                 case ServiceType.CarWash: CarSalesServices.UI.carWash.Show(car); break;
-                case ServiceType.FuelStation: CarSalesServices.Vehicles.Refuel(car); break;
+                case ServiceType.FuelStation: FuelStationUI.Show(car); break;   // phase 12: the V2 fuel screen
             }
         }
     }

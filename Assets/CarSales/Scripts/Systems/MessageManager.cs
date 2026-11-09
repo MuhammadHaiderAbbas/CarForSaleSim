@@ -78,7 +78,7 @@ namespace CarSales
                 var m = Add(MessageType.SellerOffer, $"{seller} wants to sell a {def.year} {def.brand} {def.displayName}",
                     $"Hi! I'm moving abroad and need to sell my car quickly.\n" +
                     $"{car.mileage:N0} km, condition {car.condition:0}% ({CarParts.Label(car.condition)}). " +
-                    $"I'd take <b>${price:N0}</b>. Offer valid today only!");
+                    $"I'd take <b>£{price:N0}</b>. Offer valid today only!");
                 m.offerCar = car;
                 m.offerPrice = price;
                 m.expiresDay = day;
@@ -90,7 +90,7 @@ namespace CarSales
             var bank = CarSalesServices.Bank;
             if (bank && bank.Loan > 0)
                 Add(MessageType.Bank, "Bank reminder",
-                    $"Your loan balance is ${bank.Loan:N0}. Tonight's interest will be ${bank.TomorrowInterest:N0}.");
+                    $"Your loan balance is £{bank.Loan:N0}. Tonight's interest will be £{bank.TomorrowInterest:N0}.");
         }
 
         public bool AcceptOffer(GameMessage m, out string message)

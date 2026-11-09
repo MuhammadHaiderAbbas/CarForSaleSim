@@ -72,17 +72,19 @@ namespace CarSales
         /// <summary>The original AUTO WORLD dark blue look.</summary>
         public static UIPalette Dark() => new UIPalette
         {
-            windowBg = C(0.035f, 0.06f, 0.12f, 0.98f), headerBg = C(0.055f, 0.1f, 0.2f), cardBg = C(0.075f, 0.115f, 0.215f),
-            cardLight = C(0.11f, 0.17f, 0.3f), menuBg = C(0.03f, 0.06f, 0.13f, 0.93f), hudBg = C(0.03f, 0.06f, 0.13f, 0.75f),
-            hudBgStrong = C(0.03f, 0.06f, 0.13f, 0.86f), toastBg = C(0.06f, 0.1f, 0.19f, 0.97f), pictureBg = C(0.09f, 0.14f, 0.26f),
-            overlay = C(0f, 0f, 0f, 0.25f), backdrop = C(0f, 0.01f, 0.04f, 0.6f), ghost = C(1f, 1f, 1f, 0.07f), line = C(0.25f, 0.5f, 0.95f, 0.45f),
-            textMain = C(0.93f, 0.96f, 1f), textDim = C(0.62f, 0.7f, 0.83f), textFaint = C(1f, 1f, 1f, 0.4f), chatPlayer = C(0.85f, 0.92f, 1f),
-            keyCap = C(1f, 1f, 1f, 0.92f), keyCapText = C(0.08f, 0.1f, 0.16f),
-            accent = C(0.13f, 0.47f, 0.95f), accentDark = C(0.09f, 0.28f, 0.6f), neutral = C(0.24f, 0.29f, 0.4f),
-            good = C(0.2f, 0.72f, 0.38f), warn = C(0.96f, 0.62f, 0.12f), bad = C(0.88f, 0.28f, 0.28f), gold = C(1f, 0.83f, 0.3f),
-            info = C(0.45f, 0.82f, 1f), special = C(0.55f, 0.3f, 0.8f), personal = C(0.1f, 0.6f, 0.65f), home = C(0.2f, 0.75f, 0.6f),
-            buttonHover = C(0.82f, 0.9f, 1f), buttonPressed = C(0.65f, 0.72f, 0.85f), buttonDisabled = C(0.55f, 0.55f, 0.6f, 0.55f),
-            selection = C(0.2f, 0.5f, 1f, 0.5f), shadow = C(0f, 0f, 0f, 0.6f), crosshair = C(1f, 1f, 1f, 0.85f),
+            // Phase 12 V2 palette (UI board): background #10151D, panels #1B2635, primary #1678DB, success #20B978,
+            // warning #F2B544, error #E34B52, text #F3F5F8, secondary text #8391A3.
+            windowBg = C(0.063f, 0.082f, 0.114f, 0.97f), headerBg = C(0.106f, 0.149f, 0.208f), cardBg = C(0.106f, 0.149f, 0.208f),
+            cardLight = C(0.15f, 0.2f, 0.27f), menuBg = C(0.063f, 0.082f, 0.114f, 0.92f), hudBg = C(0.063f, 0.082f, 0.114f, 0.78f),
+            hudBgStrong = C(0.063f, 0.082f, 0.114f, 0.9f), toastBg = C(0.106f, 0.149f, 0.208f, 0.97f), pictureBg = C(0.13f, 0.18f, 0.25f),
+            overlay = C(0f, 0f, 0f, 0.25f), backdrop = C(0.02f, 0.03f, 0.05f, 0.55f), ghost = C(1f, 1f, 1f, 0.07f), line = C(0.086f, 0.471f, 0.859f, 0.45f),
+            textMain = C(0.953f, 0.961f, 0.973f), textDim = C(0.514f, 0.569f, 0.639f), textFaint = C(1f, 1f, 1f, 0.38f), chatPlayer = C(0.85f, 0.92f, 1f),
+            keyCap = C(0.953f, 0.961f, 0.973f, 0.95f), keyCapText = C(0.063f, 0.082f, 0.114f),
+            accent = C(0.086f, 0.471f, 0.859f), accentDark = C(0.07f, 0.3f, 0.56f), neutral = C(0.2f, 0.26f, 0.35f),
+            good = C(0.125f, 0.725f, 0.471f), warn = C(0.949f, 0.71f, 0.267f), bad = C(0.89f, 0.294f, 0.322f), gold = C(0.98f, 0.78f, 0.3f),
+            info = C(0.45f, 0.75f, 1f), special = C(0.55f, 0.36f, 0.85f), personal = C(0.1f, 0.62f, 0.68f), home = C(0.2f, 0.75f, 0.6f),
+            buttonHover = C(0.86f, 0.92f, 1f), buttonPressed = C(0.68f, 0.75f, 0.86f), buttonDisabled = C(0.5f, 0.54f, 0.6f, 0.55f),
+            selection = C(0.086f, 0.471f, 0.859f, 0.5f), shadow = C(0f, 0f, 0f, 0.6f), crosshair = C(1f, 1f, 1f, 0.85f),
             mapBg = C(0.08f, 0.12f, 0.2f), mapFrame = C(0.05f, 0.08f, 0.14f),
         };
 

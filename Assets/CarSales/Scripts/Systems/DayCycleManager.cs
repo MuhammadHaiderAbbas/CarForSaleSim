@@ -163,7 +163,7 @@ namespace CarSales
                 if (CarSalesServices.Messages) CarSalesServices.Messages.GenerateDaily(CurrentDay);
                 TeleportPlayerHome();
                 CarSalesServices.UI.dailyReport.Show(report);
-                CarSalesServices.Save.SaveGame();
+                if (GameSettings.AutoSave) CarSalesServices.Save.SaveGame();   // phase 12: Settings > Gameplay > Auto Save
             }
             finally { sleeping = false; }
         }
