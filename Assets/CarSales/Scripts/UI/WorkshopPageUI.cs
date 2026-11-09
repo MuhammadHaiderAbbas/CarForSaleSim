@@ -198,14 +198,14 @@ namespace CarSales
             bool available = missing.All(m => WS.Available(supplier, m.part, tier));
             string partsText = job.Parts.Length == 0 ? "No parts needed" : hasParts ? $"<color={UIFactory.Hex(UIFactory.Good)}>Parts in storage ({TierNames[(int)tier]})</color>"
                              : available ? $"Parts {UIFactory.Money(price)} from {WorkshopManager.SupplierName(supplier)}" : $"<color={UIFactory.Hex(UIFactory.Warn)}>{WorkshopManager.SupplierName(supplier)} can't supply this ({TierNames[(int)tier]})</color>";
-            UIFactory.Text(col, $"{partsText}   -   labour {job.Hours:0.#} h ({UIFactory.Money(WorkshopCatalog.LabourCost(job))} at the garage)", 13, UIFactory.TextMain, TextAlignmentOptions.Left);
+            UIFactory.Text(col, $"{partsText}   -   labour {job.Hours:0.#} h ({UIFactory.Money(WorkshopManager.LabourCost(job))} at the garage)", 13, UIFactory.TextMain, TextAlignmentOptions.Left);
 
             var order = UIFactory.Btn(row.transform, hasParts ? "In stock" : "Order parts", UIFactory.Accent, () => WS.OrderParts(car, job, tier, supplier), 40f, 14f);
             UIFactory.LE(order, h: 40, w: 120, flexW: 0);
             order.interactable = !hasParts && available;
             var plan = UIFactory.Btn(row.transform, "Add to\nboard", UIFactory.CardLight, () => WS.AddToBoard(car, job, tier), 40f, 13f);
             UIFactory.LE(plan, h: 44, w: 80, flexW: 0);
-            var garage = UIFactory.Btn(row.transform, $"Town garage\n<size=80%>{UIFactory.Money(WorkshopCatalog.LabourCost(job))}</size>", UIFactory.Good, () => WS.StartGarageJob(car, job, tier), 40f, 13f);
+            var garage = UIFactory.Btn(row.transform, $"Town garage\n<size=80%>{UIFactory.Money(WorkshopManager.LabourCost(job))}</size>", UIFactory.Good, () => WS.StartGarageJob(car, job, tier), 40f, 13f);
             UIFactory.LE(garage, h: 44, w: 110, flexW: 0);
             garage.interactable = hasParts && !garageBusy;
             var hand = UIFactory.Btn(row.transform, $"By hand (bay)\n<size=80%>{job.Hours * HandsOn.TimeFactor:0.#} h, {WorkshopCatalog.DiyFailChance(WS.Skill) * HandsOn.RiskFactor * 100f:0}% risk</size>", UIFactory.Warn, () => WS.StartHandsOnRepair(car, job, tier), 40f, 12f);

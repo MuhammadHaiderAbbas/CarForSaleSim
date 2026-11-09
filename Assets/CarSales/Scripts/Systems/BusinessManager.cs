@@ -24,6 +24,8 @@ namespace CarSales
         public List<int> overdrawnDays = new List<int>();
         public int level = 1;
         public int overdraftLimit;
+        public int difficulty = 1;                // Phase 10: Sim.Difficulty chosen when the game started
+        public string balanceJson = "";           // Phase 10: the custom balance (Difficulty.Custom), kept with the save
         public InsuranceTier Insurance => (InsuranceTier)insurance;
     }
 
@@ -58,8 +60,20 @@ namespace CarSales
         }
         void Start() => Recalculate();
 
-        public void SetState(BusinessState s) { state = s ?? new BusinessState(); Recalculate(); OnChanged?.Invoke(); }
-        public void ResetState() => SetState(new BusinessState());
+        public void SetState(BusinessState s) { state = s ?? new BusinessState(); balance = null; Recalculate(); OnChanged?.Invoke(); }
+
+        /// <summary>New game: takes the difficulty from Settings (and the custom balance file, for Custom).</summary>
+        public void ResetState()
+        {
+            int d = GameSettings.Difficulty;
+            SetState(new BusinessState { difficulty = d, balanceJson = d == (int)Difficulty.Custom ? BalanceSettings.CustomJson() : "" });
+        }
+
+        // ------------------------------------------------------------------ BALANCE (phase 10)
+        BalanceConfig balance;
+        /// <summary>The balance knobs of this save (difficulty preset or its custom file).</summary>
+        public BalanceConfig Balance => balance ??= BalanceSettings.Resolve(state.difficulty, state.balanceJson);
+        public Difficulty Difficulty => (Difficulty)Mathf.Clamp(state.difficulty, 0, 4);
 
         static EconomyManager Eco => CarSalesServices.Economy;
         static int Today => CarRecords.Today;

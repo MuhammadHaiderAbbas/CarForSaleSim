@@ -458,3 +458,28 @@ Won cars appear in the auction car park — drive or tow them home.
   `CustomerSpawner` (footfall, campaign personas, luxury gating), `SourcingManager` (leads), `StaffManager` (staff slots),
   `PropertyManager.IncomeOf` (developments).
 
+## 21. Production readiness (Phase 10)
+- **Settings** (`UI/SettingsUI.cs`): tabs General / Display / Audio / Driving / Controls. New `GameSettings`:
+  `Subtitles`, `Language`, `GroupVolume(g)` / `SetGroupVolume`, `Difficulty` (0-4), theme 0-4 (`UIThemeChoice.ColourBlind`).
+- **Rebinding:** `CarSalesInput.Asset` (the linked .inputactions, found from any resolved action), `Collection`,
+  `AllActions()`, `SaveOverrides/LoadOverrides/ResetOverrides` (PlayerPrefs `CarSales.BindingOverrides`). Actions asked for
+  by name (`Resolve(null, "Interact")`) are looked up in the asset first, so a rebind applies everywhere; the built-in
+  fallback actions live in one map so they can be rebound too.
+- **Strings:** `Foundation/Localization/Strings` (engine-free, tested) and `Core/Loc` (`T(key, english)`, `F(...)`,
+  `Reload()`, `Available()`), table `Resources/Localization/<lang>.json`. Missing keys fall back to English, then to the
+  text in code. `Phase10Tests.EnglishTable_HasEveryKeyTheGameUses_NoDuplicates` scans `Scripts/` for `Loc.T("key", "...")`.
+- **Subtitles:** `UI/Subtitles.Say(speaker, text)`; called from `AuctionManager.LiveMessage` (player in the hall) and
+  `CustomerAI.SetBubble` (camera within 12 m).
+- **Audio:** `AudioManager.GroupOf(sfx)`, `ApplyGroupVolumes()`; `EngineAudio` uses the vehicles group;
+  `AudioLibrary` (ScriptableObject in Resources, replaceable clips); `AmbienceManager` (added by `CarSalesBootstrap`)
+  picks a zone every 0.5 s (`AuctionHall.Contains`, near a `WorkStation` / workshop `ServiceZone`, near a dealership,
+  else street), crossfades two looping sources, adds rain from `WorldManager.Weather`.
+- **Balance:** `Sim/Balance/Balance.cs` (`BalanceConfig` presets + JSON, `Sandbox.Run/Average`, `SandboxResult`);
+  `Core/BalanceSettings` (resolve preset or `Resources/CarSalesBalance.json`); stored per save in
+  `BusinessState.difficulty/balanceJson`. Used by `EconomyManager.ResetToStart` (starting money), `CustomerSpawner`
+  (budgets, footfall) and `WorkshopManager.PartPrice/LabourCost` (repairs). Editor: `SimulationConfiguratorWindow`.
+- **Credits:** `UI/CreditsUI` (`Text()` = game credits + `AssetRegistry.CreditsText`, `Show(parent, onClose)`).
+- **Build:** `Editor/CarSalesBuild.cs` (`BuildWindowsRelease/Development`, CREDITS.txt, build_info.txt). The Asset Studio
+  licence check still runs before every build.
+- **Tests:** `Tests/PlayMode/GameFlowTests.cs` (needs the built scene; uses `SaveManager.SavesRootOverride`), and the
+  save-migration matrix + balance + strings tests in `Tests/EditMode/Phase10Tests.cs`.

@@ -76,8 +76,11 @@ namespace CarSales
         /// <summary>New game: starting cash and an empty ledger.</summary>
         public void ResetToStart()
         {
-            SetState(startingMoney, startingReputation);
-            Ledger.Reset(startingMoney, 1);
+            // Phase 10: the difficulty scales the starting money (Normal = the Inspector value).
+            var cfg = BalanceSettings.Resolve(GameSettings.Difficulty, null);
+            int start = Mathf.RoundToInt(startingMoney * cfg.startingMoney / (float)CarSales.Sim.BalanceConfig.NormalStartingMoney);
+            SetState(start, startingReputation);
+            Ledger.Reset(start, 1);
         }
 
         public void SetState(int money, float reputation)

@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.0-rc1 — Phase 10 "Production readiness"
+- **Settings** in tabs: General, Display, Audio, Driving, Controls.
+- **Key rebinding** for every control, saved between sessions, with a reset button.
+- **Subtitles** for the auctioneer and customers; **colour-blind-safe theme**.
+- **Audio**: volume per sound group, ambience by area (street, showroom, workshop, auction hall) with rain, and an
+  Audio Library asset to drop in your own sounds and music.
+- **Difficulty**: Easy, Normal, Hard, Realistic or a custom file; changes starting money, customer budgets, repair
+  costs and footfall. **Simulation Configurator** (*Tools > Car Sales*) compares them in a 30-day sandbox.
+- **Credits** screen in the main menu and pause menu.
+- **One-click Windows builds** (*Tools > Car Sales > Build*), with CREDITS.txt and build info.
+- **Strings table** for translations (menus, desktop, settings, HUD).
+- HUD money counts up to the new balance.
+- **PlayMode tests** (load, buy, sleep, save/load, drive, 14-day soak) and a save-migration test matrix.
+- 17 new EditMode tests (283 total).
+
 ## v5.0-dev — Phase 9 "Advanced business"
 - **Accounts**: cash flow with a live reconciliation check, profit per car, stock value and ageing, VAT.
 - **VAT** on the margin scheme with quarterly returns, refunds and late fines.

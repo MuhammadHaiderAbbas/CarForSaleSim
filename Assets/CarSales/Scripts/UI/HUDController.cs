@@ -107,10 +107,10 @@ namespace CarSales
             speedFill.fillAmount = 0f;
             speedText = UIFactory.Text(ring.transform, "0", 44, UIFactory.TextMain, TextAlignmentOptions.Center, true);
             UIFactory.Place(speedText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(120f, 52f));
-            var unit = UIFactory.Text(ring.transform, "KM/H", 13, UIFactory.TextDim, TextAlignmentOptions.Center, true);
+            var unit = UIFactory.Text(ring.transform, Loc.T("hud.kmh", "KM/H"), 13, UIFactory.TextDim, TextAlignmentOptions.Center, true);
             UIFactory.Place(unit.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f), new Vector2(80f, 18f));
 
-            var gearLabel = UIFactory.Text(cluster.transform, "GEAR", 12, UIFactory.TextDim, TextAlignmentOptions.Left, true);
+            var gearLabel = UIFactory.Text(cluster.transform, Loc.T("hud.gear", "GEAR"), 12, UIFactory.TextDim, TextAlignmentOptions.Left, true);
             UIFactory.Place(gearLabel.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(20f, -18f), new Vector2(120f, 16f));
             gearText = UIFactory.Text(cluster.transform, "D", 50, UIFactory.Gold, TextAlignmentOptions.Left, true);
             UIFactory.Place(gearText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -34f), new Vector2(140f, 60f));
@@ -245,6 +245,7 @@ namespace CarSales
             UpdateDriving();
             UpdatePrompt();
             UpdateHints();
+            TickMoney();
 
             if (deltaTimer > 0f)
             {
@@ -270,7 +271,7 @@ namespace CarSales
             float f = drive.Fuel;
             fuelBar.Set(f / 100f);
             fuelBar.SetColor(f < 15f ? UIFactory.Bad : UIFactory.Gold);
-            fuelText.text = f < 15f ? $"FUEL {f:0}%  LOW" : $"FUEL {f:0}%";
+            fuelText.text = f < 15f ? $"{Loc.T("hud.fuel", "FUEL")} {f:0}%  {Loc.T("hud.low", "LOW")}" : $"{Loc.T("hud.fuel", "FUEL")} {f:0}%";
             fuelText.color = f < 15f ? UIFactory.Bad : UIFactory.TextDim;
         }
 
@@ -321,10 +322,40 @@ namespace CarSales
             }
         }
 
+        // Phase 10 polish: the money readout counts up/down to the new balance instead of jumping.
+        double shownMoney;
+        int targetMoney, moneyStart;
+        float moneyTween = -1f;
+        const float MoneyTweenTime = 0.6f;
+
+        void TickMoney()
+        {
+            if (moneyTween < 0f || !moneyText) return;
+            moneyTween += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(moneyTween / MoneyTweenTime);
+            float eased = 1f - (1f - t) * (1f - t) * (1f - t);   // ease-out cubic
+            shownMoney = moneyStart + (targetMoney - moneyStart) * (double)eased;
+            if (t >= 1f) { shownMoney = targetMoney; moneyTween = -1f; }
+            int shown = (int)System.Math.Round(shownMoney);
+            moneyText.text = UIFactory.Money(shown);
+            moneyText.color = shown < 0 ? UIFactory.Bad : UIFactory.Good;
+        }
+
         void HandleMoney(int money, int delta)
         {
-            moneyText.text = UIFactory.Money(money);
-            moneyText.color = money < 0 ? UIFactory.Bad : UIFactory.Good;
+            if (delta != 0 && isActiveAndEnabled)
+            {
+                moneyStart = (int)System.Math.Round(shownMoney);
+                targetMoney = money;
+                moneyTween = 0f;
+            }
+            else
+            {
+                shownMoney = targetMoney = money;
+                moneyTween = -1f;
+                moneyText.text = UIFactory.Money(money);
+                moneyText.color = money < 0 ? UIFactory.Bad : UIFactory.Good;
+            }
             if (delta != 0)
             {
                 deltaText.text = (delta > 0 ? "+" : "") + UIFactory.Money(delta);
@@ -372,7 +403,7 @@ namespace CarSales
                 float e = day.Energy;
                 energyBar.Set(e / 100f);
                 energyBar.SetColor(e > 40f ? UIFactory.Good : e > 15f ? UIFactory.Warn : UIFactory.Bad);
-                energyText.text = e > 15f ? $"Energy {e:0}%" : $"<color={UIFactory.Hex(UIFactory.Bad)}>Tired {e:0}%</color>";
+                energyText.text = e > 15f ? $"{Loc.T("hud.energy", "Energy")} {e:0}%" : $"<color={UIFactory.Hex(UIFactory.Bad)}>{Loc.T("hud.tired", "Tired")} {e:0}%</color>";
             }
             var target = GpsSystem.Target;
             if (gpsPanel.gameObject.activeSelf != (bool)target) gpsPanel.gameObject.SetActive(target);

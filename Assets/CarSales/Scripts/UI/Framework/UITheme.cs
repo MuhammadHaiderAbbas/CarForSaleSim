@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CarSales
 {
-    public enum UIThemeChoice { Dark = 0, Light = 1, HighContrast = 2, Custom = 3 }
+    public enum UIThemeChoice { Dark = 0, Light = 1, HighContrast = 2, Custom = 3, ColourBlind = 4 }
 
     /// <summary>
     /// Every colour the UI uses (spec §6.14.1). UIFactory reads these; screens never hard-code colours
@@ -59,6 +59,7 @@ namespace CarSales
             {
                 case UIThemeChoice.Light: return Light();
                 case UIThemeChoice.HighContrast: return HighContrast();
+                case UIThemeChoice.ColourBlind: return ColourBlind();
                 case UIThemeChoice.Custom:
                     var asset = Resources.Load<UIThemeAsset>(ResourceName);
                     return asset && asset.palette != null ? asset.palette.Copy() : Dark();
@@ -111,6 +112,18 @@ namespace CarSales
             p.accent = C(1f, 0.85f, 0f); p.accentDark = C(0.55f, 0.45f, 0f); p.neutral = C(0.35f, 0.35f, 0.35f);
             p.good = C(0f, 0.85f, 0.45f); p.warn = C(1f, 0.6f, 0f); p.bad = C(1f, 0.25f, 0.4f); p.gold = C(1f, 0.9f, 0.2f);
             p.info = C(0.3f, 0.85f, 1f); p.openDuration = 0f;
+            return p;
+        }
+
+        /// <summary>
+        /// Phase 10 accessibility: status colours that stay distinct with red-green colour blindness
+        /// (blue = good, orange = bad, yellow = warning; text always says the status too).
+        /// </summary>
+        public static UIPalette ColourBlind()
+        {
+            var p = Dark();
+            p.good = C(0.2f, 0.55f, 1f); p.bad = C(1f, 0.5f, 0.05f); p.warn = C(0.95f, 0.85f, 0.2f);
+            p.accent = C(0.55f, 0.35f, 0.95f); p.accentDark = C(0.33f, 0.2f, 0.6f); p.info = C(0.6f, 0.85f, 1f);
             return p;
         }
 

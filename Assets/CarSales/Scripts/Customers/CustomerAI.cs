@@ -259,6 +259,9 @@ namespace CarSales
 
         void SetBubble(string text)
         {
+            // Phase 10: speech nearby is also captioned (not the "..." / "!" icons).
+            if (!string.IsNullOrEmpty(text) && text.Length > 3 && Camera.main && Vector3.Distance(Camera.main.transform.position, transform.position) < 12f)
+                Subtitles.Say(Profile != null ? Profile.customerName : "Customer", text);
             if (!bubble) return;
             bubble.text = text;
             bubble.gameObject.SetActive(!string.IsNullOrEmpty(text));

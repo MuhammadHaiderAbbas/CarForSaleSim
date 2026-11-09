@@ -18,7 +18,7 @@ namespace CarSales
         public const string LegacyFileName = "carsales_save.json";
         public const string GameModule = "game", LedgerModule = "ledger", WorkshopModule = "workshop", AuctionModule = "auction", MarketModule = "market", CrmModule = "crm", StaffModule = "staff", SourcingModule = "sourcing", WorldModule = "world", BusinessModule = "business";
         public const int GameModuleVersion = 6, LedgerModuleVersion = 1, WorkshopModuleVersion = 1, AuctionModuleVersion = 1, MarketModuleVersion = 1, CrmModuleVersion = 1, StaffModuleVersion = 1, SourcingModuleVersion = 1, WorldModuleVersion = 1, BusinessModuleVersion = 1;   // game v6: per-car components
-        public const string GameVersion = "5.0-dev";
+        public const string GameVersion = "5.0-rc1";
 
         [SerializeField] bool loadOnStart = true;
         [SerializeField] int starterCars = 2;
@@ -28,8 +28,10 @@ namespace CarSales
         // Register data upgrades here when a module's format changes, e.g.
         // static SaveManager() { Migrations.Register(GameModule, 5, json => ...); }
 
-        public static string SavesRoot => Path.Combine(Application.persistentDataPath, "saves");
-        public static string LegacyFilePath => Path.Combine(Application.persistentDataPath, LegacyFileName);
+        /// <summary>Phase 10: PlayMode tests point saves at a temporary folder so they never touch real save games.</summary>
+        public static string SavesRootOverride;
+        public static string SavesRoot => !string.IsNullOrEmpty(SavesRootOverride) ? SavesRootOverride : Path.Combine(Application.persistentDataPath, "saves");
+        public static string LegacyFilePath => Path.Combine(!string.IsNullOrEmpty(SavesRootOverride) ? SavesRootOverride : Application.persistentDataPath, LegacyFileName);
 
         /// <summary>The save store, with any pre-v5 save file moved into a slot first.</summary>
         public static SaveStore OpenStore()

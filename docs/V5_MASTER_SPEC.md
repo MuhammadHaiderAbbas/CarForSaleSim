@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-8 are merged; Phase 9 code is written (see [Phase 9 status](#phase-9-status)); everything else is still a plan.
+**Status:** Draft 1. Phases 1-9 are merged; Phase 10 code is written (see [Phase 10 status](#phase-10-status)). The release-candidate checks (2-week run in Unity, §11 budgets) are still to be done in the Editor.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1170,6 +1170,34 @@ Profiling and optimisation (§11), PlayMode test suite, save-migration test matr
 localisation-ready strings table, accessibility (rebinding, subtitles, colour-blind), build pipeline (Windows
 first), balancing with the Simulation Configurator sandbox, credits screen from licence records.
 **Done when:** release-candidate build runs 2 in-game weeks without errors, meets §11 budgets, passes all tests.
+
+#### Phase 10 status
+**Code complete** (283 EditMode tests passing, PlayMode suite compile-checked; nothing run in Unity yet). Of the
+"done when" points, *passes all tests* is met for EditMode. The 2-week run is automated
+(`GameFlowTests.Soak_FourteenDays_NoErrors_LedgerReconciles`) but has to be run in the Editor, and the §11 budgets
+have to be measured on your hardware (Settings → Display → frame-rate overlay, plus the Unity Profiler).
+
+| Item | Built |
+|---|---|
+| PlayMode suite | `Tests/PlayMode` (Test Runner → PlayMode): scene loads with every service, buy a car online, sleep advances the day, save → change → load restores money/day/cars, test drive starts and ends, 14-day soak with no logged errors and the ledger matching cash every morning. Saves go to a temp folder (`SaveManager.SavesRootOverride`). Skipped if the scene isn't built. |
+| Save-migration matrix | EditMode: every old game-module version 1-6 migrates in order to current; saves missing any later module load defaults; a module from a newer game is refused while the rest load; unknown modules survive a round trip with the same checksum. |
+| Audio | Sound groups (music, effects, ambience, vehicles, interface) with sliders; **AudioLibrary** asset (`Resources/CarSalesAudioLibrary`) replaces any sound or ambience loop; **AmbienceManager** crossfades street / showroom / workshop / auction-hall beds by where you are, rain on top when wet (muffled indoors), optional music slot. All generated in code until you add clips. |
+| Polish | HUD money counts up/down to the new balance. (Broader animation polish is still to do.) |
+| Strings table | `Foundation/Localization/Strings` + runtime `Loc.T(key, english)`; `Resources/Localization/en.json` (76 keys: main menu, pause, desktop apps, settings, HUD). Add `xx.json` to add a language (Settings → General → Language). A test checks every key used in code is in en.json, with no duplicates or conflicting texts. Other screens still use plain English. |
+| Accessibility | **Key rebinding** (Settings → Controls; saved in PlayerPrefs, reset button; applies to every action including ones resolved by name), **subtitles** for the auctioneer and customers' speech bubbles (Settings → General), **colour-blind-safe theme** (blue/orange instead of green/red). |
+| Build pipeline | *Tools → Car Sales → Build → Windows (Release / Development)* → `Builds/Windows[-Dev]/CarForSaleSimulator.exe` with CREDITS.txt and build_info.txt; release builds still refuse assets with unshippable licences. Command line: `-executeMethod CarSales.EditorTools.CarSalesBuild.BuildWindowsRelease`. No CI workflow (the repo has no ProjectSettings/Packages for GameCI to open). |
+| Balancing | `Sim/Balance`: Easy / Normal / Hard / Realistic presets (starting money, customer budgets, repair costs, footfall, stock prices) + **Sandbox** that plays a simple dealer with the real buyer model. *Tools → Car Sales → Simulation Configurator* compares presets and a custom set over N days and seeds, and saves `Resources/CarSalesBalance.json` (Difficulty: CUSTOM). A save keeps the difficulty it started with. 30-day average net profit (20 seeds): Easy ≈ $141k, Normal ≈ $72k, Hard ≈ $11k, Realistic ≈ break-even. Tests keep that order and keep Normal profitable but under 3× the starting money. |
+| Credits | Main menu and pause menu → Credits: game credits + every imported asset's attribution from the Asset Studio registry. |
+
+**Phase 10 play-test checklist:**
+1. Test Runner → PlayMode → Run All (after Build Everything). All pass, including the 14-day soak.
+2. Settings → Controls: rebind Interact to F, use it, restart the game: still F. Reset all.
+3. Settings → Display → Theme: COLOUR-BLIND SAFE, back to the main menu, load: good/bad are blue/orange.
+4. Walk into the auction hall during a sale: subtitles; the ambience changes; rain outside is louder than inside.
+5. Settings → Audio: drag each slider; engine and ambience follow.
+6. Settings → General → Difficulty: HARD, New Game: less starting money ($30,000); repairs cost more.
+7. Tools → Car Sales → Simulation Configurator → Run sandbox. Build → Windows (Development): the game runs from Builds/.
+8. Turn on the frame-rate overlay in the busiest spot (dealership + traffic + rain) and compare with §11.
 
 ---
 

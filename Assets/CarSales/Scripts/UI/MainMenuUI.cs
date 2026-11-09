@@ -63,17 +63,18 @@ namespace CarSales
             UIFactory.LE(logo, h: 80);
             var sub = UIFactory.Text(panel.transform, "USED CARS", 24, UIFactory.Accent, TextAlignmentOptions.Center, true);
             UIFactory.LE(sub, h: 30);
-            var tag = UIFactory.Text(panel.transform, "Car For Sale Simulator  -  Buy. Fix. Sell. Build an empire.", 18, UIFactory.TextDim, TextAlignmentOptions.Center);
+            var tag = UIFactory.Text(panel.transform, Loc.T("menu.tagline", "Car For Sale Simulator  -  Buy. Fix. Sell. Build an empire."), 18, UIFactory.TextDim, TextAlignmentOptions.Center);
             UIFactory.LE(tag, h: 50);
             UIFactory.Divider(panel.transform);
             infoText = UIFactory.Text(panel.transform, "", 17, UIFactory.TextDim, TextAlignmentOptions.Center);
             UIFactory.LE(infoText, h: 30);
 
-            continueButton = UIFactory.Btn(panel.transform, "Continue", UIFactory.Good, ContinueLatest, 70f, 24f);
-            UIFactory.Btn(panel.transform, "New Game", UIFactory.Accent, () => OpenSlots(true), 70f, 24f);
-            loadButton = UIFactory.Btn(panel.transform, "Load Game", UIFactory.AccentDark, () => OpenSlots(false), 70f, 24f);
-            UIFactory.Btn(panel.transform, "Settings", UIFactory.Neutral, () => { mainPanel.SetActive(false); settings.Show(); }, 70f, 24f);
-            UIFactory.Btn(panel.transform, "Quit", UIFactory.Bad, PauseMenuUI.QuitGame, 70f, 24f);
+            continueButton = UIFactory.Btn(panel.transform, Loc.T("menu.continue", "Continue"), UIFactory.Good, ContinueLatest, 70f, 24f);
+            UIFactory.Btn(panel.transform, Loc.T("menu.new", "New Game"), UIFactory.Accent, () => OpenSlots(true), 70f, 24f);
+            loadButton = UIFactory.Btn(panel.transform, Loc.T("menu.load", "Load Game"), UIFactory.AccentDark, () => OpenSlots(false), 70f, 24f);
+            UIFactory.Btn(panel.transform, Loc.T("menu.settings", "Settings"), UIFactory.Neutral, () => { mainPanel.SetActive(false); settings.Show(); }, 70f, 24f);
+            UIFactory.Btn(panel.transform, Loc.T("menu.credits", "Credits"), UIFactory.Neutral, () => { mainPanel.SetActive(false); CreditsUI.Show(transform, () => mainPanel.SetActive(true)); }, 56f, 20f);
+            UIFactory.Btn(panel.transform, Loc.T("menu.quit", "Quit"), UIFactory.Bad, PauseMenuUI.QuitGame, 70f, 24f);
             UIFactory.Spacer(panel.transform);
             var version = UIFactory.Text(panel.transform, "v" + SaveManager.GameVersion, 14, UIFactory.TextFaint, TextAlignmentOptions.Center);
             UIFactory.LE(version, h: 20);
@@ -114,11 +115,11 @@ namespace CarSales
                 slotThumbs[i] = UIFactory.Rect("Image", frame.transform).gameObject.AddComponent<RawImage>();
                 UIFactory.Stretch(slotThumbs[i].rectTransform);
                 slotThumbs[i].raycastTarget = false;
-                deleteButtons[i] = UIFactory.Btn(row, "Delete", UIFactory.Bad, () => DeleteSlot(slot), 132f, 18f);
+                deleteButtons[i] = UIFactory.Btn(row, Loc.T("common.delete", "Delete"), UIFactory.Bad, () => DeleteSlot(slot), 132f, 18f);
                 UIFactory.LE(deleteButtons[i], w: 130);
             }
             UIFactory.Spacer(panel.transform);
-            UIFactory.Btn(panel.transform, "Back", UIFactory.Neutral, CloseSlots, 64f, 22f);
+            UIFactory.Btn(panel.transform, Loc.T("common.back", "Back"), UIFactory.Neutral, CloseSlots, 64f, 22f);
             slotPanel.SetActive(false);
         }
 

@@ -232,7 +232,13 @@ namespace CarSales
 
         // ------------------------------------------------------------------ PARTS
         public int PartPrice(string part, PartTier tier, Supplier s, CarInstance c) =>
-            WorkshopCatalog.PartPrice(part, tier, s, c != null ? BasePrice(c) : 20000);
+            Mathf.RoundToInt(WorkshopCatalog.PartPrice(part, tier, s, c != null ? BasePrice(c) : 20000) * RepairCostFactor);
+
+        /// <summary>Phase 10 difficulty: parts and garage labour cost more on harder settings.</summary>
+        public static float RepairCostFactor => CarSalesServices.Business ? CarSalesServices.Business.Balance.repairCostMultiplier : 1f;
+
+        /// <summary>Town-garage labour for a job (difficulty applied).</summary>
+        public static int LabourCost(RepairJobDef job) => Mathf.RoundToInt(WorkshopCatalog.LabourCost(job) * RepairCostFactor);
 
         /// <summary>Parts still missing for a job (in that tier).</summary>
         public List<(string part, int count)> Missing(RepairJobDef job, PartTier tier)
@@ -283,7 +289,7 @@ namespace CarSales
         {
             if (JobOn(c) != null) { UI.Error("The garage is already working on this car."); return false; }
             if (!state.inventory.HasPartsFor(job, tier)) { UI.Error("Order the parts first."); return false; }
-            int labour = WorkshopCatalog.LabourCost(job);
+            int labour = LabourCost(job);
             if (!Pay(labour, TxCategory.Labour, $"Labour: {job.Name} - {c.Name}", c)) return false;
             state.inventory.TakePartsFor(job, tier);
             state.jobs.Add(new WorkshopJob { job = job.Id, carId = c.instanceId, tier = (int)tier, hoursLeft = job.Hours, hoursTotal = job.Hours, labourCost = labour, startedDay = Today });

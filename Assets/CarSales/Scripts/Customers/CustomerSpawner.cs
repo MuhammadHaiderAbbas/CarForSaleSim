@@ -66,6 +66,7 @@ namespace CarSales
                 if (CarSalesServices.Staff && CarSalesServices.Staff.Working(CarSales.Sim.StaffRole.Receptionist).Any()) mult *= 0.8f;
                 if (CarSalesServices.World) mult /= Mathf.Max(0.2f, CarSalesServices.World.Footfall);   // phase 8: weather, weekends, holidays, events
                 if (CarSalesServices.Business) mult /= Mathf.Max(0.2f, CarSalesServices.Business.FootfallFactor);   // phase 9: marketing, reviews
+                if (CarSalesServices.Business) mult /= Mathf.Max(0.2f, CarSalesServices.Business.Balance.footfallMultiplier);   // phase 10: difficulty
                 yield return new WaitForSeconds(Random.Range(spawnInterval.x, spawnInterval.y) * mult);
             }
         }
@@ -135,7 +136,7 @@ namespace CarSales
             var p = new CustomerProfile
             {
                 customerName = customerNames[Random.Range(0, customerNames.Length)],
-                budget = Mathf.RoundToInt(Random.Range(persona.BudgetMin, persona.BudgetMax) * (0.8f + rep * 0.4f) * budgetMult),
+                budget = Mathf.RoundToInt(Random.Range(persona.BudgetMin, persona.BudgetMax) * (0.8f + rep * 0.4f) * budgetMult * (CarSalesServices.Business ? CarSalesServices.Business.Balance.budgetMultiplier : 1f)),
                 preferredCategory = (CarCategory)best,
                 patience = persona.Patience,
                 greed = persona.Haggling,

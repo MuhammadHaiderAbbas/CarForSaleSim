@@ -45,7 +45,10 @@ dealerships (also inside imported buildings). Phase 8b lets you **draw roads** (
 **workshops, car washes, fuel stations, houses and apartments**, put imported interiors in showrooms, and keeps the
 frame rate up (traffic setting, overlay, automatic thinning). Phase 9 adds **proper books**: cash flow, profit per car, stock ageing, **VAT returns**
 (margin scheme), an **overdraft**, **insurance**, running costs, **marketing campaigns**, **dealership levels 1-6**,
-analytics and property development.
+analytics and property development. Phase 10 gets it ready to ship: **settings tabs** with **key rebinding**, subtitles and a
+**colour-blind theme**, **sound groups and ambience**, **difficulty presets** (with the Simulation Configurator sandbox),
+a **credits** screen, **one-click Windows builds** (*Tools → Car Sales → Build*), a strings table for translations, and a
+**PlayMode test suite** (*Window → General → Test Runner → PlayMode*).
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

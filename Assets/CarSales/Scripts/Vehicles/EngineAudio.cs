@@ -45,7 +45,7 @@ namespace CarSales
             float targetVolume = running ? (electric ? 0.05f + 0.2f * rpm01 : 0.16f + 0.34f * driver.Load + 0.1f * rpm01) : 0f;
             float k = 1f - Mathf.Exp(-12f * Time.deltaTime);
             source.pitch = Mathf.Lerp(source.pitch, targetPitch, k);
-            source.volume = Mathf.Lerp(source.volume, targetVolume, k);
+            source.volume = Mathf.Lerp(source.volume, targetVolume * GameSettings.GroupVolume(AudioManager.GroupVehicles), k);
         }
 
         static AudioClip CombustionClip()

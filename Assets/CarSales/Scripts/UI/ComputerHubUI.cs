@@ -128,23 +128,23 @@ namespace CarSales
 
         void BuildIcons()
         {
-            Tile("Dashboard", "D", UIFactory.Accent, () => ShowPage(Home), Home);
-            Tile("My Cars", "S", UIFactory.Good, () => ShowPage(Inventory), Inventory);
-            Tile("Marketplace", "M", UIFactory.Info, () => ShowPage(Marketplace), Marketplace);
-            Tile("Auctions", "A", UIFactory.Bad, () => CarSalesServices.UI.auction.Show());
-            Tile("Messages", "@", UIFactory.Gold, () => ShowPage(Messages), Messages);
-            Tile("Bank", "B", UIFactory.Personal, () => ShowPage(Bank), Bank);
-            Tile("Accounts", "%", UIFactory.Home, () => ShowPage(Accounts), Accounts);
-            Tile("Real Estate", "R", UIFactory.Special, () => ShowPage(RealEstate), RealEstate);
-            Tile("Upgrades", "+", UIFactory.Gold, () => ShowPage(Upgrades), Upgrades);
-            Tile("Statistics", "#", UIFactory.AccentDark, () => ShowPage(Stats), Stats);
-            Tile("Settings", "*", UIFactory.Neutral, () => CarSalesServices.UI.settings.Show());
-            Tile("Workshop", "W", UIFactory.Warn, () => ShowPage(Workshop));
-            Tile("Customers", "C", UIFactory.Personal, () => ShowPage(Customers));
-            Tile("Staff", "T", UIFactory.Good, () => ShowPage(Staff));
-            Tile("Market", "V", UIFactory.Info, () => ShowPage(MarketApp));
-            Tile("Business", "L", UIFactory.Gold, () => ShowPage(Business));
-            Tile("Classifieds", "K", UIFactory.Gold, () => { ShowPage(MarketApp); MarketApp.ShowTab(3); });
+            Tile(Loc.T("app.dashboard", "Dashboard"), "D", UIFactory.Accent, () => ShowPage(Home), Home);
+            Tile(Loc.T("app.mycars", "My Cars"), "S", UIFactory.Good, () => ShowPage(Inventory), Inventory);
+            Tile(Loc.T("app.marketplace", "Marketplace"), "M", UIFactory.Info, () => ShowPage(Marketplace), Marketplace);
+            Tile(Loc.T("app.auctions", "Auctions"), "A", UIFactory.Bad, () => CarSalesServices.UI.auction.Show());
+            Tile(Loc.T("app.messages", "Messages"), "@", UIFactory.Gold, () => ShowPage(Messages), Messages);
+            Tile(Loc.T("app.bank", "Bank"), "B", UIFactory.Personal, () => ShowPage(Bank), Bank);
+            Tile(Loc.T("app.accounts", "Accounts"), "%", UIFactory.Home, () => ShowPage(Accounts), Accounts);
+            Tile(Loc.T("app.realestate", "Real Estate"), "R", UIFactory.Special, () => ShowPage(RealEstate), RealEstate);
+            Tile(Loc.T("app.upgrades", "Upgrades"), "+", UIFactory.Gold, () => ShowPage(Upgrades), Upgrades);
+            Tile(Loc.T("app.statistics", "Statistics"), "#", UIFactory.AccentDark, () => ShowPage(Stats), Stats);
+            Tile(Loc.T("app.settings", "Settings"), "*", UIFactory.Neutral, () => CarSalesServices.UI.settings.Show());
+            Tile(Loc.T("app.workshop", "Workshop"), "W", UIFactory.Warn, () => ShowPage(Workshop));
+            Tile(Loc.T("app.customers", "Customers"), "C", UIFactory.Personal, () => ShowPage(Customers));
+            Tile(Loc.T("app.staff", "Staff"), "T", UIFactory.Good, () => ShowPage(Staff));
+            Tile(Loc.T("app.market", "Market"), "V", UIFactory.Info, () => ShowPage(MarketApp));
+            Tile(Loc.T("app.business", "Business"), "L", UIFactory.Gold, () => ShowPage(Business));
+            Tile(Loc.T("app.classifieds", "Classifieds"), "K", UIFactory.Gold, () => { ShowPage(MarketApp); MarketApp.ShowTab(3); });
         }
 
         void Tile(string label, string glyph, Color color, UnityAction onClick, ComputerPage page = null, bool soon = false)

@@ -568,7 +568,13 @@ namespace CarSales
         public enum Call { Opening, None, GoingOnce, GoingTwice, Sold }
         public Call LiveCall { get; private set; }
         public AuctionLot LiveLot => live;
-        public string LiveMessage { get; private set; } = "";
+        string liveMessage = "";
+        /// <summary>The auctioneer's last call (also shown as a subtitle when you're in the hall).</summary>
+        public string LiveMessage
+        {
+            get => liveMessage;
+            private set { liveMessage = value; if (!string.IsNullOrEmpty(value) && PlayerInHall()) Subtitles.Say("Auctioneer", value, 4f); }
+        }
         float callTimer, aiTimer, pauseTimer, nextInstantHour;
         CarDisplay stageCar;
 

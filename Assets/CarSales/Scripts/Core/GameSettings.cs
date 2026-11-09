@@ -66,7 +66,7 @@ namespace CarSales
         /// <summary>Colour theme of the UI. Screens use it the next time they are built (load a game / main menu).</summary>
         public static UIThemeChoice Theme
         {
-            get => (UIThemeChoice)Mathf.Clamp(PlayerPrefs.GetInt(ThemeKey, 0), 0, 3);
+            get => (UIThemeChoice)Mathf.Clamp(PlayerPrefs.GetInt(ThemeKey, 0), 0, 4);
             set { PlayerPrefs.SetInt(ThemeKey, (int)value); PlayerPrefs.Save(); UITheme.Reload(); }
         }
 
@@ -88,6 +88,31 @@ namespace CarSales
             set { PlayerPrefs.SetInt("CarSales.Traffic", Mathf.Clamp(value, 0, 3)); PlayerPrefs.Save(); }
         }
         public static float TrafficMultiplier => TrafficLevel == 0 ? 0f : TrafficLevel == 1 ? 0.5f : TrafficLevel == 2 ? 1f : 1.6f;
+
+        /// <summary>Phase 10: on-screen captions for the auctioneer, customers and sellers.</summary>
+        public static bool Subtitles
+        {
+            get => PlayerPrefs.GetInt("CarSales.Subtitles", 1) == 1;
+            set => SetFlag("CarSales.Subtitles", value);
+        }
+
+        /// <summary>Phase 10: language of the strings table (Resources/Localization/&lt;code&gt;.json).</summary>
+        public static string Language
+        {
+            get => PlayerPrefs.GetString("CarSales.Language", "en");
+            set { PlayerPrefs.SetString("CarSales.Language", value); PlayerPrefs.Save(); Loc.Reload(); }
+        }
+
+        /// <summary>Phase 10 sound groups: 0 music, 1 sound effects, 2 ambience, 3 vehicles, 4 interface.</summary>
+        public static float GroupVolume(int group) => PlayerPrefs.GetFloat("CarSales.Vol" + group, 1f);
+        public static void SetGroupVolume(int group, float v) { PlayerPrefs.SetFloat("CarSales.Vol" + group, Mathf.Clamp01(v)); PlayerPrefs.Save(); }
+
+        /// <summary>Phase 10: difficulty (0 easy, 1 normal, 2 hard, 3 realistic, 4 custom file); used when a new game starts.</summary>
+        public static int Difficulty
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetInt("CarSales.Difficulty", 1), 0, 4);
+            set { PlayerPrefs.SetInt("CarSales.Difficulty", Mathf.Clamp(value, 0, 4)); PlayerPrefs.Save(); }
+        }
 
         /// <summary>Phase 8b: small frame-time overlay (top right).</summary>
         public static bool ShowPerformance

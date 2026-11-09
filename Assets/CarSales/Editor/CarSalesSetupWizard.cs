@@ -689,6 +689,7 @@ namespace CarSales.EditorTools
             systems.AddComponent<SourcingManager>();
             systems.AddComponent<WorldManager>();
             systems.AddComponent<BusinessManager>();
+            systems.AddComponent<AmbienceManager>();
             Set(systems.AddComponent<CarSalesBootstrap>(), "database", db);
             systems.AddComponent<EconomyManager>();
             systems.AddComponent<InventoryManager>();
