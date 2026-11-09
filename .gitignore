@@ -28,3 +28,7 @@
 crashlytics-build.properties
 sysinfo.txt
 .DS_Store
+
+# Phase 13: generated surface textures (rebuilt automatically)
+/Assets/CarSales/GeneratedArt/
+/Assets/CarSales/GeneratedArt.meta

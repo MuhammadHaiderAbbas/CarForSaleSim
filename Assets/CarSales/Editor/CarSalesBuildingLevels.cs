@@ -39,6 +39,9 @@ namespace CarSales.EditorTools
 
         static void PitchedRoof(Transform g, string name, Vector3 centre, float width, float depth, float rise, Material mat)
         {
+            // Phase 13: real roof tiles - clay for the red roofs, slate for the grey ones.
+            if (mats != null && mats.roofTiles && mat == mats.flagRed) mat = mats.roofTiles;
+            else if (mats != null && mats.roofSlate && mat == mats.roof) mat = mats.roofSlate;
             // Two tilted slabs meeting at the ridge (runs along X).
             float half = depth / 2f, len = Mathf.Sqrt(half * half + rise * rise) + 0.3f;
             float ang = Mathf.Atan2(rise, half) * Mathf.Rad2Deg;
@@ -60,7 +63,7 @@ namespace CarSales.EditorTools
         /// <summary>Level 2: a two-storey showroom - wider, taller, glass ground floor, clad upper floor, canopy, totem sign.</summary>
         static void BuildShowroomL2(Transform g, Mats m, string name, bool premium)
         {
-            Solid(g, "Floor", new Vector3(0f, 0.02f, 18f), new Vector3(32f, 0.04f, 16f), premium ? m.platform : m.floor);
+            Solid(g, "Floor", new Vector3(0f, 0.02f, 18f), new Vector3(32f, 0.04f, 16f), premium ? (m.marble ?? m.platform) : m.floor);
             Solid(g, "Wall_North", new Vector3(0f, 4f, 26f), new Vector3(32.3f, 8f, 0.3f), m.wall);
             Solid(g, "Wall_West", new Vector3(-16f, 4f, 18f), new Vector3(0.3f, 8f, 16f), m.wall);
             Solid(g, "Wall_East", new Vector3(16f, 4f, 18f), new Vector3(0.3f, 8f, 16f), m.wall);
@@ -87,11 +90,8 @@ namespace CarSales.EditorTools
                 Solid(g, "DisplayPlatform", new Vector3(x, 0.07f, 17f), new Vector3(5.6f, 0.05f, 5.6f), m.platform);
                 Deco(g, "PlatformGlow", PrimitiveType.Cylinder, new Vector3(x, 0.045f, 17f), new Vector3(5.9f, 0.02f, 5.9f), premium ? m.lampGlow : m.ringGlow);
             }
-            Solid(g, "ReceptionDesk", new Vector3(-8.2f, 0.55f, 22.4f), new Vector3(4.2f, 1.1f, 0.9f), m.wall);
-            Deco(g, "ReceptionTop", PrimitiveType.Cube, new Vector3(-8.2f, 1.13f, 22.4f), new Vector3(4.4f, 0.06f, 1.1f), m.goldTrim);
             Solid(g, "Mezzanine", new Vector3(0f, 4.5f, 24.5f), new Vector3(31.6f, 0.25f, 2.8f), m.wall);
             Deco(g, "Railing", PrimitiveType.Cube, new Vector3(0f, 5.1f, 23.15f), new Vector3(31.6f, 1f, 0.05f), m.windowGlass);
-            foreach (float x in new[] { 9f, 12.5f }) { Solid(g, "Sofa", new Vector3(x, 0.25f, 24.4f), new Vector3(3f, 0.5f, 0.9f), m.sofa); Deco(g, "SofaBack", PrimitiveType.Cube, new Vector3(x, 0.75f, 24.8f), new Vector3(3f, 0.6f, 0.2f), m.sofa); }
             for (int ix = -2; ix <= 2; ix++) for (int iz = 0; iz < 3; iz++)
                 Deco(g, "CeilingLight", PrimitiveType.Cube, new Vector3(ix * 6.4f, 7.97f, 12.5f + iz * 4.5f), new Vector3(3f, 0.04f, 0.8f), m.ceilingLight);
             PointLight(g, new Vector3(-8f, 6.5f, 16f), 18f, 1.8f, new Color(1f, 0.96f, 0.9f));
@@ -107,6 +107,7 @@ namespace CarSales.EditorTools
                 Deco(g, "RoofFlag", PrimitiveType.Cube, new Vector3(x + 0.5f, 10.4f, 10.5f), new Vector3(1f, 0.6f, 0.03f), premium ? m.goldTrim : m.flagBlue);
             }
             foreach (var p in new[] { new Vector3(-15f, 0f, 25f), new Vector3(15f, 0f, 11f), new Vector3(-15f, 0f, 11f), new Vector3(15f, 0f, 25f) }) Plant(g, p, m, 1.1f);
+            FurnishShowroom(g, m, 2, premium);   // phase 13c
         }
 
         /// <summary>Level 3: a flagship glass box - full-height glazing, white blade frame, mezzanine, six platforms, rooftop letters.</summary>
@@ -142,13 +143,11 @@ namespace CarSales.EditorTools
             Solid(g, "Mezzanine", new Vector3(0f, 5f, 25.2f), new Vector3(35.6f, 0.3f, 3.6f), m.flagWhite);
             Deco(g, "MezzRail", PrimitiveType.Cube, new Vector3(0f, 5.65f, 23.4f), new Vector3(35.6f, 1f, 0.05f), m.windowGlass);
             WindowRow(g, 26.8f, 7f, -16f, 16f, 3.4f, 2f, 0.8f, m.windowsGlow);
-            Solid(g, "ReceptionDesk", new Vector3(-8.2f, 0.55f, 22.4f), new Vector3(4.6f, 1.1f, 1f), m.flagWhite);
-            Deco(g, "ReceptionGlow", PrimitiveType.Cube, new Vector3(-8.2f, 0.25f, 21.88f), new Vector3(4.6f, 0.06f, 0.04f), m.ledStrip);
-            foreach (float x in new[] { 8.5f, 12f, 15.5f }) { Solid(g, "Lounge", new Vector3(x, 0.25f, 25.6f), new Vector3(3f, 0.5f, 0.9f), m.sofa); Deco(g, "LoungeBack", PrimitiveType.Cube, new Vector3(x, 0.75f, 26f), new Vector3(3f, 0.6f, 0.2f), m.sofa); }
             Solid(g, "CoffeeBar", new Vector3(14.5f, 0.55f, 19f), new Vector3(0.9f, 1.1f, 3.4f), m.timber);
             for (int ix = -2; ix <= 2; ix++) Deco(g, "CeilingLine", PrimitiveType.Cube, new Vector3(ix * 7f, H - 0.03f, 18f), new Vector3(0.25f, 0.04f, 16f), m.ceilingLight);
             PointLight(g, new Vector3(0f, 8.5f, 18f), 24f, 1.8f, new Color(1f, 0.97f, 0.92f));
             AddReflectionProbe(g, "ShowroomReflections", new Vector3(0f, 5f, 18f), new Vector3(36f, H + 0.2f, 18.2f));
+            FurnishShowroom(g, m, 3, premium);   // phase 13c
             // Forecourt: water feature planters, tall totem, flag row.
             foreach (float x in new[] { -10f, 10f })
             {

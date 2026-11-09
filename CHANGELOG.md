@@ -1,5 +1,23 @@
 # Changelog
 
+## v5.0-rc4 — Phase 13 "Realism"
+- **Real textures on every surface**: asphalt, paving slabs, concrete, brick, painted walls, grass, porcelain and marble
+  floors, wood, roof tiles, metal cladding and more, all at their real size. Background buildings have real fronts
+  with windows, and rooftop air-con units, lift housings and water tanks.
+- **Surface Library** (*Tools > Car Sales > Realism*): swap any surface for a scanned texture from Poly Haven or ambientCG.
+- **Graphics levels Low / Medium / High / Ultra**: soft long shadows, ambient occlusion, many real lights (Forward+),
+  HDR colour grading, texture streaming. Build Everything sets them up once; *Restore Original Graphics* undoes it.
+- **Night**: windows light up building by building, street lamps light the road near you, your car has headlights,
+  signs glow; night and rain have their own colour grading.
+- **Weather and air**: wet roads, pavements and roofs go dark and shiny and dry slowly; morning mist, golden-hour haze.
+- **Clear-coat car paint**, also on cars you import.
+- **Furnished interiors**: showrooms (reception, lounge, sales desks, coffee point), workshops (tool chests, workbenches,
+  tyre racks, strip lights) and the parts shop. Every piece can be replaced by a real model (*Asset Studio > Town*).
+- **Walk-in homes**: go inside your home, sleep in your bed and wake up beside it.
+- **Realism Checklist** with live progress, and a full step-by-step guide: `docs/REALISM_GUIDE.md`.
+- Debug keys: **F2** one hour later, **F4** next weather.
+- 32 new tests (375 total).
+
 ## v5.0-rc3 — Phase 12 "CarForSaleSimV2"
 - **New town from the master map**: 14 zones round a 2.8 km **test-drive loop**, avenues and seven
   **roundabouts**, a park with a lake, a town centre, an industrial estate, two private-seller closes and two

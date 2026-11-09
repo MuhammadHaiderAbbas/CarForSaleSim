@@ -24,7 +24,9 @@ namespace CarSales.EditorTools
             {
                 case PlaceholderKind.Building: return category == CarSales.Studio.AssetCategory.Building;
                 case PlaceholderKind.Tree: return category == CarSales.Studio.AssetCategory.Prop || category == CarSales.Studio.AssetCategory.Environment;
-                default: return category == CarSales.Studio.AssetCategory.Prop;
+                case PlaceholderKind.StreetLamp:
+                case PlaceholderKind.Bench: return category == CarSales.Studio.AssetCategory.Prop;
+                default: return category == CarSales.Studio.AssetCategory.Interior || category == CarSales.Studio.AssetCategory.Prop;   // furniture
             }
         }
 

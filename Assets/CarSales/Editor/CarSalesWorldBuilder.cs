@@ -252,12 +252,7 @@ namespace CarSales.EditorTools
             Deco(t, "TreeCanopy2", PrimitiveType.Sphere, new Vector3(0.5f, 5f * s, 0.3f), new Vector3(2.2f, 2f, 2.2f) * s, m.leaves);
         }
 
-        static void Plant(Transform g, Vector3 pos, Mats m, float scale)
-        {
-            Solid(g, "PlantPot", pos + new Vector3(0f, 0.3f * scale, 0f), new Vector3(0.6f, 0.6f, 0.6f) * scale, m.pot);
-            Deco(g, "PlantLeaves", PrimitiveType.Sphere, pos + new Vector3(0f, 1.0f * scale, 0f), new Vector3(0.9f, 1.1f, 0.9f) * scale, m.leaves);
-            Deco(g, "PlantLeaves2", PrimitiveType.Sphere, pos + new Vector3(0.15f, 1.5f * scale, 0.1f), new Vector3(0.6f, 0.7f, 0.6f) * scale, m.leaves);
-        }
+        static void Plant(Transform g, Vector3 pos, Mats m, float scale) => PottedPlant(g, pos, scale, m);   // phase 13c: a real-looking plant
 
         // ------------------------------------------------------------------ DEALERSHIPS
         /// <summary>Lot + glass showroom + spots + customers. Uses the original AUTO WORLD layout (world-aligned, road to the south).</summary>
@@ -381,7 +376,7 @@ namespace CarSales.EditorTools
         static void BuildShowroom(Transform g, Mats m, string name, bool premium)
         {
             var facade = premium ? m.signBoard : m.accentPanel;
-            Solid(g, "Floor", new Vector3(0f, 0.02f, 17f), new Vector3(24f, 0.04f, 14f), premium ? m.platform : m.floor);
+            Solid(g, "Floor", new Vector3(0f, 0.02f, 17f), new Vector3(24f, 0.04f, 14f), premium ? (m.marble ?? m.platform) : m.floor);
             Solid(g, "Wall_North", new Vector3(0f, 2.5f, 24f), new Vector3(24.3f, 5f, 0.3f), m.wall);
             Solid(g, "Wall_West", new Vector3(-12f, 2.5f, 17f), new Vector3(0.3f, 5f, 14f), m.wall);
             Solid(g, "Wall_East", new Vector3(12f, 2.5f, 17f), new Vector3(0.3f, 5f, 14f), m.wall);
@@ -412,13 +407,9 @@ namespace CarSales.EditorTools
                 Deco(g, "PlatformGlow", PrimitiveType.Cylinder, new Vector3(x, 0.045f, 17f), new Vector3(6.3f, 0.02f, 6.3f), premium ? m.lampGlow : m.ringGlow);
             }
 
-            Solid(g, "ReceptionDesk", new Vector3(-8.2f, 0.55f, 22.4f), new Vector3(3.4f, 1.1f, 0.8f), m.wall);
-            Deco(g, "ReceptionTop", PrimitiveType.Cube, new Vector3(-8.2f, 1.13f, 22.4f), new Vector3(3.6f, 0.06f, 1.0f), m.desk);
             SignText(g, new Vector3(-8.2f, 3.2f, 23.8f), name.ToUpper(), 5f, new Color(0.15f, 0.25f, 0.45f), new Vector2(8f, 1f), 180f);
-            Solid(g, "Sofa", new Vector3(8.2f, 0.25f, 23.1f), new Vector3(3f, 0.5f, 0.9f), m.sofa);
-            Deco(g, "SofaBack", PrimitiveType.Cube, new Vector3(8.2f, 0.75f, 23.5f), new Vector3(3f, 0.6f, 0.2f), m.sofa);
-            Solid(g, "CoffeeTable", new Vector3(8.2f, 0.22f, 21.7f), new Vector3(1.6f, 0.44f, 0.8f), m.desk);
             foreach (var p in new[] { new Vector3(-11f, 0f, 23f), new Vector3(11f, 0f, 11f), new Vector3(-11f, 0f, 11f) }) Plant(g, p, m, 1f);
+            FurnishShowroom(g, m, 1, premium);   // phase 13c
         }
 
         static void BuildDealerProps(Transform g, Mats m, bool premium)
@@ -464,11 +455,22 @@ namespace CarSales.EditorTools
             var cBox = computer.AddComponent<BoxCollider>();
             cBox.center = new Vector3(0f, 0.65f, 0f);
             cBox.size = new Vector3(1.8f, 1.3f, 0.9f);
-            Prim(PrimitiveType.Cube, "Desk", computer.transform, new Vector3(0f, 0.375f, 0f), new Vector3(1.6f, 0.75f, 0.8f), m.desk);
-            Prim(PrimitiveType.Cube, "Monitor", computer.transform, new Vector3(0f, 1.02f, -0.2f), new Vector3(0.75f, 0.45f, 0.04f), m.screen);
-            Prim(PrimitiveType.Cube, "MonitorBack", computer.transform, new Vector3(0f, 1.02f, -0.23f), new Vector3(0.78f, 0.48f, 0.03f), m.signBoard);
-            Prim(PrimitiveType.Cube, "Keyboard", computer.transform, new Vector3(0f, 0.77f, 0.15f), new Vector3(0.5f, 0.03f, 0.18f), m.signBoard);
-            Prim(PrimitiveType.Cube, "Chair", computer.transform, new Vector3(0f, 0.45f, 0.75f), new Vector3(0.55f, 0.1f, 0.55f), m.sofa);
+            // Phase 13c: a real desk (top, side panels, drawers, monitor stand); the box collider stays the same and the
+            // showroom furniture puts an office chair in front of it.
+            var c = computer.transform;
+            var dark = m.blackGlass ? m.blackGlass : m.signBoard;
+            Part(c, "DeskTop", new Vector3(0f, 0.73f, 0f), new Vector3(1.6f, 0.04f, 0.8f), m.desk);
+            foreach (var sx in new[] { -1f, 1f }) Part(c, "DeskSide", new Vector3(sx * 0.77f, 0.355f, 0f), new Vector3(0.04f, 0.71f, 0.76f), m.frame);
+            Part(c, "Modesty", new Vector3(0f, 0.5f, -0.35f), new Vector3(1.5f, 0.36f, 0.02f), m.frame);
+            Part(c, "Drawers", new Vector3(0.5f, 0.35f, 0.02f), new Vector3(0.42f, 0.6f, 0.68f), m.desk);
+            Part(c, "StandBase", new Vector3(0f, 0.758f, -0.2f), new Vector3(0.24f, 0.015f, 0.2f), dark);
+            Part(c, "StandNeck", new Vector3(0f, 0.86f, -0.24f), new Vector3(0.05f, 0.2f, 0.03f), dark);
+            Prim(PrimitiveType.Cube, "Monitor", c, new Vector3(0f, 1.02f, -0.2f), new Vector3(0.75f, 0.45f, 0.04f), m.screen);
+            Prim(PrimitiveType.Cube, "MonitorBack", c, new Vector3(0f, 1.02f, -0.23f), new Vector3(0.78f, 0.48f, 0.03f), m.signBoard);
+            Prim(PrimitiveType.Cube, "Keyboard", c, new Vector3(0f, 0.765f, 0.15f), new Vector3(0.5f, 0.025f, 0.18f), m.signBoard);
+            Part(c, "Mouse", new Vector3(0.36f, 0.77f, 0.16f), new Vector3(0.06f, 0.025f, 0.1f), m.signBoard);
+            Part(c, "Papers", new Vector3(-0.5f, 0.755f, 0.05f), new Vector3(0.21f, 0.006f, 0.3f), m.flagWhite, euler: new Vector3(0f, 10f, 0f));
+            Part(c, "Mug", new Vector3(-0.55f, 0.8f, -0.2f), new Vector3(0.08f, 0.05f, 0.08f), m.pot, type: PrimitiveType.Cylinder);
             computer.AddComponent<DealerComputer>();
         }
 
@@ -536,7 +538,7 @@ namespace CarSales.EditorTools
         static void BuildWorkshop(Transform g, Mats m, CarDatabase db)
         {
             Solid(g, "Apron", new Vector3(0f, 0.012f, -2f), new Vector3(16f, 0.024f, 5f), m.concrete);
-            Solid(g, "Floor", new Vector3(0f, 0.02f, 7f), new Vector3(16f, 0.04f, 14f), m.concrete);
+            Solid(g, "Floor", new Vector3(0f, 0.02f, 7f), new Vector3(16f, 0.04f, 14f), m.epoxy ?? m.concrete);
             Solid(g, "Wall_Back", new Vector3(0f, 2.5f, 14f), new Vector3(16.3f, 5f, 0.3f), m.wall);
             Solid(g, "Wall_W", new Vector3(-8f, 2.5f, 7f), new Vector3(0.3f, 5f, 14f), m.wall);
             Solid(g, "Wall_E", new Vector3(8f, 2.5f, 7f), new Vector3(0.3f, 5f, 14f), m.wall);
@@ -554,8 +556,7 @@ namespace CarSales.EditorTools
                 Solid(g, "LiftPost", new Vector3(x, 1.6f, 7f), new Vector3(0.35f, 3.2f, 0.35f), m.liftYellow);
                 Deco(g, "LiftArm", PrimitiveType.Cube, new Vector3(x + (x < -3.8f ? 0.6f : -0.6f), 0.3f, 7f), new Vector3(1.2f, 0.1f, 0.25f), m.liftYellow);
             }
-            Solid(g, "ToolChest", new Vector3(7.2f, 0.55f, 11.5f), new Vector3(0.7f, 1.1f, 1.6f), m.toolRed);
-            Solid(g, "Workbench", new Vector3(0f, 0.45f, 13.4f), new Vector3(4f, 0.9f, 0.8f), m.metal);
+            FurnishWorkshop(g, m);   // phase 13c: tool chest, workbench with pegboard, tyre rack, tube lights
             for (int i = 0; i < 4; i++)
                 Deco(g, "Tire", PrimitiveType.Cylinder, new Vector3(-7.2f, 0.13f + i * 0.26f, 12.8f), new Vector3(0.75f, 0.12f, 0.75f), m.tire).AddComponent<BoxCollider>();
             foreach (float z in new[] { 2.2f, 3.3f })
@@ -741,7 +742,7 @@ namespace CarSales.EditorTools
             else if (tier == 1)
             {
                 Solid(g, "House", new Vector3(0f, 3f, 7f), new Vector3(10f, 6f, 8f), m.wall);
-                var roof = Deco(g, "Roof", PrimitiveType.Cube, new Vector3(0f, 6f, 7f), new Vector3(10.8f, 4.6f, 4.6f), m.flagRed);
+                var roof = Deco(g, "Roof", PrimitiveType.Cube, new Vector3(0f, 6f, 7f), new Vector3(10.8f, 4.6f, 4.6f), m.roofTiles ?? m.flagRed);
                 roof.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
                 foreach (var p in new[] { new Vector3(-3f, 1.8f, 2.97f), new Vector3(-3f, 4.4f, 2.97f), new Vector3(3f, 4.4f, 2.97f) })
                     Deco(g, "Window", PrimitiveType.Cube, p, new Vector3(1.6f, 1.2f, 0.05f), m.windowGlass);
@@ -783,6 +784,7 @@ namespace CarSales.EditorTools
             var bed = door.AddComponent<HomeBed>();
             bed.propertyId = propertyId;
             bed.wakePoint = wake;
+            BuildHomeInterior(g, m, propertyId, tier, wake);   // phase 13c: walk in, sleep in a real bed
             PointLight(g, doorPos + new Vector3(0f, 1.5f, -0.8f), 6f, 1f, new Color(1f, 0.85f, 0.6f));
 
             var zone = AddZone(g, ServiceType.Home, name, new Vector3(drivewayX, 2f, 0f), new Vector3(4.5f, 4f, 8f), new Vector3(drivewayX, 0.05f, 0f));
@@ -849,11 +851,53 @@ namespace CarSales.EditorTools
         {
             // Front of a replacement model (+Z) faces the street: south-facing buildings turn 180°.
             var t = Slot(g, "Building", pos, PlaceholderKind.Building, size, facesSouth ? 180f : 0f);
-            Solid(t, "Building", new Vector3(0f, size.y / 2f, 0f), size, mat);
+            var body = Solid(t, "Building", new Vector3(0f, size.y / 2f, 0f), size, mat);
+            var facade = FacadeFor(mat, size, m);
+            if (facade)
+            {
+                // Phase 13: a real façade (windows, frames, lit rooms at night) on the walls and a gravel roof on top.
+                body.GetComponent<Renderer>().sharedMaterials = new[] { facade, m.roof };
+                RoofClutter(t, size, m, Mathf.Abs(pos.x * 7f + pos.z * 3f));
+                return;
+            }
             float faceZ = facesSouth ? -size.z / 2f - 0.06f : size.z / 2f + 0.06f;
             int floors = Mathf.FloorToInt(size.y / 3.2f);
             for (int f = 1; f < floors; f++)
                 Deco(t, "Windows", PrimitiveType.Cube, new Vector3(0f, f * 3.2f + 0.6f, faceZ), new Vector3(size.x * 0.86f, 1.3f, 0.06f), m.windowsGlow);
+        }
+
+        /// <summary>Glass offices for tall or clad blocks; rendered or brick flats for the rest.</summary>
+        static Material FacadeFor(Material mat, Vector3 size, Mats m)
+        {
+            if (m.facadeOffice == null) return null;
+            if (mat == m.cladding || size.y >= 18f) return m.facadeOffice;
+            int i = System.Array.IndexOf(m.buildings, mat);
+            return i == 1 ? m.facadeBrick : m.facadeApartment;
+        }
+
+        /// <summary>Parapet, air-conditioning units, a lift housing and a water tank: what a real flat roof has on it.</summary>
+        static void RoofClutter(Transform t, Vector3 size, Mats m, float seed)
+        {
+            float top = size.y, hx = size.x / 2f, hz = size.z / 2f;
+            Deco(t, "Parapet_N", PrimitiveType.Cube, new Vector3(0f, top + 0.45f, hz - 0.15f), new Vector3(size.x, 0.9f, 0.3f), m.concrete);
+            Deco(t, "Parapet_S", PrimitiveType.Cube, new Vector3(0f, top + 0.45f, -hz + 0.15f), new Vector3(size.x, 0.9f, 0.3f), m.concrete);
+            Deco(t, "Parapet_E", PrimitiveType.Cube, new Vector3(hx - 0.15f, top + 0.45f, 0f), new Vector3(0.3f, 0.9f, size.z - 0.6f), m.concrete);
+            Deco(t, "Parapet_W", PrimitiveType.Cube, new Vector3(-hx + 0.15f, top + 0.45f, 0f), new Vector3(0.3f, 0.9f, size.z - 0.6f), m.concrete);
+            int units = 2 + (int)(seed % 3f);
+            for (int i = 0; i < units; i++)
+            {
+                float x = -hx + 2.5f + ((seed * (i + 3)) % Mathf.Max(1f, size.x - 5f));
+                float z = -hz + 2f + ((seed * (i + 7)) % Mathf.Max(1f, size.z - 4f));
+                var unit = Deco(t, "AirCon", PrimitiveType.Cube, new Vector3(x, top + 0.6f, z), new Vector3(1.6f, 1.2f, 1.1f), m.metal);
+                unit.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.On;
+            }
+            if (size.y > 12f)
+            {
+                var housing = Deco(t, "LiftHousing", PrimitiveType.Cube, new Vector3(hx * 0.4f, top + 1.6f, 0f), new Vector3(3.2f, 3.2f, 3.6f), m.concrete);
+                housing.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.On;
+                var tank = Deco(t, "WaterTank", PrimitiveType.Cylinder, new Vector3(-hx * 0.5f, top + 1.4f, hz * 0.3f), new Vector3(2.2f, 1.4f, 2.2f), m.metal);
+                tank.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.On;
+            }
         }
     }
 }

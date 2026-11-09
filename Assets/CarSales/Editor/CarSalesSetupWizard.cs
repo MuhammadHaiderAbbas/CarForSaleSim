@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CarSales.Foundation.Graphics;
 using TMPro;
 using Unity.AI.Navigation;
 using UnityEditor;
@@ -44,6 +45,7 @@ namespace CarSales.EditorTools
             if (!EditorUtility.DisplayDialog("Car Sales Simulator",
                     "This will (re)create everything inside\n\n" + Gen +
                     "\n\n(materials, car models, data, prefabs, the dealership world and the scenes).\n" +
+                    "The first time, it also sets up Low / Medium / High / Ultra graphics levels (undo: Realism > Restore Original Graphics).\n" +
                     "Anything you changed inside that folder will be replaced.\n\nContinue?",
                     "Build", "Cancel")) return;
 
@@ -61,6 +63,15 @@ namespace CarSales.EditorTools
                 if (AssetDatabase.IsValidFolder(Gen)) AssetDatabase.DeleteAsset(Gen);
                 foreach (var f in new[] { "Materials", "Data/Cars", "Prefabs/CarModels", "Scenes", "Resources" })
                     EnsureFolder(Gen + "/" + f);
+
+                if (RealisticGraphics.NeverApplied)
+                {
+                    Progress("Graphics levels", 0.04f);
+                    Debug.Log("[CarSales] " + RealisticGraphics.Apply().Replace("\n", " "));
+                }
+
+                Progress("Textures", 0.05f);
+                EnsureSurfaceTextures();   // phase 13: generated once, reused afterwards
 
                 Progress("Materials", 0.08f);
                 var mats = CreateMaterials();
@@ -89,7 +100,7 @@ namespace CarSales.EditorTools
                     "Done!\n\nGame scene: " + ScenePath + "\nMain menu: " + MenuScenePath +
                     "\nTest track: " + TestTrackScenePath +
                     "\n\nPress PLAY here to jump straight in, or open the MainMenu scene for the full flow.\n\n" +
-                    "E interact | F drive | Tab inventory | M map | P phone | Esc menu\nSleep at home to end the day.\nF1 +£10,000 (debug) | F5/F9 save/load | F12 delete save",
+                    "E interact | F drive | Tab inventory | M map | P phone | Esc menu\nSleep at home to end the day.\nDebug: F1 +£10,000 | F2 +1 hour | F4 next weather | F5/F9 save/load | F12 delete save",
                     "Let's go");
             }
             catch (System.Exception e)
@@ -262,7 +273,13 @@ namespace CarSales.EditorTools
             public Material[] buildings; public Material windowsGlow;
             public Material timber, cladding, brick, darkGlass, solar, water, goldTrim, ledStrip;   // phase 11b building levels
             public Material fieldWheat, fieldSoil;   // phase 12 countryside
+            public Material roofTiles, roofSlate, marble, carpet, epoxy, facadeOffice, facadeApartment, facadeBrick;   // phase 13 realism
+            public Material fabricLight, fabricAccent, leather, linen, gloss, worktop, blackGlass, chrome, daylight, lampShade, racking, tiles;
+            public Material[] art;   // phase 13c furniture
         }
+
+        /// <summary>The materials of the current build (PitchedRoof and other helpers swap in their realistic versions).</summary>
+        static Mats mats;
 
         static bool loadMaterialsOnly;
 
@@ -334,43 +351,43 @@ namespace CarSales.EditorTools
             litShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
             colorProperty = litShader.name == "Standard" ? "_Color" : "_BaseColor";
 
-            return new Mats
+            var made = new Mats
             {
-                paint = M("M_CarPaint", Color.white, 0.88f, metallic: 0.3f),
+                paint = ClearCoat(M("M_CarPaint", Color.white, 0.88f, metallic: 0.3f)),
                 glass = M("M_CarGlass", new Color(0.06f, 0.08f, 0.11f), 0.95f),
                 tire = M("M_Tire", new Color(0.05f, 0.05f, 0.05f), 0.15f),
                 headlight = M("M_Headlight", new Color(1f, 0.96f, 0.8f), 0.9f, true, 2.5f),
                 taillight = M("M_Taillight", new Color(0.85f, 0.05f, 0.05f), 0.9f, true, 2f),
                 trim = M("M_CarTrim", new Color(0.09f, 0.09f, 0.1f), 0.5f),
-                ground = M("M_Grass", new Color(0.28f, 0.38f, 0.22f), 0.05f),
-                asphalt = M("M_Asphalt", new Color(0.16f, 0.16f, 0.17f), 0.35f),
+                ground = Surf(M("M_Grass", new Color(0.28f, 0.38f, 0.22f), 0.05f), SurfaceId.Grass),
+                asphalt = Surf(M("M_Asphalt", new Color(0.16f, 0.16f, 0.17f), 0.35f), SurfaceId.Asphalt),
                 line = M("M_LotLine", new Color(0.95f, 0.95f, 0.92f), 0.3f),
                 yellowLine = M("M_YellowLine", new Color(0.95f, 0.75f, 0.1f), 0.3f),
-                sidewalk = M("M_Sidewalk", new Color(0.62f, 0.62f, 0.6f), 0.15f),
-                floor = M("M_ShowroomFloor", new Color(0.78f, 0.79f, 0.8f), 0.9f),
-                wall = M("M_Wall", new Color(0.92f, 0.92f, 0.94f), 0.2f),
-                roof = M("M_Roof", new Color(0.2f, 0.21f, 0.24f), 0.2f),
+                sidewalk = Surf(M("M_Sidewalk", new Color(0.62f, 0.62f, 0.6f), 0.15f), SurfaceId.Paving),
+                floor = Surf(M("M_ShowroomFloor", new Color(0.78f, 0.79f, 0.8f), 0.9f), SurfaceId.FloorTile),
+                wall = Surf(M("M_Wall", new Color(0.92f, 0.92f, 0.94f), 0.2f), SurfaceId.Render, new Color(0.9f, 0.9f, 0.9f)),
+                roof = Surf(M("M_Roof", new Color(0.2f, 0.21f, 0.24f), 0.2f), SurfaceId.RoofMembrane),
                 frame = M("M_WindowFrame", new Color(0.12f, 0.13f, 0.15f), 0.6f, metallic: 0.6f),
                 windowGlass = Transparent(M("M_ShopGlass", new Color(0.55f, 0.75f, 0.9f), 0.95f), 0.25f),
                 accentPanel = M("M_SignPanel", new Color(0.05f, 0.12f, 0.3f), 0.6f),
                 signWhite = M("M_SignWhite", Color.white, 0.5f, true, 1.2f),
-                desk = M("M_Wood", new Color(0.42f, 0.27f, 0.15f), 0.45f),
+                desk = Surf(M("M_Wood", new Color(0.42f, 0.27f, 0.15f), 0.45f), SurfaceId.Wood, new Color(0.46f, 0.3f, 0.17f)),
                 screen = M("M_Screen", new Color(0.12f, 0.35f, 0.75f), 0.9f, true, 1.5f),
                 customer = M("M_Customer", new Color(0.7f, 0.7f, 0.7f), 0.2f),
                 signBoard = M("M_SignBoard", new Color(0.08f, 0.08f, 0.1f), 0.5f),
-                metal = M("M_Metal", new Color(0.35f, 0.36f, 0.38f), 0.7f, metallic: 0.8f),
-                trunk = M("M_TreeTrunk", new Color(0.33f, 0.22f, 0.13f), 0.1f),
-                leaves = M("M_Leaves", new Color(0.2f, 0.45f, 0.18f), 0.1f),
+                metal = Surf(M("M_Metal", new Color(0.35f, 0.36f, 0.38f), 0.7f, metallic: 0.8f), SurfaceId.BrushedMetal, new Color(0.55f, 0.56f, 0.58f)),
+                trunk = Surf(M("M_TreeTrunk", new Color(0.33f, 0.22f, 0.13f), 0.1f), SurfaceId.Bark),
+                leaves = Surf(M("M_Leaves", new Color(0.2f, 0.45f, 0.18f), 0.1f), SurfaceId.Foliage),
                 lampGlow = M("M_LampGlow", new Color(1f, 0.9f, 0.7f), 0.5f, true, 3f),
                 ceilingLight = M("M_CeilingLight", Color.white, 0.5f, true, 2.5f),
-                sofa = M("M_Sofa", new Color(0.18f, 0.19f, 0.22f), 0.3f),
+                sofa = Surf(M("M_Sofa", new Color(0.18f, 0.19f, 0.22f), 0.3f), SurfaceId.Fabric, new Color(0.2f, 0.21f, 0.24f)),
                 pot = M("M_Pot", new Color(0.85f, 0.85f, 0.85f), 0.4f),
                 bin = M("M_Bin", new Color(0.15f, 0.25f, 0.2f), 0.4f),
                 cone = M("M_Cone", new Color(1f, 0.42f, 0.05f), 0.4f),
                 flagRed = M("M_FlagRed", new Color(0.8f, 0.1f, 0.12f), 0.3f),
                 flagBlue = M("M_FlagBlue", new Color(0.1f, 0.25f, 0.7f), 0.3f),
                 flagWhite = M("M_FlagWhite", new Color(0.92f, 0.92f, 0.95f), 0.3f),
-                concrete = M("M_Concrete", new Color(0.5f, 0.5f, 0.52f), 0.25f),
+                concrete = Surf(M("M_Concrete", new Color(0.5f, 0.5f, 0.52f), 0.25f), SurfaceId.Concrete),
                 liftYellow = M("M_LiftYellow", new Color(0.95f, 0.75f, 0.1f), 0.5f),
                 toolRed = M("M_ToolRed", new Color(0.75f, 0.1f, 0.1f), 0.6f),
                 brushBlue = M("M_WashBrush", new Color(0.15f, 0.35f, 0.9f), 0.2f),
@@ -378,23 +395,53 @@ namespace CarSales.EditorTools
                 platform = M("M_DisplayPlatform", new Color(0.12f, 0.12f, 0.14f), 0.95f),
                 ringGlow = M("M_RingGlow", new Color(0.2f, 0.55f, 1f), 0.5f, true, 3f),
                 windowsGlow = M("M_BuildingWindows", new Color(0.55f, 0.7f, 0.85f), 0.9f, true, 0.8f),
-                timber = M("M_Timber", new Color(0.55f, 0.38f, 0.22f), 0.25f),
-                cladding = M("M_Cladding", new Color(0.18f, 0.2f, 0.24f), 0.55f, metallic: 0.5f),
-                brick = M("M_Brick", new Color(0.55f, 0.27f, 0.2f), 0.15f),
+                timber = Surf(M("M_Timber", new Color(0.55f, 0.38f, 0.22f), 0.25f), SurfaceId.Wood, new Color(0.6f, 0.43f, 0.27f)),
+                cladding = Surf(M("M_Cladding", new Color(0.18f, 0.2f, 0.24f), 0.55f, metallic: 0.5f), SurfaceId.Cladding, new Color(0.2f, 0.22f, 0.26f)),
+                brick = Surf(M("M_Brick", new Color(0.55f, 0.27f, 0.2f), 0.15f), SurfaceId.Brick),
                 darkGlass = Transparent(M("M_DarkGlass", new Color(0.12f, 0.2f, 0.3f), 0.95f), 0.45f),
                 solar = M("M_Solar", new Color(0.05f, 0.08f, 0.2f), 0.9f, metallic: 0.4f),
                 water = M("M_Water", new Color(0.2f, 0.55f, 0.85f), 0.95f),
                 goldTrim = M("M_GoldTrim", new Color(0.85f, 0.65f, 0.25f), 0.7f, metallic: 0.8f),
                 ledStrip = M("M_LedStrip", new Color(0.4f, 0.8f, 1f), 0.5f, true, 3f),
-                fieldWheat = M("M_FieldWheat", new Color(0.72f, 0.66f, 0.38f), 0.05f),
-                fieldSoil = M("M_FieldSoil", new Color(0.42f, 0.33f, 0.22f), 0.05f),
+                fieldWheat = Surf(M("M_FieldWheat", new Color(0.72f, 0.66f, 0.38f), 0.05f), SurfaceId.Wheat),
+                fieldSoil = Surf(M("M_FieldSoil", new Color(0.42f, 0.33f, 0.22f), 0.05f), SurfaceId.Soil),
                 buildings = new[]
                 {
-                    M("M_BuildingA", new Color(0.55f, 0.58f, 0.62f), 0.3f),
-                    M("M_BuildingB", new Color(0.42f, 0.45f, 0.52f), 0.3f),
-                    M("M_BuildingC", new Color(0.65f, 0.6f, 0.55f), 0.3f),
+                    Surf(M("M_BuildingA", new Color(0.55f, 0.58f, 0.62f), 0.3f), SurfaceId.Render, new Color(0.78f, 0.76f, 0.72f)),
+                    Surf(M("M_BuildingB", new Color(0.42f, 0.45f, 0.52f), 0.3f), SurfaceId.Render, new Color(0.62f, 0.66f, 0.72f)),
+                    Surf(M("M_BuildingC", new Color(0.65f, 0.6f, 0.55f), 0.3f), SurfaceId.Render, new Color(0.86f, 0.8f, 0.68f)),
+                },
+                // Phase 13: realistic surfaces that had no material of their own before.
+                roofTiles = Surf(M("M_RoofTiles", new Color(0.6f, 0.3f, 0.22f), 0.3f), SurfaceId.RoofTiles, new Color(0.58f, 0.27f, 0.19f)),
+                roofSlate = Surf(M("M_RoofSlate", new Color(0.3f, 0.32f, 0.35f), 0.3f), SurfaceId.RoofTiles, new Color(0.28f, 0.3f, 0.33f)),
+                marble = Surf(M("M_MarbleFloor", new Color(0.9f, 0.9f, 0.9f), 0.95f), SurfaceId.Marble),
+                carpet = Surf(M("M_Carpet", new Color(0.3f, 0.32f, 0.36f), 0.05f), SurfaceId.Carpet, new Color(0.3f, 0.32f, 0.37f)),
+                epoxy = Surf(M("M_WorkshopFloor", new Color(0.45f, 0.47f, 0.48f), 0.6f), SurfaceId.Epoxy),
+                facadeOffice = Surf(M("M_FacadeOffice", Color.white, 0.9f), SurfaceId.FacadeOffice),
+                facadeApartment = Surf(M("M_FacadeApartment", Color.white, 0.5f), SurfaceId.FacadeApartment),
+                facadeBrick = Surf(M("M_FacadeBrick", Color.white, 0.5f), SurfaceId.FacadeBrick),
+                // Phase 13c: furniture and interiors.
+                fabricLight = Surf(M("M_FabricLight", new Color(0.82f, 0.79f, 0.72f), 0.2f), SurfaceId.Fabric, new Color(0.8f, 0.77f, 0.7f)),
+                fabricAccent = Surf(M("M_FabricAccent", new Color(0.16f, 0.34f, 0.4f), 0.2f), SurfaceId.Fabric, new Color(0.17f, 0.36f, 0.42f)),
+                leather = M("M_Leather", new Color(0.24f, 0.14f, 0.09f), 0.55f),
+                linen = Surf(M("M_Linen", new Color(0.93f, 0.93f, 0.91f), 0.15f), SurfaceId.Fabric, new Color(0.92f, 0.92f, 0.9f)),
+                gloss = M("M_KitchenGloss", new Color(0.9f, 0.9f, 0.88f), 0.82f),
+                worktop = Surf(M("M_Worktop", new Color(0.2f, 0.2f, 0.21f), 0.85f), SurfaceId.Marble),
+                blackGlass = M("M_BlackGlass", new Color(0.02f, 0.02f, 0.025f), 0.96f),
+                chrome = M("M_Chrome", new Color(0.86f, 0.86f, 0.88f), 0.94f, metallic: 1f),
+                daylight = M("M_DaylightWindow", new Color(0.86f, 0.92f, 1f), 0.9f, true, 1.6f),
+                lampShade = M("M_LampShade", new Color(1f, 0.86f, 0.66f), 0.3f, true, 1.4f),
+                racking = M("M_Racking", new Color(0.95f, 0.45f, 0.08f), 0.5f, metallic: 0.3f),
+                tiles = Surf(M("M_WallTiles", new Color(0.9f, 0.9f, 0.9f), 0.85f), SurfaceId.FloorTile),
+                art = new[]
+                {
+                    M("M_ArtA", new Color(0.78f, 0.36f, 0.22f), 0.3f),
+                    M("M_ArtB", new Color(0.16f, 0.3f, 0.52f), 0.3f),
+                    M("M_ArtC", new Color(0.86f, 0.72f, 0.36f), 0.3f),
                 },
             };
+            mats = made;
+            return made;
         }
 
         // ------------------------------------------------------------------ CARS
@@ -585,6 +632,7 @@ namespace CarSales.EditorTools
             Progress("Systems", 0.8f);
             var systems = BuildSystems(db, a, carDisplayPrefab);
             BuildPlayer(a, town.playerStart);
+            AddRealismDirector(m);
 
             var es = new GameObject("EventSystem", typeof(EventSystem));
             es.AddComponent<InputSystemUIInputModule>().AssignDefaultActions();
@@ -592,6 +640,7 @@ namespace CarSales.EditorTools
             PrefabUtility.SaveAsPrefabAssetAndConnect(systems, $"{Gen}/Prefabs/CarSalesSystems.prefab", InteractionMode.AutomatedAction);
             int swapped = PlaceholderReplacer.ApplyToOpenScene(false);   // your imported buildings/props (Asset Studio > Town)
             if (swapped > 0) Debug.Log($"[CarSales] {swapped} placeholders replaced with your imported models.");
+            ApplyMetricUVs(scene);   // phase 13: textures at real size
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Progress("Baking NavMesh", 0.9f);
@@ -629,6 +678,8 @@ namespace CarSales.EditorTools
             light.type = LightType.Directional;
             light.intensity = intensity;
             light.shadows = LightShadows.Soft;
+            light.shadowStrength = 0.92f;
+            light.colorTemperature = 5600f;
             go.transform.rotation = Quaternion.Euler(euler);
             var sky = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
             if (sky) RenderSettings.skybox = sky;
@@ -812,6 +863,7 @@ namespace CarSales.EditorTools
             var menu = canvasGo.AddComponent<MainMenuUI>();
             SetString(menu, "gameScene", Path.GetFileNameWithoutExtension(ScenePath));
 
+            ApplyMetricUVs(scene);
             EditorSceneManager.SaveScene(scene, MenuScenePath);
         }
 

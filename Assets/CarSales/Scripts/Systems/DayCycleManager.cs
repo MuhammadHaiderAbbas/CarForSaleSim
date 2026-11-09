@@ -161,7 +161,7 @@ namespace CarSales
                 CarSalesServices.Marketplace.RefreshListings();
                 if (CarSalesServices.Auction) CarSalesServices.Auction.GenerateLots();
                 if (CarSalesServices.Messages) CarSalesServices.Messages.GenerateDaily(CurrentDay);
-                TeleportPlayerHome();
+                TeleportPlayerHome(true);
                 CarSalesServices.UI.dailyReport.Show(report);
                 if (GameSettings.AutoSave) CarSalesServices.Save.SaveGame();   // phase 12: Settings > Gameplay > Auto Save
             }
@@ -204,9 +204,15 @@ namespace CarSales
             CheckOpenState(true);
         }
 
-        public static void TeleportPlayerHome()
+        /// <param name="wakeInBed">After sleeping: wake up beside the bed in the walk-in home (phase 13c), if it has one.</param>
+        public static void TeleportPlayerHome(bool wakeInBed = false)
         {
             var props = CarSalesServices.Properties;
+            if (wakeInBed && props)
+            {
+                var interior = HomeInterior.Find(props.ActiveHome);
+                if (interior) { interior.WakeUp(); return; }
+            }
             var bed = props ? HomeBed.Find(props.ActiveHome) : null;
             if (!bed) return;
             var p = bed.wakePoint ? bed.wakePoint : bed.transform;

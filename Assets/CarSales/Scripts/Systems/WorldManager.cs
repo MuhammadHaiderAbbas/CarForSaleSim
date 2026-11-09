@@ -20,6 +20,10 @@ namespace CarSales
         ParticleSystem rain;
         readonly List<Material> roadMats = new List<Material>();
         readonly List<float> roadDry = new List<float>();
+        readonly List<Color> roadDryColour = new List<Color>();
+        /// <summary>Outdoor materials that get darker and shinier in the rain (phase 13: roads, pavements, roofs, brick).</summary>
+        static readonly string[] WettableMaterials = { "M_Asphalt", "M_Sidewalk", "M_Concrete", "M_Roof", "M_RoofTiles", "M_RoofSlate", "M_Brick", "M_FieldSoil", "M_LotLine", "M_YellowLine" };
+        float lastHour = -1f;
         float wetness, sunFactor = 1f, policeHour = -1f;
         int policeDay = -1;
 
@@ -57,6 +61,7 @@ namespace CarSales
         {
             if (CarSalesServices.DayCycle) CarSalesServices.DayCycle.OnTimeChanged -= OnTime;
             foreach (var m in roadMats) if (m) Destroy(m);
+            roadMats.Clear(); roadDry.Clear(); roadDryColour.Clear();
         }
 
         public void SetState(WorldState s)
@@ -68,6 +73,14 @@ namespace CarSales
         }
 
         public void ResetState() => SetState(new WorldState());
+
+        /// <summary>Debug (F4): switch straight to the next kind of weather to check how the town looks in it.</summary>
+        public void DebugNextWeather()
+        {
+            state.weather = ((int)state.Weather + 1) % 6;
+            ApplyWeather(false);
+            CarSalesServices.UI.Notify("Weather: " + WorldSim.Name(state.Weather));
+        }
 
         // ------------------------------------------------------------------ WEATHER
         void OnTime(float hour)
@@ -100,38 +113,75 @@ namespace CarSales
 
         void CollectRoads()
         {
-            // Wet roads: one runtime copy of the asphalt material, made shinier when it rains.
+            // Wet ground: one runtime copy of each outdoor material, made darker and shinier when it rains.
+            // Includes hidden building levels so a rebuilt dealership gets wet too.
             var copies = new Dictionary<Material, Material>();
-            foreach (var r in UnityCompat.FindAll<Renderer>())
+            foreach (var r in UnityCompat.FindAll<Renderer>(true))
             {
-                var m = r.sharedMaterial;
-                if (!m || !(m.name.StartsWith("M_Asphalt") || m.name.StartsWith("M_Sidewalk"))) continue;
-                if (!copies.TryGetValue(m, out var copy))
+                if (r is ParticleSystemRenderer) continue;
+                var shared = r.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < shared.Length; i++)
                 {
-                    copy = new Material(m) { name = m.name + " (wet)" };
-                    copies[m] = copy;
-                    roadMats.Add(copy);
-                    roadDry.Add(copy.HasProperty("_Smoothness") ? copy.GetFloat("_Smoothness") : 0.3f);
+                    var m = shared[i];
+                    if (!m || !IsWettable(m.name)) continue;
+                    if (!copies.TryGetValue(m, out var copy))
+                    {
+                        copy = new Material(m) { name = m.name + " (wet)" };
+                        copies[m] = copy;
+                        roadMats.Add(copy);
+                        roadDry.Add(copy.HasProperty("_Smoothness") ? copy.GetFloat("_Smoothness") : 0.3f);
+                        roadDryColour.Add(copy.HasProperty("_BaseColor") ? copy.GetColor("_BaseColor") : Color.white);
+                    }
+                    shared[i] = copy;
+                    changed = true;
                 }
-                r.sharedMaterial = copy;
+                if (changed) r.sharedMaterials = shared;
             }
+        }
+
+        static bool IsWettable(string name)
+        {
+            foreach (var w in WettableMaterials)
+                if (name == w || name.StartsWith(w + " ")) return true;
+            return false;
         }
 
         void Update()
         {
             bool wet = WorldSim.IsWet(state.Weather);
-            wetness = Mathf.MoveTowards(wetness, wet ? 1f : 0f, Time.deltaTime / (wet ? 60f : 240f));
+            float hour = CarSalesServices.DayCycle ? CarSalesServices.DayCycle.HourOfDay : 12f;
+            // Wetness follows game time (soaked in ~20 game minutes, dry in ~2 hours); falls back to real time with no clock.
+            float gameHours = lastHour < 0f ? 0f : Mathf.Repeat(hour - lastHour, 24f);
+            if (gameHours > 6f) gameHours = 0f;   // slept / loaded: jump
+            lastHour = hour;
+            float target = RealismSim.WetTarget(wet, state.Weather == Weather.HeavyRain);
+            wetness = CarSalesServices.DayCycle ? RealismSim.StepWetness(wetness, target, gameHours)
+                                                : Mathf.MoveTowards(wetness, target, Time.deltaTime / (wet ? 60f : 240f));
             sunFactor = Mathf.MoveTowards(sunFactor, WorldSim.SunLight(state.Weather), Time.deltaTime * 0.05f);
             for (int i = 0; i < roadMats.Count; i++)
-                if (roadMats[i] && roadMats[i].HasProperty("_Smoothness")) roadMats[i].SetFloat("_Smoothness", Mathf.Lerp(roadDry[i], 0.85f, wetness));
+            {
+                var m = roadMats[i];
+                if (!m) continue;
+                if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", RealismSim.WetSmoothness(roadDry[i], wetness));
+                if (m.HasProperty("_BaseColor"))
+                {
+                    var c = roadDryColour[i] * RealismSim.WetDarken(wetness);
+                    c.a = roadDryColour[i].a;
+                    m.SetColor("_BaseColor", c);
+                }
+            }
 
-            float fog = WorldSim.FogDensity(state.Weather);
-            RenderSettings.fog = fog > 0f || RenderSettings.fogDensity > 0.0005f;
+            // Fog: the weather's fog or the time of day's haze (whichever is thicker), coloured for the time of day.
+            // Indoors (walk-in home) the air is clear.
+            float fog = InteriorState.Inside ? 0f : RealismSim.FogDensity(WorldSim.FogDensity(state.Weather), hour);
+            RenderSettings.fog = fog > 0f || RenderSettings.fogDensity > 0.00005f;
             RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogDensity = Mathf.MoveTowards(RenderSettings.fogDensity, fog, Time.deltaTime * 0.002f);
-            RenderSettings.fogColor = Color.Lerp(new Color(0.55f, 0.6f, 0.66f), new Color(0.75f, 0.77f, 0.8f), sunFactor);
+            var fc = RealismSim.FogColour(hour, sunFactor);
+            RenderSettings.fogColor = new Color(fc.r, fc.g, fc.b);
 
-            UpdateRain(wet);
+            UpdateRain(wet && !InteriorState.Inside);
         }
 
         void UpdateRain(bool wet)
@@ -145,7 +195,8 @@ namespace CarSales
             }
             rain.transform.position = cam.transform.position + Vector3.up * 12f;
             var em = rain.emission;
-            em.rateOverTime = state.Weather == Weather.HeavyRain ? 2600f : state.Weather == Weather.Rain ? 1100f : 0f;
+            em.rateOverTime = !wet ? 0f : state.Weather == Weather.HeavyRain ? 2600f : state.Weather == Weather.Rain ? 1100f : 0f;
+            if (!wet && rain.particleCount > 0 && InteriorState.Inside) rain.Clear();
         }
 
         static ParticleSystem CreateRain()

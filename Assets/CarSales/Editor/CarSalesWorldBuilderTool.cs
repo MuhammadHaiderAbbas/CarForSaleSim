@@ -148,6 +148,7 @@ namespace CarSales.EditorTools
             net.lightNodes = TownPlan.LightNodes.ToList();
             int swapped = PlaceholderReplacer.ApplyToOpenScene(false);
             EditorUtility.SetDirty(net);
+            ApplyMetricUVs(scene);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
@@ -232,6 +233,7 @@ namespace CarSales.EditorTools
             layout.sites.RemoveAll(x => x.id == rec.id);
             layout.sites.Add(rec);
             EditorUtility.SetDirty(layout);
+            ApplyMetricUVs(scene);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();

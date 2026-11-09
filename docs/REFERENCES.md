@@ -172,6 +172,8 @@
 ## D. Free assets to replace the placeholders
 
 Always check each asset's licence before shipping. CC0 = free for any use, no credit needed.
+**For a realistic look, follow [REALISM_GUIDE.md](REALISM_GUIDE.md)** and avoid the low-poly packs below (Kenney,
+Quaternius): they suit a stylised game, not this one.
 
 | What | Where | Notes |
 |---|---|---|

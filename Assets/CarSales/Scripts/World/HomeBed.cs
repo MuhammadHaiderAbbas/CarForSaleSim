@@ -26,6 +26,7 @@ namespace CarSales
             string name = info != null ? info.displayName : "House";
             if (!props || !props.Owns(propertyId)) return $"{name} - for sale (see the sign / Real Estate)";
             if (!IsMyHome) return $"[E] Move into {name}";
+            if (HomeInterior.Find(propertyId)) return Loc.T("home.goInside", "[E] Go inside");   // phase 13c: sleep in your bed
             var day = CarSalesServices.DayCycle;
             return day.CanSleep ? $"[E] Sleep - end Day {day.CurrentDay}" : $"{name} (you can sleep after {DayCycleManager.EarliestSleepHour:00}:00)";
         }
@@ -40,6 +41,8 @@ namespace CarSales
                 CarSalesServices.UI.Success("Moved in!", $"{props.Get(propertyId).displayName} is now your home.");
                 return;
             }
+            var interior = HomeInterior.Find(propertyId);
+            if (interior) { interior.Enter(); return; }   // phase 13c: walk-in home
             if (!CarSalesServices.DayCycle.CanSleep)
             {
                 CarSalesServices.UI.Error($"You're not tired yet. You can sleep after {DayCycleManager.EarliestSleepHour:00}:00.");

@@ -534,3 +534,40 @@ Won cars appear in the auction car park — drive or tow them home.
 - `Studio/Editor/ReleaseChecklistWindow.cs` (+ build gate), `OnlinePanel` link list. `THIRD_PARTY_NOTICES.txt` at
   the project root is copied next to builds by `CarSalesBuild`.
 
+## 27. Surfaces (Phase 13a)
+- **Generator** (tested): `Foundation/Graphics/SurfaceGen.cs` - `SurfaceId`, `SurfaceInfo` (metres per tile,
+  smoothness scale, tintable, wettable, emission), `Generate(id, size, seed)` → `SurfaceMaps` (RGBA bytes, row 0 = bottom).
+  Mask = R metallic, G occlusion, A relative smoothness (the material's `_Smoothness` scales it, so rain can raise it).
+- **Metric meshes** (tested): `Foundation/Graphics/MetricMesh.cs` - `Box(sx, sy, sz, splitCaps)`, `Plane`, `Cylinder`,
+  `Key`. Unit-size geometry like Unity's primitives with UVs in metres; split caps = façade on the walls, roof on top.
+- **Editor**: `Editor/CarSalesSurfaces.cs` - `EnsureSurfaceTextures` (cached PNGs + `surfaces.txt` stamp with average
+  colours), `Surf`/`ApplySurface` (textures, tiling, tint, macro detail map, emission), `ApplyMetricUVs(scene)` before
+  each scene save, `ClearCoat`. `SurfaceLibrary` asset + `SurfaceLibraryWindow`. `SurfaceTextureImport` sets importer
+  options (normal maps, linear masks, aniso 8, streaming).
+
+## 28. Lighting and atmosphere (Phase 13b)
+- **Graphics tiers**: `Editor/RealisticGraphics.cs` - `Apply()` copies the default URP asset + renderer per tier into
+  `Data/Rendering`, sets fields by name through `SerializedObject` (skips missing ones), adds SSAO like URP's inspector
+  (`m_RendererFeatures` + `m_RendererFeatureMap`), rewrites `m_QualitySettings` to four levels; `Restore()` uses
+  `original-graphics.json`. `NeverApplied` → Build Everything applies once.
+- **Post**: `CarSalesLooks` - day profile plus `PostNight` / `PostRain` volumes (weight 0); `Fx()` adds effects by type
+  name and sets `m_Value` / `m_OverrideState`.
+- **Rules** (tested): `Sim/World/RealismSim.cs` - `Darkness`, `GoldenHour`, `Haze`, `FogDensity`, `FogColour`,
+  `StreetLightsOn`, `WindowGlow`, `StepWetness`, `WetDarken`, `WetSmoothness`.
+- **Runtime**: `World/RealismDirector.cs` (night window / glow / daylight material copies, lamp-light pool, headlights,
+  volume weights via reflection, `HomeInterior.Track()`), `WorldManager` (wettable material copies, haze and fog colour).
+
+## 29. Interiors (Phase 13c)
+- **Plans** (tested): `Sim/World/InteriorPlan.cs` - `FurnitureType`, `FurnitureItem` (`Footprint`, `Blocks`),
+  `Home(tier)` (studio / family home / villa), `Showroom(level)`, `ShowroomObstacles`, `CanWalk` (10 cm flood fill).
+- **Kit**: `Editor/CarSalesInteriors.cs` - one function per piece (front = +Z), each in a `PlaceholderSlot`;
+  `PlaceItem` builds plan items; `FurnishShowroom/ServiceCentre/Workshop/PartsShop`; `BuildHomeInterior` (shell 40 m
+  under the house, windows, lights, probe, door, bed).
+- **Runtime**: `HomeInterior` (registry, `Contains`, `Track` → `InteriorState`, `Enter/Leave/WakeUp`), `InteriorDoor`,
+  `InteriorBed`; `HomeBed` enters the interior; `DayCycleManager.TeleportPlayerHome(wakeInBed)`; `AmbienceManager`
+  muffles the town indoors. `PlaceholderKind` 4-12 accept Interior or Prop assets.
+
+## 30. Realism checklist (Phase 13d)
+- `Studio/Core/RealismChecklist.cs` (tested): `RealismInputs` → `Evaluate` (items with weight, progress, why, next step),
+  `Score`, `NextStep`. `Studio/Editor/RealismChecklistWindow.cs` gathers the inputs (registry, Surface Library,
+  placeholder choices, Character Setup, Audio Library, graphics) and opens the right tool. Guide: `docs/REALISM_GUIDE.md`.

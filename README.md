@@ -54,7 +54,10 @@ a **credits** screen, **one-click Windows builds** (*Tools → Car Sales → Bui
 (computer → **Buildings**). Phase 12 (**CarForSaleSimV2**) rebuilds the town to the **master map** (14 zones round a
 test-drive loop with roundabouts), restyles the whole interface to the **V2 UI board** (icons, colours, new menus,
 settings, HUD, phone, fuel station), and adds a **Release Checklist** (*Tools → Car Sales*) that must pass before a
-Steam release build.
+Steam release build. Phase 13 (**Realism**) puts **real textures on every surface**, adds **Low–Ultra graphics levels**
+(shadows, ambient occlusion, real street lamps and headlights at night, wet roads in the rain, haze), **furnished
+interiors** and **walk-in homes**, and a **Realism Checklist** (*Tools → Car Sales → Realism*).
+**To make the game look real, follow [docs/REALISM_GUIDE.md](docs/REALISM_GUIDE.md)** (every step, all free sources).
 
 > **Updating from an older version?** Close Unity. Copy this project's `Assets` folder over your project's `Assets`
 > folder and let it **overwrite** files (don't delete folders first — Unity's hidden `.meta` files must survive).

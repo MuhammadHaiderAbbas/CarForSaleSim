@@ -13,7 +13,7 @@ namespace CarSales.EditorTools
             // Driveway from the road, floor, walls, open front with three bay doors.
             Solid(g, "Driveway", new Vector3(0f, 0.012f, -9.5f), new Vector3(8f, 0.024f, 19f), m.concrete);   // stops at the road
             Solid(g, "Apron", new Vector3(0f, 0.014f, -1.5f), new Vector3(24f, 0.028f, 3f), m.concrete);
-            Solid(g, "Floor", new Vector3(0f, 0.02f, 8f), new Vector3(24f, 0.04f, 16f), m.concrete);
+            Solid(g, "Floor", new Vector3(0f, 0.02f, 8f), new Vector3(24f, 0.04f, 16f), m.epoxy ?? m.concrete);
             // Phase 11b: the shed has three levels; bays, lifts and equipment stay where they are.
             var site = g;
             var levels = LevelRoots(g, BuildingManager.ServiceCentreId, new Vector3(2f, 0f, 9f), new Vector3(34f, 9f, 21f));
@@ -59,14 +59,7 @@ namespace CarSales.EditorTools
             SignText(g, new Vector3(-4f, 3.2f, 15.7f), "WORKSHOP BOARD", 4f, new Color(0.1f, 0.15f, 0.3f), new Vector2(3.2f, 0.4f));
             foreach (float x in new[] { -5.2f, -4.1f, -3f })
                 Deco(g, "BoardColumn", PrimitiveType.Cube, new Vector3(x, 1.95f, 15.72f), new Vector3(0.9f, 1.2f, 0.02f), m.desk);
-            Solid(g, "Workbench", new Vector3(0f, 0.45f, 15.2f), new Vector3(3f, 0.9f, 0.8f), m.metal);
-            for (int s = 0; s < 3; s++)
-            {
-                Solid(g, "Shelf", new Vector3(10.9f, 0.5f + s * 0.8f, 13.5f), new Vector3(1.6f, 0.06f, 3.6f), m.metal);
-                for (int b = 0; b < 3; b++)
-                    Deco(g, "PartBox", PrimitiveType.Cube, new Vector3(10.9f, 0.68f + s * 0.8f, 12.3f + b * 1.2f), new Vector3(0.9f, 0.3f, 0.7f), b % 2 == 0 ? m.toolRed : m.accentPanel);
-            }
-            Solid(g, "ToolChest", new Vector3(-10.9f, 0.55f, 13.5f), new Vector3(0.7f, 1.1f, 1.6f), m.toolRed);
+            FurnishServiceCentre(g, m);   // phase 13c: workbench, racking, tool chest, oil drums, tube lights
             PointLight(g, new Vector3(-8f, 4.8f, 7f), 14f, 1.6f, new Color(0.95f, 0.97f, 1f));
             PointLight(g, new Vector3(0f, 4.8f, 7f), 14f, 1.6f, new Color(0.95f, 0.97f, 1f));
             PointLight(g, new Vector3(8f, 4.8f, 7f), 14f, 1.6f, new Color(0.95f, 0.97f, 1f));
@@ -103,12 +96,7 @@ namespace CarSales.EditorTools
             var counter = InteractBox(g, "PartsCounter", new Vector3(0f, 0.55f, 5.5f), new Vector3(4f, 1.1f, 0.8f), m.desk);
             counter.AddComponent<PartsCounter>();
             Deco(g, "Till", PrimitiveType.Cube, new Vector3(1.2f, 1.25f, 5.5f), new Vector3(0.5f, 0.3f, 0.4f), m.screen);
-            for (int s = 0; s < 3; s++)
-                foreach (float x in new[] { -4.5f, 4.5f })
-                {
-                    Solid(g, "Shelf", new Vector3(x, 0.5f + s * 0.9f, 7.6f), new Vector3(2.4f, 0.06f, 1.2f), m.metal);
-                    Deco(g, "Stock", PrimitiveType.Cube, new Vector3(x, 0.72f + s * 0.9f, 7.6f), new Vector3(2f, 0.36f, 0.8f), s % 2 == 0 ? m.accentPanel : m.toolRed);
-                }
+            FurnishPartsShop(g, m);   // phase 13c: racking with stock, tyre display
             PointLight(g, new Vector3(0f, 3.6f, 4.5f), 10f, 1.4f, new Color(1f, 0.97f, 0.9f));
             AddMapPlace(g.gameObject, "Parts Direct", "P", UIFactory.Warn, new Vector3(0f, 0.1f, -3f));
         }
@@ -128,7 +116,7 @@ namespace CarSales.EditorTools
                     var mat = m.buildings[n % m.buildings.Length];
                     Solid(g, "Lawn", new Vector3(side * 14f, 0.01f, z), new Vector3(16f, 0.02f, 14f), m.ground);
                     Solid(g, "House", new Vector3(side * 18f, 3f, z), new Vector3(8f, 6f, 9f), mat);
-                    var roof = Deco(g, "Roof", PrimitiveType.Cube, new Vector3(side * 18f, 6.2f, z), new Vector3(8.6f, 3.2f, 3.2f), m.flagRed);
+                    var roof = Deco(g, "Roof", PrimitiveType.Cube, new Vector3(side * 18f, 6.2f, z), new Vector3(8.6f, 3.2f, 3.2f), m.roofTiles ?? m.flagRed);
                     roof.transform.localRotation = Quaternion.Euler(45f, 90f, 0f);
                     Deco(g, "Door", PrimitiveType.Cube, new Vector3(side * 13.97f, 1.1f, z + 2f), new Vector3(0.06f, 2.2f, 1.1f), m.desk);
                     Deco(g, "Window", PrimitiveType.Cube, new Vector3(side * 13.97f, 2.2f, z - 2f), new Vector3(0.06f, 1.2f, 1.8f), m.windowGlass);

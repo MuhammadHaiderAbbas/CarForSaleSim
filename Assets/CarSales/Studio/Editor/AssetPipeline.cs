@@ -472,7 +472,7 @@ namespace CarSales.Studio.EditorTools
             {
                 var mats = r.sharedMaterials;
                 for (int i = 0; i < mats.Length; i++)
-                    if (mats[i] && job.paintMaterials.Contains(mats[i].name)) { renderers.Add(r); slots.Add(i); }
+                    if (mats[i] && job.paintMaterials.Contains(mats[i].name)) { renderers.Add(r); slots.Add(i); ClearCoat(mats[i]); }
             }
             var so = new SerializedObject(visual);
             var pr = so.FindProperty("paintRenderers");
@@ -483,6 +483,34 @@ namespace CarSales.Studio.EditorTools
             for (int i = 0; i < slots.Count; i++) pi.GetArrayElementAtIndex(i).intValue = slots[i];
             so.FindProperty("colorProperty").stringValue = "_BaseColor";
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Phase 13b: real car paint has a lacquer layer on top. Moves an extracted paint material to URP Complex Lit with
+        /// clear coat (colour, maps and smoothness kept). Materials still embedded in the model file are left as they are.
+        /// </summary>
+        static void ClearCoat(Material m)
+        {
+            if (!m || !AssetDatabase.IsMainAsset(m) || (m.shader && m.shader.name.Contains("Complex Lit"))) return;
+            if (!m.shader || !m.shader.name.StartsWith("Universal Render Pipeline/Lit")) return;
+            var complex = Shader.Find("Universal Render Pipeline/Complex Lit");
+            if (!complex) return;
+            var keywords = m.shaderKeywords;
+            var baseMap = m.GetTexture("_BaseMap"); var normal = m.HasProperty("_BumpMap") ? m.GetTexture("_BumpMap") : null;
+            var mask = m.HasProperty("_MetallicGlossMap") ? m.GetTexture("_MetallicGlossMap") : null;
+            var color = m.GetColor("_BaseColor");
+            float smooth = m.GetFloat("_Smoothness"), metal = m.GetFloat("_Metallic");
+            m.shader = complex;
+            m.SetTexture("_BaseMap", baseMap); m.SetColor("_BaseColor", color);
+            if (normal) m.SetTexture("_BumpMap", normal);
+            if (mask) m.SetTexture("_MetallicGlossMap", mask);
+            m.SetFloat("_Smoothness", Mathf.Max(smooth, 0.75f));
+            m.SetFloat("_Metallic", metal);
+            m.shaderKeywords = keywords;
+            m.SetFloat("_ClearCoatMask", 1f);
+            m.SetFloat("_ClearCoatSmoothness", 0.95f);
+            m.EnableKeyword("_CLEARCOAT");
+            EditorUtility.SetDirty(m);
         }
 
         static void SetUpStatic(GameObject root)

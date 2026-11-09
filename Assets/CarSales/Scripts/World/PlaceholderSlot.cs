@@ -2,7 +2,12 @@ using UnityEngine;
 
 namespace CarSales
 {
-    public enum PlaceholderKind { Building = 0, Tree = 1, StreetLamp = 2, Bench = 3 }
+    /// <summary>Append only (saved choices use the numbers). 4+ are phase 13 furniture: Interior or Prop assets.</summary>
+    public enum PlaceholderKind
+    {
+        Building = 0, Tree = 1, StreetLamp = 2, Bench = 3,
+        Sofa = 4, Chair = 5, Table = 6, Plant = 7, Storage = 8, Bed = 9, Appliance = 10, Decor = 11, WorkshopKit = 12,
+    }
 
     /// <summary>
     /// Marks a group of placeholder primitives (a backdrop building, a tree, a lamp, a bench) that the

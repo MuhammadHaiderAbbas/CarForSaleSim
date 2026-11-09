@@ -104,6 +104,7 @@ namespace CarSales.EditorTools
                 Set(controller, "gearDownAction", a.gearDown);
             }
 
+            ApplyMetricUVs(scene);
             EditorSceneManager.SaveScene(scene, TestTrackScenePath);
             VerifySavedLinks(TestTrackScenePath, db, a);
             var list = EditorBuildSettings.scenes.Where(s => s.path != TestTrackScenePath).ToList();

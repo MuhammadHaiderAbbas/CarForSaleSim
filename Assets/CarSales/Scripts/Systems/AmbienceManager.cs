@@ -57,6 +57,7 @@ namespace CarSales
                 if (z != zone) SwitchTo(z);
             }
             float amb = GameSettings.GroupVolume(AudioManager.GroupAmbience);
+            if (InteriorState.Inside) amb *= 0.25f;   // phase 13c: the town is muffled inside your home
             float k = Mathf.Clamp01(Time.unscaledDeltaTime / Fade);
             var cur = aIsCurrent ? bedA : bedB;
             var old = aIsCurrent ? bedB : bedA;

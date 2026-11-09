@@ -1,6 +1,6 @@
 # Car Sales Simulator V5.0 — Master Technical Development Specification
 
-**Status:** Draft 1. Phases 1-11 are merged; Phase 12 (V2 master map, V2 interface, release tooling) code is written (see [Phase 12 status](#phase-12-status)). Nothing has been run in Unity yet: the release-candidate checks (2-week run, §11 budgets, Release Checklist) are to be done in the Editor.
+**Status:** Draft 1. Phases 1-12 are merged; Phase 13 (realism: textures, lighting, interiors) code is written (see [Phase 13 status](#phase-13-status)). Nothing has been run in Unity yet: the release-candidate checks (2-week run, §11 budgets, Release Checklist) are to be done in the Editor.
 **Baseline:** v4.0 "Open Town" (commit `e242293`): 95 runtime scripts, ~7,800 lines runtime C#, 2 editor generators, 1 installer
 **Engine:** Unity 6 LTS, URP, C#
 **Default region:** United Kingdom (GBP, V5C/MOT/write-off categories). Region rules are data, so other regions can be added later.
@@ -1255,6 +1255,37 @@ earlier layouts.
 4. Main menu, pause, settings (try every page, Reset to Default), phone apps, Fuel Station, negotiation portrait.
 5. Asset Studio > Online: paste your six links, look them up, download one and set it up.
 6. Tools > Car Sales > Release Checklist: work through it, then Build > Windows (Release).
+
+### Phase 13 — Realism: surfaces, lighting, interiors (L)
+The owner asked for a realistic, detailed town with interiors. **Done when:** every surface has a real texture at its
+real size, the game has Low/Medium/High/Ultra graphics with shadows, ambient occlusion and real night lights, the
+weather and time of day change the look, the showrooms, workshops and homes are furnished (homes walk-in), every piece
+of furniture can be swapped for a real model, and the Realism Checklist lists what is left with live progress.
+
+#### Phase 13 status
+**Code complete** (375 EditMode tests passing, compile-checked; not run in Unity).
+
+| Item | Built |
+|---|---|
+| Surfaces (13a) | `Foundation/Graphics/SurfaceGen.cs`: 24 tiling PBR texture sets made in code (albedo, normal, mask = metal/AO/smoothness, emission): asphalt, concrete, paving, brick, render, grass, porcelain and marble floors, wood, flat roof, roof tiles, cladding, soil, wheat, fabric, brushed metal, foliage, bark, carpet, workshop resin, and three façades (office glass, rendered flats, brick flats) with night-lit windows. Generated once into `Assets/CarSales/GeneratedArt/Surfaces` (git-ignored). `Foundation/Graphics/MetricMesh.cs`: cube/plane/cylinder with UVs in metres, swapped in by Build Everything so textures show at real size (meshes shared by size). Large ground surfaces get a 70 m variation map against tiling. **Surface Library** (*Realism* menu) swaps any surface for a scanned material (Poly Haven / ambientCG). Backdrop buildings get façades, a gravel roof and roof clutter; pitched roofs get clay or slate tiles; premium showrooms marble; workshops resin floors. Tests: tiling seams, determinism, normals, detail, lit-window share, tintable brightness, mesh winding, tangents, metric UVs. |
+| Lighting & atmosphere (13b) | `Editor/RealisticGraphics.cs`: four URP tiers copied from your URP asset (originals untouched, Restore available) with shadows 60-260 m, 2-4 cascades, soft shadows, SSAO renderer feature, Forward+, probe blending, HDR grading, MSAA, texture streaming; quality levels Low/Medium/High/Ultra (High default). Post-processing: day profile (ACES, bloom, split-tone, grain, warm balance) plus night and rain profiles. `Sim/World/RealismSim.cs` (tested): darkness, golden hour, haze, fog colour, street-light switching, window glow, wetness. `Scripts/World/RealismDirector.cs`: lit windows at night, lamp heads and signs dim by day, a pool of real lamp lights moved to the nearest lamps (6-24 by quality), headlights on the car you drive, night/rain volume weights. `WorldManager`: wet roads, pavements, roofs and brick darker and shinier, drying over ~2 game hours; haze and fog coloured by time of day. Car paint and imported car paint use Complex Lit clear coat. Debug F2 (+1 hour), F4 (next weather). |
+| Interiors (13c) | `Editor/CarSalesInteriors.cs`: furniture kit (sofas, armchairs, coffee/dining tables, chairs, office chairs, desks with monitors, beds, nightstands with lamps, wardrobes, bookcases, kitchens, islands, fridges, TV walls, floor lamps, plants, rugs, wall art, reception counters, coffee points, brochure stands, tool chests, workbenches, tyre racks, racking, tube lights). Every piece is a `PlaceholderSlot` (new kinds Sofa...WorkshopKit) so Asset Studio > Town can swap in real models (Interior assets). `Sim/World/InteriorPlan.cs` holds the layouts (tested: no overlaps, inside the walls, clear of car platforms, door-to-bed and customer-to-car paths). Showrooms (3 levels), service centre, mechanic workshop and parts shop refurnished. **Walk-in homes**: `HomeInterior`, `InteriorDoor`, `InteriorBed`; the front door takes you inside (built under the house), you sleep in the bed and wake beside it; fog, rain, street lights and ambience are turned down indoors. |
+| Checklist & guide (13d) | `Studio/Core/RealismChecklist.cs` (tested) + *Tools > Car Sales > Realism > Realism Checklist*: score, next step and a button per step (graphics, sky, cars, scanned textures, characters, town models, furniture, sound, licences). `docs/REALISM_GUIDE.md`: every step, sources, licences, troubleshooting. |
+
+**Not done / needs you:** the realistic models themselves (cars, people, buildings, trees, furniture) and sounds must
+be downloaded in Unity from the sources in the guide (this environment can't reach them, and licences need your
+account). Colours, brightness and fog density are a first pass that has not been seen on screen. Baked global
+illumination (light probes / APV) is not set up: everything is real-time.
+
+**Phase 13 play-test checklist:**
+1. Build Everything (the first time it also makes the graphics levels): Project Settings > Quality lists Low-Ultra.
+2. Play: look at roads, pavements, brick, grass and building fronts close up and far away (no stretched or tiny textures).
+3. F2 until night: windows light up, lamps light the street near you, headlights on the car you drive.
+4. F4 to rain: roads darken and shine, then dry slowly; fog and haze look right at dawn, noon, dusk and night.
+5. Walk into AUTO WORLD at each building level (Buildings app) and check customers still reach every car.
+6. Go home: E at the front door, walk to the bed, sleep after 18:00, wake beside it, E on the inside of the door.
+7. Realism Checklist and Surface Library: drop a Poly Haven asphalt in, Apply, see it in Play mode.
+8. Each graphics level: frame-rate overlay; Restore Original Graphics and Apply again both work.
 
 ---
 

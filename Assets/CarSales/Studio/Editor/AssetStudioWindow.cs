@@ -83,7 +83,18 @@ namespace CarSales.Studio.EditorTools
             "Street and lot trees (fitted to 6 m height; Prop or Environment assets).",
             "Street lamps (fitted to 6 m height).",
             "Benches in front of the showrooms (fitted to 1 m height).",
+            "Sofas and armchairs in showrooms, lounges and homes (fitted to their height; Interior or Prop assets).",
+            "Office, dining and waiting-room chairs.",
+            "Desks, coffee tables, dining and bedside tables.",
+            "Potted plants indoors.",
+            "Shelving, bookcases and wardrobes.",
+            "Beds in the walk-in homes.",
+            "TVs, fridges, coffee machines and water coolers.",
+            "Wall art, lamps and other decoration.",
+            "Workshop kit: tool chests, workbenches, tyre racks.",
         };
+
+        static string KindHelpFor(PlaceholderKind kind) => (int)kind < KindHelp.Length ? KindHelp[(int)kind] : "";
 
         void DrawTown()
         {
@@ -98,12 +109,12 @@ namespace CarSales.Studio.EditorTools
             {
                 EditorGUILayout.Space(6);
                 EditorGUILayout.LabelField(ObjectNames.NicifyVariableName(kind.ToString()), EditorStyles.boldLabel);
-                EditorGUILayout.LabelField(KindHelp[(int)kind], EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(KindHelpFor(kind), EditorStyles.wordWrappedMiniLabel);
                 var entry = settings.For(kind);
                 var candidates = reg.records.Where(r => r != null && r.prefab && CarSales.EditorTools.PlaceholderReplacer.Accepts(kind, r.category)).ToList();
                 if (candidates.Count == 0)
                 {
-                    EditorGUILayout.LabelField(kind == PlaceholderKind.Building ? "  Import a model as Building to use it here." : "  Import a model as Prop to use it here.", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField(kind == PlaceholderKind.Building ? "  Import a model as Building to use it here." : (int)kind >= (int)PlaceholderKind.Sofa ? "  Import a model as Interior (or Prop) to use it here." : "  Import a model as Prop to use it here.", EditorStyles.miniLabel);
                     continue;
                 }
                 foreach (var r in candidates)
